@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -21,7 +19,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class WeatherService {
@@ -30,30 +27,42 @@ public class WeatherService {
     private final ObjectMapper objectMapper;
     private final String apiKey;
 
+    // ============================================================
+    // WEATHER CACHE
+    // ============================================================
+
     /*
-     * ============================================================
-     * WEATHER CACHE
-     * ============================================================
+     * Fresh weather is kept for 10 minutes.
      *
-     * Weather does NOT need to be fetched every time the user
-     * opens /weather.
-     *
-     * Cache is kept for 10 minutes.
-     *
-     * Key:
-     * latitude + longitude
-     *
-     * Example:
-     * 25.4358,81.8463
-     *
-     * This means refreshing the weather page will normally be
-     * almost instant after the first successful request.
+     * During this period, opening /weather again does NOT contact
+     * OpenWeather. The cached response is returned immediately.
      */
     private static final long CACHE_DURATION_MS =
             10 * 60 * 1000L;
 
+    /*
+     * Keep expired entries as well.
+     *
+     * This allows us to return the previous weather data when
+     * OpenWeather is temporarily unavailable.
+     */
     private final Map<String, CachedWeather> weatherCache =
             new ConcurrentHashMap<>();
+
+
+    // ============================================================
+    // NETWORK SETTINGS
+    // ============================================================
+
+    /*
+     * Fail reasonably quickly instead of allowing the browser
+     * to remain stuck on "Reading the sky..." for a long time.
+     */
+    private static final Duration REQUEST_TIMEOUT =
+            Duration.ofSeconds(5);
+
+    private static final int CONNECT_TIMEOUT_MILLIS =
+            4000;
 
 
     // ============================================================
@@ -67,48 +76,35 @@ public class WeatherService {
 
         /*
          * ========================================================
-         * HTTP CLIENT
+         * FAST / CONTROLLED HTTP CLIENT
          * ========================================================
          *
-         * Keep network timeouts reasonably short.
+         * The previous implementation allowed OpenWeather
+         * connections to wait too long.
          *
-         * We don't want the browser to sit there for 30+ seconds
-         * waiting for OpenWeather.
+         * We now fail fast when the external service is unavailable.
          */
-
-        HttpClient httpClient = HttpClient.create()
-                .option(
-                        ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                        5000
-                )
-                .responseTimeout(
-                        Duration.ofSeconds(8)
-                )
-                .doOnConnected(connection ->
-                        connection
-                                .addHandlerLast(
-                                        new ReadTimeoutHandler(
-                                                8,
-                                                TimeUnit.SECONDS
-                                        )
-                                )
-                                .addHandlerLast(
-                                        new WriteTimeoutHandler(
-                                                8,
-                                                TimeUnit.SECONDS
-                                        )
-                                )
-                );
-
-        this.webClient = WebClient.builder()
-                .clientConnector(
-                        new ReactorClientHttpConnector(
-                                httpClient
+        HttpClient httpClient =
+                HttpClient.create()
+                        .option(
+                                ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                                CONNECT_TIMEOUT_MILLIS
                         )
-                )
-                .build();
+                        .responseTimeout(
+                                REQUEST_TIMEOUT
+                        );
 
-        this.objectMapper = new ObjectMapper();
+        this.webClient =
+                WebClient.builder()
+                        .clientConnector(
+                                new ReactorClientHttpConnector(
+                                        httpClient
+                                )
+                        )
+                        .build();
+
+        this.objectMapper =
+                new ObjectMapper();
     }
 
 
@@ -125,20 +121,22 @@ public class WeatherService {
                 longitude
         );
 
-        /*
-         * ========================================================
-         * CACHE CHECK
-         * ========================================================
-         */
+        // ========================================================
+        // CACHE CHECK
+        // ========================================================
 
-        String cacheKey = createCacheKey(
-                latitude,
-                longitude
-        );
+        String cacheKey =
+                createCacheKey(
+                        latitude,
+                        longitude
+                );
 
         CachedWeather cached =
                 weatherCache.get(cacheKey);
 
+        /*
+         * Fresh cache = immediate response.
+         */
         if (cached != null &&
                 !cached.isExpired()) {
 
@@ -197,7 +195,7 @@ public class WeatherService {
                             .retrieve()
                             .bodyToMono(String.class)
                             .timeout(
-                                    Duration.ofSeconds(8)
+                                    REQUEST_TIMEOUT
                             );
 
 
@@ -242,25 +240,24 @@ public class WeatherService {
                             .retrieve()
                             .bodyToMono(String.class)
                             .timeout(
-                                    Duration.ofSeconds(8)
+                                    REQUEST_TIMEOUT
+                            )
+                            /*
+                             * IMPORTANT:
+                             *
+                             * If forecast fails, don't make the
+                             * entire weather request fail.
+                             *
+                             * Current weather is more important.
+                             */
+                            .onErrorReturn(
+                                    createEmptyForecastResponse()
                             );
 
 
             // ====================================================
-            // RUN BOTH REQUESTS AT THE SAME TIME
+            // RUN BOTH REQUESTS IN PARALLEL
             // ====================================================
-            //
-            // BEFORE:
-            //
-            // current → wait → forecast → wait
-            //
-            // NOW:
-            //
-            // current ───────┐
-            //                 ├── wait for both
-            // forecast ──────┘
-            //
-            // This significantly reduces total waiting time.
 
             Map<String, String> responses =
                     Mono.zip(
@@ -337,11 +334,12 @@ public class WeatherService {
             );
 
             /*
-             * We don't make another reverse-geocoding request.
+             * OpenWeather current-weather response already
+             * contains city and country.
              *
-             * OpenWeather already gives us city and country.
+             * We therefore do NOT make another reverse-geocoding
+             * API request.
              */
-
             locationData.put(
                     "city",
                     current
@@ -387,6 +385,12 @@ public class WeatherService {
                     current.path("wind");
 
 
+            /*
+             * Current weather is required.
+             *
+             * If this is missing, the request is considered
+             * unsuccessful and old cache will be attempted.
+             */
             if (weather == null ||
                     weather.isMissingNode()) {
 
@@ -610,7 +614,7 @@ public class WeatherService {
 
 
             // ====================================================
-            // SAVE TO CACHE
+            // SAVE CACHE
             // ====================================================
 
             weatherCache.put(
@@ -629,15 +633,9 @@ public class WeatherService {
 
         } catch (Exception e) {
 
-            /*
-             * ====================================================
-             * FALLBACK TO OLD CACHE
-             * ====================================================
-             *
-             * If OpenWeather temporarily fails but we have
-             * previously fetched weather data, return it instead
-             * of making the entire weather page fail.
-             */
+            // ====================================================
+            // FALLBACK TO OLD CACHE
+            // ====================================================
 
             CachedWeather oldCache =
                     weatherCache.get(cacheKey);
@@ -645,12 +643,17 @@ public class WeatherService {
             if (oldCache != null) {
 
                 System.out.println(
-                        "OPENWEATHER FAILED - USING OLD WEATHER CACHE"
+                        "OPENWEATHER FAILED - "
+                                + "USING STALE WEATHER CACHE"
                 );
 
                 return oldCache.data;
             }
 
+
+            // ====================================================
+            // NO CACHE AVAILABLE
+            // ====================================================
 
             System.err.println(
                     "OPENWEATHER REQUEST FAILED: "
@@ -663,6 +666,22 @@ public class WeatherService {
                     e
             );
         }
+    }
+
+
+    // ============================================================
+    // EMPTY FORECAST RESPONSE
+    // ============================================================
+
+    /*
+     * Used when the forecast endpoint fails.
+     *
+     * This allows current weather to still be displayed instead
+     * of returning an HTTP 500 response.
+     */
+    private String createEmptyForecastResponse() {
+
+        return "{\"list\":[]}";
     }
 
 
