@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
@@ -13,7 +14,6 @@
          ========================================================= -->
 
     <div class="editorial-container nav-inner">
-
 
         <!-- =====================================================
              BRAND
@@ -70,7 +70,6 @@
 
             <!-- =================================================
                  WEATHER
-                 INLINE SVG - NO IMAGE FILE REQUIRED
                  ================================================= -->
 
             <a href="/weather"
@@ -105,13 +104,10 @@
 
                             <path d="M60 8V16"/>
                             <path d="M60 56V63"/>
-
                             <path d="M32 36H40"/>
                             <path d="M80 36H88"/>
-
                             <path d="M40 16L46 22"/>
                             <path d="M74 50L80 56"/>
-
                             <path d="M80 16L74 22"/>
 
                         </g>
@@ -141,7 +137,6 @@
                     </svg>
 
                 </span>
-
 
                 <span class="weather-nav-text">
                     WEATHER
@@ -237,7 +232,7 @@
 
 
                 <span
-                    th:if="${unreadNotificationCount > 0}"
+                    th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}"
                     th:text="${unreadNotificationCount}"
                     class="notification-count">
 
@@ -256,12 +251,16 @@
                  sec:authorize="isAuthenticated()">
 
 
-                <!-- USER BUTTON -->
+                <!-- =================================================
+                     USER TRIGGER
+                     ================================================= -->
 
                 <button
                     type="button"
                     class="user-trigger"
-                    id="userMenuButton">
+                    id="userMenuButton"
+                    aria-label="Open account menu"
+                    aria-expanded="false">
 
                     <span
                         class="user-initial"
@@ -270,7 +269,6 @@
                         U
 
                     </span>
-
 
                     <span
                         class="user-name"
@@ -281,23 +279,45 @@
                     </span>
 
 
-                    <span class="user-chevron">
-                        ↓
+                    <!-- CHEVRON -->
+
+                    <span
+                        class="user-chevron"
+                        aria-hidden="true">
+
+                        <svg
+                            viewBox="0 0 24 24"
+                            width="15"
+                            height="15"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round">
+
+                            <polyline points="6 9 12 15 18 9">
+                            </polyline>
+
+                        </svg>
+
                     </span>
 
                 </button>
 
 
                 <!-- =================================================
-                     USER DROPDOWN
+                     ACCOUNT DROPDOWN
                      ================================================= -->
 
                 <div
                     class="user-dropdown"
-                    id="userDropdown">
+                    id="userDropdown"
+                    role="menu">
 
 
-                    <!-- USER INFORMATION -->
+                    <!-- =================================================
+                         ACCOUNT HEADER
+                         ================================================= -->
 
                     <div class="dropdown-user">
 
@@ -305,106 +325,285 @@
                             SIGNED IN AS
                         </span>
 
-                        <strong
-                            sec:authentication="name">
-
-                            User
-
+                        <strong sec:authentication="name">
+                            user@example.com
                         </strong>
 
                     </div>
 
 
-                    <!-- DASHBOARD -->
+                    <!-- =================================================
+                         MAIN ACCOUNT LINKS
+                         ================================================= -->
 
-                    <a href="/dashboard">
-
-                        📊 Dashboard
-
-                    </a>
+                    <div class="dropdown-links">
 
 
-                    <!-- SAVED NEWS -->
+                        <!-- DASHBOARD -->
 
-                    <a href="/bookmarks">
+                        <a
+                            href="/dashboard"
+                            class="dropdown-item"
+                            role="menuitem">
 
-                        🔖 Saved News
+                            <span class="dropdown-icon">
 
-                        <span
-                            class="dropdown-count"
-                            th:if="${savedNewsCount != null}"
-                            th:text="${savedNewsCount}">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round">
 
-                            0
+                                    <rect
+                                        x="3"
+                                        y="3"
+                                        width="7"
+                                        height="7">
+                                    </rect>
 
-                        </span>
+                                    <rect
+                                        x="14"
+                                        y="3"
+                                        width="7"
+                                        height="7">
+                                    </rect>
 
-                    </a>
+                                    <rect
+                                        x="3"
+                                        y="14"
+                                        width="7"
+                                        height="7">
+                                    </rect>
+
+                                    <rect
+                                        x="14"
+                                        y="14"
+                                        width="7"
+                                        height="7">
+                                    </rect>
+
+                                </svg>
+
+                            </span>
+
+                            <span>
+                                Dashboard
+                            </span>
+
+                        </a>
 
 
-                    <!-- NOTIFICATIONS -->
+                        <!-- SAVED NEWS -->
 
-                    <a href="/notifications">
+                        <a
+                            href="/bookmarks"
+                            class="dropdown-item"
+                            role="menuitem">
 
-                        🔔 Notifications
+                            <span class="dropdown-icon">
 
-                        <span
-                            class="dropdown-count"
-                            th:if="${unreadNotificationCount > 0}"
-                            th:text="${unreadNotificationCount}">
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round">
 
-                            0
+                                    <path
+                                        d="M6 3h12v18l-6-4-6 4z">
+                                    </path>
 
-                        </span>
+                                </svg>
 
-                    </a>
+                            </span>
 
+                            <span>
+                                Saved News
+                            </span>
 
-                    <!-- PROFILE -->
-
-                    <a href="/profile">
-
-                        👤 My Profile
-
-                    </a>
+                        </a>
 
 
-                    <!-- DIVIDER -->
+                        <!-- NOTIFICATIONS -->
 
-                    <div class="dropdown-divider">
+                        <a
+                            href="/notifications"
+                            class="dropdown-item"
+                            role="menuitem">
+
+                            <span class="dropdown-icon">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round">
+
+                                    <path
+                                        d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9">
+                                    </path>
+
+                                    <path
+                                        d="M10 21h4">
+                                    </path>
+
+                                </svg>
+
+                            </span>
+
+                            <span>
+                                Notifications
+                            </span>
+
+
+                            <!-- NOTIFICATION COUNT -->
+
+                            <span
+                                class="dropdown-count"
+                                th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}"
+                                th:text="${unreadNotificationCount}">
+
+                                0
+
+                            </span>
+
+                        </a>
+
+
+                        <!-- MY PROFILE -->
+
+                        <a
+                            href="/profile"
+                            class="dropdown-item"
+                            role="menuitem">
+
+                            <span class="dropdown-icon">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round">
+
+                                    <circle
+                                        cx="12"
+                                        cy="8"
+                                        r="4">
+                                    </circle>
+
+                                    <path
+                                        d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7">
+                                    </path>
+
+                                </svg>
+
+                            </span>
+
+                            <span>
+                                My Profile
+                            </span>
+
+                        </a>
+
                     </div>
 
 
-                    <!-- ADMIN -->
-
-                    <a
-                        href="/admin/users"
-                        sec:authorize="hasRole('ADMIN')">
-
-                        👑 Admin Dashboard
-
-                    </a>
-
+                    <!-- =================================================
+                         ADMIN SECTION
+                         ================================================= -->
 
                     <div
-                        class="dropdown-divider"
+                        class="dropdown-section"
                         sec:authorize="hasRole('ADMIN')">
+
+                        <a
+                            href="/admin/users"
+                            class="dropdown-item"
+                            role="menuitem">
+
+                            <span class="dropdown-icon">
+
+                                <svg
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.8"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round">
+
+                                    <path
+                                        d="M12 2l2.7 6.1L21 9l-4.5 4.3L17.6 20 12 17l-5.6 3 1.1-6.7L3 9l6.3-.9z">
+                                    </path>
+
+                                </svg>
+
+                            </span>
+
+                            <span>
+                                Admin Dashboard
+                            </span>
+
+                        </a>
+
                     </div>
 
 
-                    <!-- LOGOUT -->
+                    <!-- =================================================
+                         LOGOUT
+                         ================================================= -->
 
-                    <form
-                        th:action="@{/logout}"
-                        method="post">
+                    <div class="dropdown-section logout-section">
 
-                        <button type="submit">
+                        <form
+                            th:action="@{/logout}"
+                            method="post">
 
-                            🚪 Logout
+                            <button
+                                type="submit"
+                                class="dropdown-item dropdown-logout">
 
-                        </button>
+                                <span class="dropdown-icon">
 
-                    </form>
+                                    <svg
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.8"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round">
+
+                                        <path
+                                            d="M10 17l5-5-5-5">
+                                        </path>
+
+                                        <path
+                                            d="M15 12H3">
+                                        </path>
+
+                                        <path
+                                            d="M21 19V5">
+                                        </path>
+
+                                    </svg>
+
+                                </span>
+
+                                <span>
+                                    Logout
+                                </span>
+
+                            </button>
+
+                        </form>
+
+                    </div>
 
                 </div>
 
@@ -415,9 +614,10 @@
                  LOGIN
                  ================================================= -->
 
-            <a href="/login"
-               class="nav-login"
-               sec:authorize="!isAuthenticated()">
+            <a
+                href="/login"
+                class="nav-login"
+                sec:authorize="!isAuthenticated()">
 
                 LOGIN
 
@@ -485,11 +685,11 @@
 
         <!-- =====================================================
              MOBILE WEATHER
-             INLINE SVG
              ===================================================== -->
 
-        <a href="/weather"
-           class="weather-nav-link">
+        <a
+            href="/weather"
+            class="weather-nav-link">
 
             <span class="weather-nav-icon-wrap">
 
@@ -498,6 +698,7 @@
                     viewBox="0 0 96 96"
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true">
+
 
                     <!-- SUN -->
 
@@ -520,13 +721,10 @@
 
                         <path d="M60 8V16"/>
                         <path d="M60 56V63"/>
-
                         <path d="M32 36H40"/>
                         <path d="M80 36H88"/>
-
                         <path d="M40 16L46 22"/>
                         <path d="M74 50L80 56"/>
-
                         <path d="M80 16L74 22"/>
 
                     </g>
@@ -556,7 +754,6 @@
                 </svg>
 
             </span>
-
 
             <span class="weather-nav-text">
                 WEATHER
@@ -591,4 +788,5 @@
 </nav>
 
 </body>
+
 </html>
