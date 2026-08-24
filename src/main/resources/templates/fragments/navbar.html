@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<body>
+
+<nav th:fragment="navbar"
+     class="editorial-nav">
+
+    <!-- =========================================================
+         NAV INNER
+         ========================================================= -->
+
+    <div class="editorial-container nav-inner">
+
+
+        <!-- =====================================================
+             BRAND
+             ===================================================== -->
+
+        <a href="/"
+           class="brand">
+
+            <span class="brand-mark">
+                NP
+            </span>
+
+            <span class="brand-name">
+                NEWS PORTAL
+            </span>
+
+        </a>
+
+
+        <!-- =====================================================
+             DESKTOP NAVIGATION
+             ===================================================== -->
+
+        <div class="desktop-navigation">
+
+            <a href="/">
+                HOME
+            </a>
+
+            <a href="/newsList">
+                NEWS
+            </a>
+
+            <a href="/newsList?category=India">
+                INDIA
+            </a>
+
+            <a href="/newsList?category=World">
+                WORLD
+            </a>
+
+            <a href="/newsList?category=Technology">
+                TECHNOLOGY
+            </a>
+
+            <a href="/newsList?category=Business">
+                BUSINESS
+            </a>
+
+            <a href="/newsList?category=Sports">
+                SPORTS
+            </a>
+
+
+            <!-- =================================================
+                 WEATHER
+                 INLINE SVG - NO IMAGE FILE REQUIRED
+                 ================================================= -->
+
+            <a href="/weather"
+               class="weather-nav-link">
+
+                <span class="weather-nav-icon-wrap">
+
+                    <svg
+                        class="weather-nav-icon"
+                        viewBox="0 0 96 96"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true">
+
+                        <!-- SUN -->
+
+                        <circle
+                            cx="60"
+                            cy="36"
+                            r="18"
+                            fill="#FFD83D"
+                            stroke="#172B3F"
+                            stroke-width="3">
+                        </circle>
+
+
+                        <!-- SUN RAYS -->
+
+                        <g
+                            stroke="#172B3F"
+                            stroke-width="3.5"
+                            stroke-linecap="round">
+
+                            <path d="M60 8V16"/>
+                            <path d="M60 56V63"/>
+
+                            <path d="M32 36H40"/>
+                            <path d="M80 36H88"/>
+
+                            <path d="M40 16L46 22"/>
+                            <path d="M74 50L80 56"/>
+
+                            <path d="M80 16L74 22"/>
+
+                        </g>
+
+
+                        <!-- CLOUD -->
+
+                        <path
+                            d="
+                                M18 68
+                                C18 59 25 52 34 52
+                                C36 52 38 52.4 40 53.1
+                                C43 45 50 39 59 39
+                                C70 39 79 47 80 58
+                                C88 58 94 64 94 72
+                                C94 80 88 86 80 86
+                                H34
+                                C25 86 18 80 18 72
+                                Z
+                            "
+                            fill="#FFFFFF"
+                            stroke="#172B3F"
+                            stroke-width="3"
+                            stroke-linejoin="round">
+                        </path>
+
+                    </svg>
+
+                </span>
+
+
+                <span class="weather-nav-text">
+                    WEATHER
+                </span>
+
+            </a>
+
+        </div>
+
+
+        <!-- =====================================================
+             RIGHT SIDE NAV ACTIONS
+             ===================================================== -->
+
+        <div class="nav-actions">
+
+
+            <!-- =================================================
+                 SEARCH
+                 ================================================= -->
+
+            <a href="/newsList"
+               class="nav-search"
+               aria-label="Search news">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true">
+
+                    <circle
+                        cx="11"
+                        cy="11"
+                        r="6.5">
+                    </circle>
+
+                    <path
+                        d="M16 16L21 21">
+                    </path>
+
+                </svg>
+
+            </a>
+
+
+            <!-- =================================================
+                 ADD NEWS
+                 ================================================= -->
+
+            <a href="/addNews"
+               class="nav-editor-link"
+               sec:authorize="hasAnyRole('EDITOR', 'ADMIN')">
+
+                ADD NEWS
+
+            </a>
+
+
+            <!-- =================================================
+                 ADMIN
+                 ================================================= -->
+
+            <a href="/admin/users"
+               class="nav-editor-link"
+               sec:authorize="hasRole('ADMIN')">
+
+                ADMIN
+
+            </a>
+
+
+            <!-- =================================================
+                 NOTIFICATIONS
+                 ================================================= -->
+
+            <a href="/notifications"
+               class="nav-notification"
+               sec:authorize="isAuthenticated()"
+               aria-label="Notifications">
+
+                <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true">
+
+                    <path
+                        d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9">
+                    </path>
+
+                    <path
+                        d="M10 21h4">
+                    </path>
+
+                </svg>
+
+
+                <span
+                    th:if="${unreadNotificationCount > 0}"
+                    th:text="${unreadNotificationCount}"
+                    class="notification-count">
+
+                    0
+
+                </span>
+
+            </a>
+
+
+            <!-- =================================================
+                 USER MENU
+                 ================================================= -->
+
+            <div class="user-menu"
+                 sec:authorize="isAuthenticated()">
+
+
+                <!-- USER BUTTON -->
+
+                <button
+                    type="button"
+                    class="user-trigger"
+                    id="userMenuButton">
+
+                    <span
+                        class="user-initial"
+                        sec:authentication="name">
+
+                        U
+
+                    </span>
+
+
+                    <span
+                        class="user-name"
+                        sec:authentication="name">
+
+                        User
+
+                    </span>
+
+
+                    <span class="user-chevron">
+                        ↓
+                    </span>
+
+                </button>
+
+
+                <!-- =================================================
+                     USER DROPDOWN
+                     ================================================= -->
+
+                <div
+                    class="user-dropdown"
+                    id="userDropdown">
+
+
+                    <!-- USER INFORMATION -->
+
+                    <div class="dropdown-user">
+
+                        <span class="dropdown-label">
+                            SIGNED IN AS
+                        </span>
+
+                        <strong
+                            sec:authentication="name">
+
+                            User
+
+                        </strong>
+
+                    </div>
+
+
+                    <!-- DASHBOARD -->
+
+                    <a href="/dashboard">
+
+                        📊 Dashboard
+
+                    </a>
+
+
+                    <!-- SAVED NEWS -->
+
+                    <a href="/bookmarks">
+
+                        🔖 Saved News
+
+                        <span
+                            class="dropdown-count"
+                            th:if="${savedNewsCount != null}"
+                            th:text="${savedNewsCount}">
+
+                            0
+
+                        </span>
+
+                    </a>
+
+
+                    <!-- NOTIFICATIONS -->
+
+                    <a href="/notifications">
+
+                        🔔 Notifications
+
+                        <span
+                            class="dropdown-count"
+                            th:if="${unreadNotificationCount > 0}"
+                            th:text="${unreadNotificationCount}">
+
+                            0
+
+                        </span>
+
+                    </a>
+
+
+                    <!-- PROFILE -->
+
+                    <a href="/profile">
+
+                        👤 My Profile
+
+                    </a>
+
+
+                    <!-- DIVIDER -->
+
+                    <div class="dropdown-divider">
+                    </div>
+
+
+                    <!-- ADMIN -->
+
+                    <a
+                        href="/admin/users"
+                        sec:authorize="hasRole('ADMIN')">
+
+                        👑 Admin Dashboard
+
+                    </a>
+
+
+                    <div
+                        class="dropdown-divider"
+                        sec:authorize="hasRole('ADMIN')">
+                    </div>
+
+
+                    <!-- LOGOUT -->
+
+                    <form
+                        th:action="@{/logout}"
+                        method="post">
+
+                        <button type="submit">
+
+                            🚪 Logout
+
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 LOGIN
+                 ================================================= -->
+
+            <a href="/login"
+               class="nav-login"
+               sec:authorize="!isAuthenticated()">
+
+                LOGIN
+
+            </a>
+
+
+            <!-- =================================================
+                 MOBILE MENU BUTTON
+                 ================================================= -->
+
+            <button
+                type="button"
+                class="mobile-menu-button"
+                id="mobileMenuButton"
+                aria-label="Open navigation">
+
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         MOBILE NAVIGATION
+         ========================================================= -->
+
+    <div
+        class="mobile-navigation"
+        id="mobileNavigation">
+
+
+        <a href="/">
+            HOME
+        </a>
+
+        <a href="/newsList">
+            NEWS
+        </a>
+
+        <a href="/newsList?category=India">
+            INDIA
+        </a>
+
+        <a href="/newsList?category=World">
+            WORLD
+        </a>
+
+        <a href="/newsList?category=Technology">
+            TECHNOLOGY
+        </a>
+
+        <a href="/newsList?category=Business">
+            BUSINESS
+        </a>
+
+        <a href="/newsList?category=Sports">
+            SPORTS
+        </a>
+
+
+        <!-- =====================================================
+             MOBILE WEATHER
+             INLINE SVG
+             ===================================================== -->
+
+        <a href="/weather"
+           class="weather-nav-link">
+
+            <span class="weather-nav-icon-wrap">
+
+                <svg
+                    class="weather-nav-icon"
+                    viewBox="0 0 96 96"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true">
+
+                    <!-- SUN -->
+
+                    <circle
+                        cx="60"
+                        cy="36"
+                        r="18"
+                        fill="#FFD83D"
+                        stroke="#172B3F"
+                        stroke-width="3">
+                    </circle>
+
+
+                    <!-- SUN RAYS -->
+
+                    <g
+                        stroke="#172B3F"
+                        stroke-width="3.5"
+                        stroke-linecap="round">
+
+                        <path d="M60 8V16"/>
+                        <path d="M60 56V63"/>
+
+                        <path d="M32 36H40"/>
+                        <path d="M80 36H88"/>
+
+                        <path d="M40 16L46 22"/>
+                        <path d="M74 50L80 56"/>
+
+                        <path d="M80 16L74 22"/>
+
+                    </g>
+
+
+                    <!-- CLOUD -->
+
+                    <path
+                        d="
+                            M18 68
+                            C18 59 25 52 34 52
+                            C36 52 38 52.4 40 53.1
+                            C43 45 50 39 59 39
+                            C70 39 79 47 80 58
+                            C88 58 94 64 94 72
+                            C94 80 88 86 80 86
+                            H34
+                            C25 86 18 80 18 72
+                            Z
+                        "
+                        fill="#FFFFFF"
+                        stroke="#172B3F"
+                        stroke-width="3"
+                        stroke-linejoin="round">
+                    </path>
+
+                </svg>
+
+            </span>
+
+
+            <span class="weather-nav-text">
+                WEATHER
+            </span>
+
+        </a>
+
+
+        <!-- MOBILE ADD NEWS -->
+
+        <a
+            href="/addNews"
+            sec:authorize="hasAnyRole('EDITOR', 'ADMIN')">
+
+            ADD NEWS
+
+        </a>
+
+
+        <!-- MOBILE ADMIN -->
+
+        <a
+            href="/admin/users"
+            sec:authorize="hasRole('ADMIN')">
+
+            ADMIN
+
+        </a>
+
+    </div>
+
+</nav>
+
+</body>
+</html>

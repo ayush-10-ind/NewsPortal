@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Login | News Portal</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            min-height: 100%;
+        }
+
+        body {
+            background: #f5f2eb;
+            color: #111111;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+
+        /* =====================================================
+           PAGE
+           ===================================================== */
+
+        .login-page {
+            min-height: 100vh;
+
+            display: grid;
+            grid-template-columns: 58% 42%;
+        }
+
+
+        /* =====================================================
+           LEFT EDITORIAL PANEL
+           ===================================================== */
+
+        .editorial-panel {
+            position: relative;
+
+            min-height: 100vh;
+
+            padding: 48px 68px 42px;
+
+            border-right: 1px solid #d8d3c9;
+
+            display: flex;
+            flex-direction: column;
+        }
+
+
+        /* =====================================================
+           BRAND
+           ===================================================== */
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+
+            gap: 14px;
+
+            width: fit-content;
+
+            text-decoration: none;
+
+            color: #111111;
+        }
+
+
+        .brand-mark {
+            width: 40px;
+            height: 40px;
+
+            border: 1px solid #111111;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-family: Georgia, "Times New Roman", serif;
+
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+
+        .brand-name {
+            font-family: Arial, Helvetica, sans-serif;
+
+            font-size: 13px;
+            font-weight: 700;
+
+            letter-spacing: 4px;
+        }
+
+
+        /* =====================================================
+           LEFT CONTENT
+           ===================================================== */
+
+        .editorial-content {
+            margin-top: auto;
+            margin-bottom: auto;
+
+            max-width: 720px;
+        }
+
+
+        .eyebrow {
+            display: flex;
+            align-items: center;
+
+            gap: 14px;
+
+            margin-bottom: 28px;
+
+            color: #b33a24;
+
+            font-size: 12px;
+            font-weight: 700;
+
+            letter-spacing: 3px;
+
+            text-transform: uppercase;
+        }
+
+
+        .eyebrow-line {
+            width: 48px;
+            height: 1px;
+
+            background: #b33a24;
+        }
+
+
+        .editorial-title {
+            margin: 0;
+
+            max-width: 680px;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: clamp(70px, 6.4vw, 112px);
+
+            font-weight: 400;
+
+            line-height: 0.88;
+
+            letter-spacing: -5px;
+        }
+
+
+        .editorial-description {
+            max-width: 650px;
+
+            margin-top: 38px;
+
+            padding-bottom: 28px;
+
+            border-bottom: 1px solid #d8d3c9;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 21px;
+
+            line-height: 1.55;
+
+            color: #5c5a55;
+        }
+
+
+        /* =====================================================
+           EDITORIAL FOOTER
+           ===================================================== */
+
+        .editorial-footer {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            padding-top: 25px;
+
+            color: #77736b;
+
+            font-size: 10px;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+        }
+
+
+        /* =====================================================
+           RIGHT LOGIN PANEL
+           ===================================================== */
+
+        .login-panel {
+            min-height: 100vh;
+
+            padding: 48px 70px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .login-container {
+            width: 100%;
+
+            max-width: 440px;
+        }
+
+
+        /* =====================================================
+           LOGIN HEADER
+           ===================================================== */
+
+        .login-eyebrow {
+            margin-bottom: 16px;
+
+            color: #b33a24;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            letter-spacing: 3px;
+
+            text-transform: uppercase;
+        }
+
+
+        .login-title {
+            margin: 0;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 58px;
+
+            font-weight: 400;
+
+            line-height: 1;
+
+            letter-spacing: -2px;
+        }
+
+
+        .login-subtitle {
+            margin-top: 18px;
+
+            color: #716d65;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 17px;
+
+            line-height: 1.5;
+        }
+
+
+        /* =====================================================
+           FORM
+           ===================================================== */
+
+        .login-form {
+            margin-top: 42px;
+        }
+
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+
+        .form-label {
+            display: block;
+
+            margin-bottom: 9px;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            letter-spacing: 1.5px;
+
+            text-transform: uppercase;
+        }
+
+
+        .form-input {
+            width: 100%;
+
+            height: 54px;
+
+            padding: 0 16px;
+
+            border: 1px solid #c9c4ba;
+
+            background: #faf8f3;
+
+            color: #111111;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            font-size: 15px;
+
+            outline: none;
+
+            transition:
+                border-color 0.2s ease,
+                background 0.2s ease;
+        }
+
+
+        .form-input:focus {
+            border-color: #111111;
+
+            background: #ffffff;
+        }
+
+
+        /* =====================================================
+           PASSWORD ROW
+           ===================================================== */
+
+        .password-row {
+            display: flex;
+
+            justify-content: space-between;
+            align-items: center;
+
+            margin-bottom: 9px;
+        }
+
+
+        .password-row .form-label {
+            margin-bottom: 0;
+        }
+
+
+        .forgot-link {
+            color: #716d65;
+
+            font-size: 11px;
+
+            text-decoration: none;
+
+            letter-spacing: 0.5px;
+        }
+
+
+        .forgot-link:hover {
+            color: #b33a24;
+        }
+
+
+        /* =====================================================
+           LOGIN BUTTON
+           ===================================================== */
+
+        .login-button {
+            width: 100%;
+
+            height: 56px;
+
+            margin-top: 10px;
+
+            border: 1px solid #111111;
+
+            background: #111111;
+
+            color: #ffffff;
+
+            cursor: pointer;
+
+            font-size: 12px;
+
+            font-weight: 700;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+
+            transition:
+                background 0.2s ease,
+                color 0.2s ease;
+        }
+
+
+        .login-button:hover {
+            background: #b33a24;
+
+            border-color: #b33a24;
+        }
+
+
+        /* =====================================================
+           ERROR
+           ===================================================== */
+
+        .login-error {
+            margin-top: 18px;
+
+            padding: 12px 14px;
+
+            border-left: 3px solid #b33a24;
+
+            background: #eee9df;
+
+            color: #8d2f1e;
+
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           REGISTER
+           ===================================================== */
+
+        .register-section {
+            margin-top: 30px;
+
+            padding-top: 25px;
+
+            border-top: 1px solid #d8d3c9;
+
+            color: #716d65;
+
+            font-size: 13px;
+        }
+
+
+        .register-link {
+            color: #111111;
+
+            font-weight: 700;
+
+            text-decoration: underline;
+
+            text-underline-offset: 3px;
+        }
+
+
+        .register-link:hover {
+            color: #b33a24;
+        }
+
+
+        /* =====================================================
+           DIVIDER
+           ===================================================== */
+
+        .login-divider {
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            margin: 30px 0;
+
+            color: #8a867e;
+
+            font-size: 10px;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
+        }
+
+
+        .login-divider::before,
+        .login-divider::after {
+            content: "";
+
+            flex: 1;
+
+            height: 1px;
+
+            background: #d8d3c9;
+        }
+
+
+        /* =====================================================
+           SOCIAL LOGIN
+           ===================================================== */
+
+        .social-buttons {
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 12px;
+        }
+
+
+        .social-button {
+            width: 100%;
+
+            height: 48px;
+
+            border: 1px solid #c9c4ba;
+
+            background: transparent;
+
+            color: #111111;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            font-family: Arial, Helvetica, sans-serif;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            letter-spacing: 1px;
+
+            text-transform: uppercase;
+
+            text-decoration: none;
+
+            cursor: pointer;
+
+            transition:
+                background 0.2s ease,
+                border-color 0.2s ease;
+        }
+
+
+        .social-button:hover {
+            background: #ffffff;
+
+            border-color: #111111;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 900px) {
+
+            .login-page {
+                grid-template-columns: 1fr;
+            }
+
+
+            .editorial-panel {
+                min-height: auto;
+
+                padding: 35px 30px;
+            }
+
+
+            .editorial-content {
+                margin-top: 90px;
+
+                margin-bottom: 70px;
+            }
+
+
+            .editorial-title {
+                font-size: 72px;
+
+                letter-spacing: -3px;
+            }
+
+
+            .editorial-description {
+                font-size: 18px;
+            }
+
+
+            .login-panel {
+                min-height: auto;
+
+                padding: 55px 30px 70px;
+            }
+
+        }
+
+
+        @media (max-width: 500px) {
+
+            .editorial-panel {
+                padding: 28px 22px;
+            }
+
+
+            .brand-name {
+                letter-spacing: 2px;
+            }
+
+
+            .editorial-title {
+                font-size: 56px;
+            }
+
+
+            .login-panel {
+                padding: 45px 22px 60px;
+            }
+
+
+            .login-title {
+                font-size: 48px;
+            }
+
+
+            .social-buttons {
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="login-page">
+
+
+    <!-- =====================================================
+         LEFT EDITORIAL PANEL
+         ===================================================== -->
+
+    <section class="editorial-panel">
+
+        <a href="/" class="brand">
+
+            <span class="brand-mark">
+                NP
+            </span>
+
+            <span class="brand-name">
+                NEWS PORTAL
+            </span>
+
+        </a>
+
+
+        <div class="editorial-content">
+
+            <div class="eyebrow">
+
+                <span>
+                    THE NEWSROOM
+                </span>
+
+                <span class="eyebrow-line"></span>
+
+                <span>
+                    MEMBER ACCESS
+                </span>
+
+            </div>
+
+
+            <h1 class="editorial-title">
+
+                Stay close to<br>
+
+                the story.
+
+            </h1>
+
+
+            <p class="editorial-description">
+
+                Sign in to save stories, follow your reading
+                history and get closer to the reporting that
+                matters to you.
+
+            </p>
+
+        </div>
+
+
+        <div class="editorial-footer">
+
+            <span>
+                INDEPENDENT REPORTING
+            </span>
+
+            <span>
+                NEWS PORTAL
+            </span>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =====================================================
+         RIGHT LOGIN PANEL
+         ===================================================== -->
+
+    <section class="login-panel">
+
+        <div class="login-container">
+
+
+            <div class="login-eyebrow">
+                MEMBER LOGIN
+            </div>
+
+
+            <h2 class="login-title">
+                Welcome back.
+            </h2>
+
+
+            <p class="login-subtitle">
+                Sign in to continue to your News Portal account.
+            </p>
+
+
+
+            <!-- =================================================
+                 NORMAL LOGIN
+                 ================================================= -->
+
+            <form
+                    class="login-form"
+                    th:action="@{/login}"
+                    method="post">
+
+
+                <!-- EMAIL -->
+
+                <div class="form-group">
+
+                    <label
+                            class="form-label"
+                            for="username">
+
+                        Email
+
+                    </label>
+
+                    <input
+                            class="form-input"
+
+                            type="email"
+
+                            id="username"
+
+                            name="username"
+
+                            placeholder="you@example.com"
+
+                            autocomplete="email"
+
+                            required>
+
+                </div>
+
+
+
+                <!-- PASSWORD -->
+
+                <div class="form-group">
+
+                    <div class="password-row">
+
+                        <label
+                                class="form-label"
+                                for="password">
+
+                            Password
+
+                        </label>
+
+
+                        <a
+                                href="#"
+                                class="forgot-link">
+
+                            Forgot password?
+
+                        </a>
+
+                    </div>
+
+
+                    <input
+                            class="form-input"
+
+                            type="password"
+
+                            id="password"
+
+                            name="password"
+
+                            placeholder="Enter your password"
+
+                            autocomplete="current-password"
+
+                            required>
+
+                </div>
+
+
+
+                <!-- LOGIN BUTTON -->
+
+                <button
+                        type="submit"
+                        class="login-button">
+
+                    Sign In
+
+                </button>
+
+
+
+                <!-- LOGIN ERROR -->
+
+                <div
+                        th:if="${param.error}"
+                        class="login-error">
+
+                    Invalid email or password.
+                    Please try again.
+
+                </div>
+
+
+
+                <!-- LOGOUT -->
+
+                <div
+                        th:if="${param.logout}"
+                        class="login-error">
+
+                    You have been successfully signed out.
+
+                </div>
+
+            </form>
+
+
+
+            <!-- =================================================
+                 SOCIAL LOGIN
+                 ================================================= -->
+
+            <div class="login-divider">
+                OR
+            </div>
+
+
+            <div class="social-buttons">
+
+
+                <!-- GOOGLE -->
+
+                <a
+                        class="social-button"
+                        href="/oauth2/authorization/google">
+
+                    Continue with Google
+
+                </a>
+
+
+                <!-- GITHUB -->
+
+                <a
+                        class="social-button"
+                        href="/oauth2/authorization/github">
+
+                    Continue with GitHub
+
+                </a>
+
+
+            </div>
+
+
+
+            <!-- =================================================
+                 REGISTER
+                 ================================================= -->
+
+            <div class="register-section">
+
+                Don't have an account?
+
+                <a
+                        href="/register"
+                        class="register-link">
+
+                    Create an account
+
+                </a>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+</div>
+
+</body>
+
+</html>

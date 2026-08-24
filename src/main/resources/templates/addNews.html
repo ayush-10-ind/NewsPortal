@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Add News | News Portal</title>
+
+    <link rel="stylesheet"
+          th:href="@{/newsportal.css}">
+
+</head>
+
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<main class="editor-page">
+
+    <div class="editor-container">
+
+        <!-- HEADER -->
+
+        <div class="editor-heading">
+
+            <div>
+
+                <span class="editor-kicker">
+                    THE NEWSROOM
+                </span>
+
+                <h1>
+                    Publish a story.
+                </h1>
+
+                <p>
+                    Add a new article to the News Portal.
+                </p>
+
+            </div>
+
+            <div class="editor-date">
+                NEWS PORTAL<br>
+                EDITORIAL DESK
+            </div>
+
+        </div>
+
+
+        <!-- FORM -->
+
+        <form th:action="@{/saveNews}"
+              method="post"
+              class="news-editor-form">
+
+
+            <!-- TITLE -->
+
+            <div class="editor-field editor-field-full">
+
+                <label for="title">
+                    HEADLINE
+                </label>
+
+                <input
+                        type="text"
+                        id="title"
+                        name="title"
+                        placeholder="Write a clear, compelling headline..."
+                        required>
+
+            </div>
+
+
+            <!-- AUTHOR -->
+
+            <div class="editor-row">
+
+                <div class="editor-field">
+
+                    <label for="author">
+                        AUTHOR
+                    </label>
+
+                    <input
+                            type="text"
+                            id="author"
+                            name="author"
+                            placeholder="Author name"
+                            required>
+
+                </div>
+
+
+                <!-- CATEGORY -->
+
+                <div class="editor-field">
+
+                    <label for="category">
+                        SECTION
+                    </label>
+
+                    <input
+                            type="text"
+                            id="category"
+                            name="category"
+                            placeholder="Technology, India, World..."
+                            required>
+
+                </div>
+
+            </div>
+
+
+            <!-- IMAGE -->
+
+            <div class="editor-field editor-field-full">
+
+                <label for="imageUrl">
+                    FEATURE IMAGE
+                </label>
+
+                <input
+                        type="text"
+                        id="imageUrl"
+                        name="imageUrl"
+                        placeholder="/images/news-image.jpg">
+
+                <span class="editor-help">
+                    Enter the image path stored in your project.
+                </span>
+
+            </div>
+
+
+            <!-- CONTENT -->
+
+            <div class="editor-field editor-field-full">
+
+                <label for="content">
+                    STORY
+                </label>
+
+                <textarea
+                        id="content"
+                        name="content"
+                        rows="14"
+                        placeholder="Write the complete story here..."
+                        required></textarea>
+
+            </div>
+
+
+            <!-- DATE -->
+
+            <div class="editor-row">
+
+                <div class="editor-field">
+
+                    <label for="publishedDate">
+                        PUBLICATION DATE
+                    </label>
+
+                    <input
+                            type="date"
+                            id="publishedDate"
+                            name="publishedDate"
+                            required>
+
+                </div>
+
+                <div class="editor-field editor-note">
+
+                    <span class="editor-note-title">
+                        EDITOR'S NOTE
+                    </span>
+
+                    <p>
+                        Review your headline, image and story
+                        before publishing.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- ACTIONS -->
+
+            <div class="editor-actions">
+
+                <a href="/newsList"
+                   class="editor-cancel">
+                    CANCEL
+                </a>
+
+                <button
+                        type="submit"
+                        class="editor-publish">
+
+                    PUBLISH STORY
+                    <span>→</span>
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</main>
+
+
+<footer class="site-footer">
+
+    <div class="editorial-container footer-grid">
+
+        <div>
+
+            <div class="footer-brand">
+                NEWS PORTAL
+            </div>
+
+            <p>
+                Independent reporting and stories
+                shaping the day ahead.
+            </p>
+
+        </div>
+
+        <div class="footer-links">
+
+            <a href="/">HOME</a>
+
+            <a href="/newsList">NEWS</a>
+
+            <a href="/newsList?category=India">INDIA</a>
+
+            <a href="/newsList?category=World">WORLD</a>
+
+            <a href="/newsList?category=Technology">
+                TECHNOLOGY
+            </a>
+
+            <a href="/newsList?category=Business">
+                BUSINESS
+            </a>
+
+        </div>
+
+    </div>
+
+</footer>
+
+
+</body>
+
+</html>

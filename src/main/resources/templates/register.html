@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Join News Portal</title>
+
+    <link rel="stylesheet"
+          th:href="@{/newsportal.css}">
+
+</head>
+
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}">
+</div>
+
+
+<main class="auth-page">
+
+    <div class="auth-container">
+
+
+        <!-- LEFT SIDE -->
+
+        <section class="auth-intro">
+
+            <span class="auth-kicker">
+                THE NEWSROOM
+            </span>
+
+            <h1>
+                Stay
+                <em>informed.</em>
+            </h1>
+
+            <p>
+                Create your News Portal account and
+                keep the stories that matter close.
+            </p>
+
+            <div class="auth-intro-line"></div>
+
+            <span class="auth-edition">
+                NEWS PORTAL / MEMBER EDITION
+            </span>
+
+        </section>
+
+
+        <!-- RIGHT SIDE -->
+
+        <section class="auth-form-section">
+
+            <div class="auth-form-header">
+
+                <span class="auth-form-kicker">
+                    NEW MEMBER
+                </span>
+
+                <h2>
+                    Create account
+                </h2>
+
+                <p>
+                    Join the newsroom community.
+                </p>
+
+            </div>
+
+
+            <!-- ERROR -->
+
+            <div
+                    th:if="${error}"
+                    class="auth-error"
+                    th:text="${error}">
+
+                Registration failed.
+
+            </div>
+
+
+            <!-- SUCCESS -->
+
+            <div
+                    th:if="${message}"
+                    class="auth-success"
+                    th:text="${message}">
+
+                Account created successfully.
+
+            </div>
+
+
+            <form
+                    th:action="@{/register}"
+                    method="post"
+                    class="auth-form">
+
+
+                <!-- NAME -->
+
+                <div class="auth-field">
+
+                    <label for="name">
+                        FULL NAME
+                    </label>
+
+                    <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            placeholder="Your name"
+                            autocomplete="name"
+                            required>
+
+                </div>
+
+
+                <!-- EMAIL -->
+
+                <div class="auth-field">
+
+                    <label for="email">
+                        EMAIL ADDRESS
+                    </label>
+
+                    <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            required>
+
+                </div>
+
+
+                <!-- PASSWORD -->
+
+                <div class="auth-field">
+
+                    <label for="password">
+                        PASSWORD
+                    </label>
+
+                    <input
+                            id="password"
+                            name="password"
+                            type="password"
+                            placeholder="Create a password"
+                            autocomplete="new-password"
+                            required>
+
+                </div>
+
+
+                <!-- CONFIRM -->
+
+                <div class="auth-field">
+
+                    <label for="confirmPassword">
+                        CONFIRM PASSWORD
+                    </label>
+
+                    <input
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            type="password"
+                            placeholder="Repeat your password"
+                            autocomplete="new-password"
+                            required>
+
+                </div>
+
+
+                <button
+                        type="submit"
+                        class="auth-submit">
+
+                    CREATE ACCOUNT
+
+                    <span>
+                        →
+                    </span>
+
+                </button>
+
+
+            </form>
+
+
+            <div class="auth-footer">
+
+                <span>
+                    ALREADY A MEMBER?
+                </span>
+
+                <a href="/login">
+                    SIGN IN
+                </a>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</main>
+
+
+<footer class="site-footer">
+
+    <div class="editorial-container footer-grid">
+
+        <div>
+
+            <div class="footer-brand">
+                NEWS PORTAL
+            </div>
+
+            <p>
+                Independent reporting and stories
+                shaping the day ahead.
+            </p>
+
+        </div>
+
+        <div class="footer-links">
+
+            <a href="/">
+                HOME
+            </a>
+
+            <a href="/newsList">
+                NEWS
+            </a>
+
+            <a href="/newsList?category=India">
+                INDIA
+            </a>
+
+            <a href="/newsList?category=World">
+                WORLD
+            </a>
+
+            <a href="/newsList?category=Technology">
+                TECHNOLOGY
+            </a>
+
+        </div>
+
+    </div>
+
+</footer>
+
+</body>
+
+</html>

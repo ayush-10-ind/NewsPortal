@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html
+    xmlns:th="http://www.thymeleaf.org"
+    xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1">
+
+    <title>Dashboard - News Portal</title>
+
+
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+
+
+    <style>
+
+        body {
+            background: #f5f7fb;
+        }
+
+
+        /* =========================
+           HERO
+           ========================= */
+
+        .dashboard-hero {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #0d6efd,
+                    #6610f2
+                );
+
+            color: white;
+
+            padding: 55px 0;
+        }
+
+
+        /* =========================
+           STAT CARDS
+           ========================= */
+
+        .stat-card {
+
+            background: white;
+
+            border: none;
+
+            border-radius: 18px;
+
+            padding: 25px;
+
+            box-shadow:
+                0 8px 25px
+                rgba(0, 0, 0, .08);
+
+            transition: .25s;
+        }
+
+
+        .stat-card:hover {
+
+            transform: translateY(-5px);
+
+            box-shadow:
+                0 15px 30px
+                rgba(0, 0, 0, .12);
+        }
+
+
+        .stat-icon {
+
+            width: 55px;
+
+            height: 55px;
+
+            border-radius: 14px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 26px;
+
+            background: #e9f2ff;
+
+            margin-bottom: 15px;
+        }
+
+
+        .stat-number {
+
+            font-size: 30px;
+
+            font-weight: 700;
+        }
+
+
+        /* =========================
+           SECTIONS
+           ========================= */
+
+        .dashboard-section {
+
+            background: white;
+
+            border-radius: 18px;
+
+            padding: 30px;
+
+            box-shadow:
+                0 8px 25px
+                rgba(0, 0, 0, .07);
+        }
+
+
+        .section-title {
+
+            font-weight: 700;
+
+            margin-bottom: 5px;
+        }
+
+
+        /* =========================
+           NEWS CARD
+           ========================= */
+
+        .news-card {
+
+            border: none;
+
+            border-radius: 15px;
+
+            background: #f8f9fa;
+
+            transition: .25s;
+        }
+
+
+        .news-card:hover {
+
+            transform: translateY(-4px);
+
+            box-shadow:
+                0 8px 20px
+                rgba(0, 0, 0, .10);
+        }
+
+
+        .category {
+
+            display: inline-block;
+
+            background: #0d6efd;
+
+            color: white;
+
+            padding: 4px 11px;
+
+            border-radius: 20px;
+
+            font-size: 12px;
+        }
+
+
+        .bookmark-item {
+
+            border-bottom:
+                1px solid #eee;
+
+            padding: 15px 0;
+        }
+
+
+        .bookmark-item:last-child {
+
+            border-bottom: none;
+        }
+
+
+        footer {
+
+            margin-top: 70px;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     NAVBAR
+     ===================================================== -->
+
+<div
+    th:replace="~{fragments/navbar :: navbar}">
+</div>
+
+
+
+<!-- =====================================================
+     DASHBOARD HERO
+     ===================================================== -->
+
+<section class="dashboard-hero">
+
+    <div class="container">
+
+        <h1 class="fw-bold">
+
+            👋 Welcome back,
+            <span th:text="${user.name}">
+                User
+            </span>
+
+        </h1>
+
+
+        <p class="lead mb-0">
+
+            Here's what's happening in your News Portal.
+
+        </p>
+
+    </div>
+
+</section>
+
+
+
+<div class="container my-5">
+
+
+    <!-- =================================================
+         STATISTICS
+         ================================================= -->
+
+    <div class="row g-4">
+
+
+        <!-- TOTAL NEWS -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+
+                    📰
+
+                </div>
+
+
+                <div class="text-muted">
+
+                    Total News
+
+                </div>
+
+
+                <div
+                    class="stat-number"
+                    th:text="${totalNews}">
+
+                    0
+
+                </div>
+
+
+                <a
+                    href="/newsList"
+                    class="text-decoration-none">
+
+                    Browse News →
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- SAVED NEWS -->
+
+        <div class="col-lg-4 col-md-6">
+
+            <div class="stat-card">
+
+                <div class="stat-icon">
+
+                    🔖
+
+                </div>
+
+
+                <div class="text-muted">
+
+                    Saved News
+
+                </div>
+
+
+                <div
+                    class="stat-number"
+                    th:text="${savedNewsCount}">
+
+                    0
+
+                </div>
+
+
+                <a
+                    href="/bookmarks"
+                    class="text-decoration-none">
+
+                    View Saved News →
+
+                </a>
+
+            </div>
+
+        </div>
+
+
+
+ <div class="col-lg-4 col-md-6">
+
+    <div class="stat-card">
+
+        <div class="stat-icon">
+            📖
+        </div>
+
+        <div class="text-muted">
+            Articles Read
+        </div>
+
+        <div
+            class="stat-number"
+            th:text="${articlesReadCount}">
+
+            0
+
+        </div>
+
+        <span class="text-muted">
+            Your reading history
+        </span>
+
+    </div>
+
+</div>
+
+<!-- =================================================
+     RECENTLY READ
+     ================================================= -->
+
+<div class="dashboard-section mt-5">
+
+    <div
+        class="d-flex
+               justify-content-between
+               align-items-center
+               mb-4">
+
+        <div>
+
+            <h3 class="section-title">
+
+                📖 Recently Read
+
+            </h3>
+
+            <p class="text-muted mb-0">
+
+                Articles you've recently opened.
+
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <!-- NO HISTORY -->
+
+    <div
+        th:if="${#lists.isEmpty(recentReadingHistory)}"
+        class="text-center py-4">
+
+        <div style="font-size: 45px;">
+            📖
+        </div>
+
+        <p class="text-muted">
+
+            You haven't read any articles yet.
+
+        </p>
+
+        <a
+            href="/newsList"
+            class="btn btn-primary">
+
+            Explore News
+
+        </a>
+
+    </div>
+
+
+    <!-- READING HISTORY -->
+
+    <div
+        th:unless="${#lists.isEmpty(recentReadingHistory)}">
+
+        <div
+            class="bookmark-item"
+            th:each="history : ${recentReadingHistory}">
+
+            <div
+                class="d-flex
+                       justify-content-between
+                       align-items-center
+                       gap-3">
+
+                <div>
+
+                    <span
+                        class="category"
+                        th:text="${history.news.category != null
+                            ? history.news.category
+                            : 'General'}">
+
+                        Technology
+
+                    </span>
+
+
+                    <h5 class="mt-2 mb-1">
+
+                        <a
+                            th:href="@{/viewNews/{id}(id=${history.news.id})}"
+                            class="text-decoration-none text-dark"
+                            th:text="${history.news.title}">
+
+                            News Title
+
+                        </a>
+
+                    </h5>
+
+
+                    <small class="text-muted">
+
+                        Last read:
+
+                        <span
+                            th:text="${history.lastReadAt}">
+
+                            Date
+
+                        </span>
+
+                    </small>
+
+                </div>
+
+
+                <a
+                    th:href="@{/viewNews/{id}(id=${history.news.id})}"
+                    class="btn btn-sm btn-primary">
+
+                    Read Again
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- =================================================
+         RECENTLY SAVED
+         ================================================= -->
+
+    <div class="dashboard-section mt-5">
+
+
+        <div
+            class="d-flex
+                   justify-content-between
+                   align-items-center
+                   mb-3">
+
+
+            <div>
+
+                <h3 class="section-title">
+
+                    🔖 Recently Saved
+
+                </h3>
+
+
+                <p class="text-muted mb-0">
+
+                    Your latest bookmarked articles.
+
+                </p>
+
+            </div>
+
+
+            <a
+                href="/bookmarks"
+                class="btn btn-outline-primary">
+
+                View All
+
+            </a>
+
+        </div>
+
+
+
+        <!-- NO BOOKMARKS -->
+
+        <div
+            th:if="${#lists.isEmpty(recentBookmarks)}"
+            class="text-center py-4">
+
+
+            <div style="font-size: 45px;">
+
+                🔖
+
+            </div>
+
+
+            <p class="text-muted">
+
+                You haven't saved any news yet.
+
+            </p>
+
+
+            <a
+                href="/newsList"
+                class="btn btn-primary">
+
+                Explore News
+
+            </a>
+
+        </div>
+
+
+
+        <!-- BOOKMARKS -->
+
+        <div
+            th:unless="${#lists.isEmpty(recentBookmarks)}">
+
+
+            <div
+                class="bookmark-item"
+                th:each="bookmark : ${recentBookmarks}">
+
+
+                <div
+                    class="d-flex
+                           justify-content-between
+                           align-items-center
+                           gap-3">
+
+
+                    <div>
+
+
+                        <span
+                            class="category"
+                            th:text="${bookmark.news.category != null
+                                ? bookmark.news.category
+                                : 'General'}">
+
+                            Technology
+
+                        </span>
+
+
+                        <h5 class="mt-2 mb-1">
+
+                            <a
+                                th:href="@{/viewNews/{id}(id=${bookmark.news.id})}"
+                                class="text-decoration-none text-dark"
+                                th:text="${bookmark.news.title}">
+
+                                News Title
+
+                            </a>
+
+                        </h5>
+
+
+                        <small class="text-muted">
+
+                            Saved on
+
+                            <span
+                                th:text="${bookmark.createdAt}">
+
+                                Date
+
+                            </span>
+
+                        </small>
+
+                    </div>
+
+
+                    <a
+                        th:href="@{/viewNews/{id}(id=${bookmark.news.id})}"
+                        class="btn btn-sm btn-primary">
+
+                        Read
+
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+<!-- =================================================
+     PERSONALIZED NEWS
+     ================================================= -->
+
+<div class="dashboard-section mt-5">
+
+    <div
+        class="d-flex
+               justify-content-between
+               align-items-center
+               mb-4">
+
+        <div>
+
+            <h3 class="section-title">
+
+                🎯 Recommended For You
+
+            </h3>
+
+            <p class="text-muted mb-0">
+
+                News selected based on your reading activity.
+
+            </p>
+
+        </div>
+
+
+        <a
+            href="/newsList"
+            class="btn btn-outline-primary">
+
+            Explore All
+
+        </a>
+
+    </div>
+
+
+    <!-- NO RECOMMENDATIONS -->
+
+    <div
+        th:if="${#lists.isEmpty(recommendedNews)}"
+        class="text-center py-4">
+
+        <div style="font-size:45px;">
+
+            🎯
+
+        </div>
+
+        <p class="text-muted mb-0">
+
+            Read a few articles to get personalized recommendations.
+
+        </p>
+
+    </div>
+
+
+    <!-- RECOMMENDED NEWS -->
+
+    <div
+        class="row g-4"
+        th:unless="${#lists.isEmpty(recommendedNews)}">
+
+
+        <div
+            class="col-lg-4 col-md-6"
+            th:each="news : ${recommendedNews}">
+
+
+            <div class="card news-card h-100">
+
+
+                <div class="card-body">
+
+
+                    <!-- CATEGORY -->
+
+                    <span
+                        class="category"
+                        th:text="${news.category != null
+                            ? news.category
+                            : 'General'}">
+
+                        Technology
+
+                    </span>
+
+
+                    <!-- TITLE -->
+
+                    <h5
+                        class="fw-bold mt-3"
+                        th:text="${news.title}">
+
+                        News Title
+
+                    </h5>
+
+
+                    <!-- DATE + VIEWS -->
+
+                    <p class="text-muted small">
+
+                        📅
+
+                        <span
+                            th:text="${news.publishedDate}">
+
+                            Date
+
+                        </span>
+
+                        &nbsp; • &nbsp;
+
+                        👁️
+
+                        <span
+                            th:text="${news.viewCount != null
+                                ? news.viewCount
+                                : 0}">
+
+                            0
+
+                        </span>
+
+                    </p>
+
+
+                    <!-- CONTENT -->
+
+                    <p
+                        class="text-muted"
+                        th:if="${news.content != null}">
+
+                        <span
+                            th:if="${#strings.length(news.content) > 120}"
+                            th:text="${#strings.substring(
+                                news.content,
+                                0,
+                                120
+                            ) + '...'}">
+
+                        </span>
+
+
+                        <span
+                            th:unless="${#strings.length(news.content) > 120}"
+                            th:text="${news.content}">
+
+                        </span>
+
+                    </p>
+
+
+                    <!-- READ -->
+
+                    <a
+                        th:href="@{/viewNews/{id}(id=${news.id})}"
+                        class="btn btn-primary btn-sm">
+
+                        Read Article
+
+                    </a>
+
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+    <!-- =================================================
+         LATEST NEWS
+         ================================================= -->
+
+    <div class="dashboard-section mt-5">
+
+
+        <div
+            class="d-flex
+                   justify-content-between
+                   align-items-center
+                   mb-4">
+
+
+            <div>
+
+                <h3 class="section-title">
+
+                    📰 Latest News
+
+                </h3>
+
+
+                <p class="text-muted mb-0">
+
+                    The newest stories on the portal.
+
+                </p>
+
+            </div>
+
+
+            <a
+                href="/newsList"
+                class="btn btn-outline-primary">
+
+                View All
+
+            </a>
+
+        </div>
+
+
+        <div class="row g-4">
+
+
+            <div
+                class="col-lg-4 col-md-6"
+                th:each="news : ${latestNews}">
+
+
+                <div
+                    class="card news-card h-100">
+
+
+                    <div class="card-body">
+
+
+                        <span
+                            class="category"
+                            th:text="${news.category != null
+                                ? news.category
+                                : 'General'}">
+
+                            Technology
+
+                        </span>
+
+
+                        <h5
+                            class="fw-bold mt-3"
+                            th:text="${news.title}">
+
+                            News Title
+
+                        </h5>
+
+
+                        <p
+                            class="text-muted small">
+
+                            📅
+
+                            <span
+                                th:text="${news.publishedDate}">
+
+                                Date
+
+                            </span>
+
+                            &nbsp; • &nbsp;
+
+                            👁️
+
+                            <span
+                                th:text="${news.viewCount != null
+                                    ? news.viewCount
+                                    : 0}">
+
+                                0
+
+                            </span>
+
+                        </p>
+
+
+                        <p
+                            class="text-muted"
+                            th:if="${news.content != null}">
+
+                            <span
+                                th:if="${#strings.length(news.content) > 120}"
+                                th:text="${#strings.substring(
+                                    news.content,
+                                    0,
+                                    120
+                                ) + '...'}">
+                            </span>
+
+
+                            <span
+                                th:unless="${#strings.length(news.content) > 120}"
+                                th:text="${news.content}">
+                            </span>
+
+                        </p>
+
+
+                        <a
+                            th:href="@{/viewNews/{id}(id=${news.id})}"
+                            class="btn btn-primary btn-sm">
+
+                            Read Article
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         POPULAR NEWS
+         ================================================= -->
+
+    <div class="dashboard-section mt-5">
+
+
+        <div
+            class="d-flex
+                   justify-content-between
+                   align-items-center
+                   mb-4">
+
+
+            <div>
+
+                <h3 class="section-title">
+
+                    🔥 Popular News
+
+                </h3>
+
+
+                <p class="text-muted mb-0">
+
+                    Articles getting the most attention.
+
+                </p>
+
+            </div>
+
+
+            <a
+                href="/newsList?sort=mostViewed"
+                class="btn btn-outline-primary">
+
+                More Popular
+
+            </a>
+
+        </div>
+
+
+        <div class="row g-3">
+
+
+            <div
+                class="col-lg-6"
+                th:each="news : ${popularNews}">
+
+
+                <div
+                    class="card news-card">
+
+
+                    <div class="card-body">
+
+
+                        <div
+                            class="d-flex
+                                   justify-content-between
+                                   align-items-start">
+
+
+                            <div>
+
+
+                                <span
+                                    class="category"
+                                    th:text="${news.category != null
+                                        ? news.category
+                                        : 'General'}">
+
+                                    Technology
+
+                                </span>
+
+
+                                <h5
+                                    class="fw-bold mt-2"
+                                    th:text="${news.title}">
+
+                                    News Title
+
+                                </h5>
+
+                            </div>
+
+
+                            <span
+                                class="badge bg-danger">
+
+                                👁️
+
+                                <span
+                                    th:text="${news.viewCount != null
+                                        ? news.viewCount
+                                        : 0}">
+
+                                    0
+
+                                </span>
+
+                            </span>
+
+                        </div>
+
+
+                        <a
+                            th:href="@{/viewNews/{id}(id=${news.id})}"
+                            class="btn btn-sm btn-primary mt-2">
+
+                            Read Article
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     FOOTER
+     ===================================================== -->
+
+<footer
+    class="bg-dark
+           text-white
+           text-center
+           p-3">
+
+    © 2026 News Portal | Developed by Ayush Trivedi
+
+</footer>
+
+
+<script
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Latest News | News Portal</title>
+
+
+    <!-- =====================================================
+         GOOGLE FONTS
+         ===================================================== -->
+
+    <link rel="preconnect"
+          href="https://fonts.googleapis.com">
+
+    <link rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossorigin>
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap"
+          rel="stylesheet">
+
+
+    <!-- =====================================================
+         CSS
+         ===================================================== -->
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+
+        body {
+            margin: 0;
+            background: #f7f4ee;
+            color: #111;
+            font-family: "DM Sans", sans-serif;
+        }
+
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+
+        /* =====================================================
+           HEADER
+           ===================================================== */
+
+        .top-header {
+            width: 100%;
+            border-bottom: 1px solid #d8d2c8;
+            background: #f7f4ee;
+        }
+
+
+        .header-inner {
+            max-width: 1500px;
+            margin: auto;
+            padding: 22px 40px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #111;
+            color: white;
+
+            font-family: "Playfair Display", serif;
+            font-size: 19px;
+        }
+
+
+        .brand-name {
+            font-family: "Playfair Display", serif;
+            font-size: 30px;
+            font-weight: 600;
+        }
+
+
+        .nav {
+            display: flex;
+            align-items: center;
+            gap: 26px;
+
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+
+        .nav a:hover {
+            color: #b93820;
+        }
+
+
+        /* =====================================================
+           PAGE
+           ===================================================== */
+
+        .page {
+            max-width: 1500px;
+            margin: auto;
+            padding: 55px 40px 80px;
+        }
+
+
+        /* =====================================================
+           HERO
+           ===================================================== */
+
+        .hero {
+            border-top: 1px solid #111;
+            border-bottom: 1px solid #d8d2c8;
+
+            padding: 40px 0;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: 40px;
+        }
+
+
+        .eyebrow {
+            color: #b93820;
+
+            font-size: 11px;
+            font-weight: 700;
+
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+
+        .hero h1 {
+            margin: 12px 0 0;
+
+            font-family: "Playfair Display", serif;
+            font-size: clamp(58px, 7vw, 100px);
+            font-weight: 400;
+            line-height: 0.9;
+        }
+
+
+        .hero-description {
+            max-width: 350px;
+
+            color: #777;
+
+            font-family: "Playfair Display", serif;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+
+        /* =====================================================
+           FILTER BAR
+           ===================================================== */
+
+        .filter-bar {
+            padding: 25px 0;
+
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr auto auto;
+            gap: 12px;
+
+            border-bottom: 1px solid #d8d2c8;
+        }
+
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+        }
+
+
+        .filter-label {
+            font-size: 9px;
+            font-weight: 700;
+
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+        }
+
+
+        input,
+        select {
+            width: 100%;
+            height: 42px;
+
+            padding: 0 12px;
+
+            border: 1px solid #d3cec5;
+            background: #fffdf9;
+
+            font-family: "DM Sans", sans-serif;
+            font-size: 12px;
+        }
+
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: #111;
+        }
+
+
+        .btn {
+            height: 42px;
+            padding: 0 20px;
+
+            border: 1px solid #111;
+
+            background: #111;
+            color: white;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+
+            cursor: pointer;
+        }
+
+
+        .btn:hover {
+            background: #b93820;
+            border-color: #b93820;
+        }
+
+
+        .btn-light {
+            background: transparent;
+            color: #111;
+        }
+
+
+        /* =====================================================
+           MOST READ
+           ===================================================== */
+
+        .most-read {
+            margin-top: 35px;
+        }
+
+
+        .section-title {
+            margin-bottom: 0;
+
+            font-family: "Playfair Display", serif;
+            font-size: 28px;
+            font-weight: 400;
+
+            border-bottom: 1px solid #111;
+            padding-bottom: 10px;
+        }
+
+
+        .most-read-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+
+            border-bottom: 1px solid #111;
+        }
+
+
+        .most-read-item {
+            min-height: 105px;
+
+            padding: 17px;
+
+            border-right: 1px solid #d3cec5;
+        }
+
+
+        .most-read-item:last-child {
+            border-right: none;
+        }
+
+
+        .most-read-number {
+            color: #b93820;
+
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+
+        .most-read-category {
+            margin-top: 8px;
+
+            color: #777;
+
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+
+        .most-read-title {
+            margin-top: 6px;
+
+            font-family: "Playfair Display", serif;
+            font-size: 15px;
+            line-height: 1.25;
+        }
+
+
+        /* =====================================================
+           NEWS GRID
+           ===================================================== */
+
+        .news-grid {
+            margin-top: 55px;
+
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+
+            gap: 45px 30px;
+        }
+
+
+        /* =====================================================
+           NEWS CARD
+           ===================================================== */
+
+        .news-card {
+            min-width: 0;
+
+            border-bottom: 1px solid #d3cec5;
+            padding-bottom: 20px;
+        }
+
+
+        /* =====================================================
+           IMAGE
+           ===================================================== */
+
+        .news-card-image {
+            position: relative;
+
+            width: 100%;
+            height: 275px;
+
+            overflow: hidden;
+
+            background: #111;
+        }
+
+
+        .news-card-image img {
+            display: block;
+
+            width: 100%;
+            height: 100%;
+
+            object-fit: cover;
+        }
+
+
+        .source-badge {
+            position: absolute;
+
+            left: 14px;
+            bottom: 14px;
+
+            padding: 8px 11px;
+
+            background: #111;
+            color: white;
+
+            font-size: 9px;
+            font-weight: 700;
+
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+
+        .image-fallback {
+            width: 100%;
+            height: 100%;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #171717;
+            color: white;
+
+            font-family: "Playfair Display", serif;
+            font-size: 25px;
+            letter-spacing: 0.08em;
+        }
+
+
+        /* =====================================================
+           ARTICLE CONTENT
+           ===================================================== */
+
+        .news-card-content {
+            padding-top: 20px;
+        }
+
+
+        .category {
+            color: #b93820;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+
+        .news-card-title {
+            margin: 10px 0 12px;
+
+            font-family: "Playfair Display", serif;
+
+            font-size: 28px;
+            font-weight: 400;
+
+            line-height: 1.12;
+        }
+
+
+        .news-card-description {
+            color: #777;
+
+            font-family: "Playfair Display", serif;
+            font-size: 15px;
+
+            line-height: 1.55;
+        }
+
+
+        .news-meta {
+            margin-top: 20px;
+            padding-top: 14px;
+
+            border-top: 1px solid #d8d2c8;
+
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+
+            color: #555;
+
+            font-size: 9px;
+            font-weight: 600;
+
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+
+        .news-actions {
+            margin-top: 22px;
+
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+
+        .read-story {
+            display: inline-flex;
+            align-items: center;
+
+            padding: 12px 17px;
+
+            background: #111;
+            color: white;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+
+        .read-story:hover {
+            background: #b93820;
+        }
+
+
+        .original-link {
+            padding: 12px 17px;
+
+            border: 1px solid #d3cec5;
+
+            font-size: 10px;
+            font-weight: 700;
+
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+
+        .original-link:hover {
+            border-color: #111;
+        }
+
+
+        /* =====================================================
+           PAGINATION
+           ===================================================== */
+
+        .pagination {
+            margin-top: 60px;
+            padding-top: 25px;
+
+            border-top: 1px solid #111;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+
+        .page-btn {
+            min-width: 38px;
+            height: 38px;
+
+            padding: 0 10px;
+
+            border: 1px solid #d3cec5;
+            background: transparent;
+
+            font-size: 11px;
+            font-weight: 700;
+
+            cursor: pointer;
+        }
+
+
+        .page-btn:hover {
+            border-color: #111;
+        }
+
+
+        .page-btn.active {
+            background: #111;
+            color: white;
+            border-color: #111;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 1100px) {
+
+            .header-inner {
+                padding: 20px 25px;
+            }
+
+
+            .nav {
+                gap: 15px;
+            }
+
+
+            .page {
+                padding-left: 25px;
+                padding-right: 25px;
+            }
+
+
+            .filter-bar {
+                grid-template-columns: 1fr 1fr;
+            }
+
+
+            .news-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+
+            .most-read-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+        }
+
+
+        @media (max-width: 700px) {
+
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+
+            .nav {
+                flex-wrap: wrap;
+            }
+
+
+            .hero {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+
+            .filter-bar {
+                grid-template-columns: 1fr;
+            }
+
+
+            .most-read-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+
+
+            .news-card-image {
+                height: 230px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     HEADER
+     ===================================================== -->
+
+<header class="top-header">
+
+    <div class="header-inner">
+
+        <a href="/" class="brand">
+
+            <div class="brand-logo">
+                NP
+            </div>
+
+            <div class="brand-name">
+                NEWS PORTAL
+            </div>
+
+        </a>
+
+
+        <nav class="nav">
+
+            <a href="/">Home</a>
+
+            <a href="/newsList">News</a>
+
+            <a href="/newsList?category=India">
+                India
+            </a>
+
+            <a href="/newsList?category=World">
+                World
+            </a>
+
+            <a href="/newsList?category=Technology">
+                Technology
+            </a>
+
+            <a href="/newsList?category=Business">
+                Business
+            </a>
+
+            <a href="/newsList?category=Sports">
+                Sports
+            </a>
+
+        </nav>
+
+    </div>
+
+</header>
+
+
+
+<!-- =====================================================
+     PAGE
+     ===================================================== -->
+
+<main class="page">
+
+
+    <!-- =================================================
+         HERO
+         ================================================= -->
+
+    <section class="hero">
+
+        <div>
+
+            <div class="eyebrow">
+                News Portal
+            </div>
+
+            <h1>
+                Latest<br>
+                News.
+            </h1>
+
+        </div>
+
+
+        <div class="hero-description">
+
+            The latest stories, reporting and
+            developments from across India and
+            around the world.
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         FILTERS
+         ================================================= -->
+
+    <form
+            class="filter-bar"
+            method="get"
+            action="/newsList">
+
+
+        <div class="filter-group">
+
+            <label class="filter-label">
+                Search
+            </label>
+
+            <input
+                    type="text"
+                    name="keyword"
+                    th:value="${keyword}"
+                    placeholder="Search headlines or stories...">
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label class="filter-label">
+                Section
+            </label>
+
+            <select name="category">
+
+                <option value="">
+                    All Sections
+                </option>
+
+                <option
+                        th:each="cat : ${categories}"
+                        th:value="${cat}"
+                        th:text="${cat}"
+                        th:selected="${cat == category}">
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label class="filter-label">
+                Order
+            </label>
+
+            <select name="sortBy">
+
+                <option value="latest"
+                        th:selected="${sortBy == 'latest'}">
+                    Latest First
+                </option>
+
+                <option value="oldest"
+                        th:selected="${sortBy == 'oldest'}">
+                    Oldest First
+                </option>
+
+                <option value="views"
+                        th:selected="${sortBy == 'views'}">
+                    Most Viewed
+                </option>
+
+            </select>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label class="filter-label">
+                &nbsp;
+            </label>
+
+            <button
+                    class="btn"
+                    type="submit">
+
+                Search
+
+            </button>
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label class="filter-label">
+                &nbsp;
+            </label>
+
+            <a
+                    class="btn btn-light"
+                    href="/newsList">
+
+                Clear
+
+            </a>
+
+        </div>
+
+
+    </form>
+
+
+
+    <!-- =================================================
+         MOST READ
+         ================================================= -->
+
+    <section class="most-read">
+
+        <div class="section-title">
+            Most Read
+        </div>
+
+
+        <div class="most-read-grid">
+
+            <div
+                    class="most-read-item"
+                    th:each="item, stat : ${mostRead}">
+
+                <div class="most-read-number"
+                     th:text="${'0' + (stat.index + 1)}">
+                    01
+                </div>
+
+
+                <div
+                        class="most-read-category"
+                        th:text="${item.category}">
+                    CATEGORY
+                </div>
+
+
+                <div
+                        class="most-read-title"
+                        th:text="${item.title}">
+                    Article title
+                </div>
+
+            </div>
+
+
+            <!-- FALLBACK -->
+            <div
+                    class="most-read-item"
+                    th:if="${mostRead == null or mostRead.isEmpty()}">
+
+                <div class="most-read-number">
+                    01
+                </div>
+
+                <div class="most-read-category">
+                    News
+                </div>
+
+                <div class="most-read-title">
+                    No popular stories yet.
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+
+    <!-- =================================================
+         NEWS GRID
+         ================================================= -->
+
+    <section class="news-grid">
+
+
+        <!-- =================================================
+             NEWS CARD
+             ================================================= -->
+<article
+        class="news-card"
+        th:each="news : ${newsPage.content}">
+
+
+<!-- =====================================================
+     IMAGE
+     ===================================================== -->
+
+<div class="news-card-image">
+
+    <!-- LOCAL IMAGE -->
+    <img
+            th:if="${news.imageUrl != null
+                    and !news.imageUrl.isEmpty()
+                    and news.imageUrl.startsWith('/uploads/news/')}"
+
+            th:src="${news.imageUrl}"
+
+            th:alt="${news.title}"
+
+            loading="lazy"
+
+            onerror="
+                this.style.display='none';
+                this.parentElement
+                    .querySelector('.image-fallback')
+                    .style.display='flex';
+            ">
+
+
+    <!-- EXTERNAL IMAGE -->
+    <img
+            th:if="${news.imageUrl != null
+                    and !news.imageUrl.isEmpty()
+                    and !news.imageUrl.startsWith('/uploads/news/')}"
+
+            th:src="@{/images/proxy(url=${news.imageUrl})}"
+
+            th:alt="${news.title}"
+
+            loading="lazy"
+
+            onerror="
+                this.style.display='none';
+                this.parentElement
+                    .querySelector('.image-fallback')
+                    .style.display='flex';
+            ">
+
+
+    <!-- FALLBACK -->
+    <div
+            class="image-fallback"
+            style="display:none;">
+
+        NEWS PORTAL
+
+    </div>
+
+
+    <!-- SOURCE -->
+    <div
+            class="source-badge"
+
+            th:if="${news.sourceName != null
+                    and !news.sourceName.isEmpty()}"
+
+            th:text="${news.sourceName}">
+
+        SOURCE
+
+    </div>
+
+</div>
+
+            <!-- =================================================
+                 ARTICLE CONTENT
+                 ================================================= -->
+
+            <div class="news-card-content">
+
+
+                <!-- CATEGORY -->
+
+                <div
+                        class="category"
+                        th:text="${news.category}">
+                    GENERAL
+                </div>
+
+
+                <!-- TITLE -->
+
+                <h2
+                        class="news-card-title"
+                        th:text="${news.title}">
+                    News article title
+                </h2>
+
+
+                <!-- DESCRIPTION -->
+
+                <div
+                        class="news-card-description"
+                        th:text="${news.content}">
+                    News article description.
+                </div>
+
+
+                <!-- META -->
+
+                <div class="news-meta">
+
+
+                    <span
+                            th:text="${news.sourceName != null
+                                    and !news.sourceName.isEmpty()
+                                    ? news.sourceName
+                                    : 'NEWS PORTAL'}">
+                        NEWS PORTAL
+                    </span>
+
+
+                    <span>/</span>
+
+
+                    <span
+                            th:text="${news.author != null
+                                    and !news.author.isEmpty()
+                                    ? news.author
+                                    : 'STAFF'}">
+                        STAFF
+                    </span>
+
+
+                    <span>/</span>
+
+
+                    <span
+                            th:text="${news.publishedDate}">
+                        DATE
+                    </span>
+
+
+                    <span>/</span>
+
+
+                    <span
+                            th:text="${news.viewCount != null
+                                    ? news.viewCount
+                                    : 0} + ' VIEWS'">
+                        0 VIEWS
+                    </span>
+
+                </div>
+
+
+
+                <!-- ACTIONS -->
+
+                <div class="news-actions">
+
+
+                    <!-- READ STORY -->
+
+                   <a th:href="@{/viewNews/{id}(id=${news.id})}">
+    READ STORY →
+</a>
+
+
+                    <!-- ORIGINAL -->
+
+                    <a
+                            class="original-link"
+
+                            th:if="${news.sourceUrl != null
+                                    and !news.sourceUrl.isEmpty()}"
+
+                            th:href="${news.sourceUrl}"
+
+                            target="_blank"
+                            rel="noopener noreferrer">
+
+                        ORIGINAL ↗
+
+                    </a>
+
+
+                </div>
+
+            </div>
+
+        </article>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         PAGINATION
+         ================================================= -->
+
+    <div
+            class="pagination"
+            th:if="${newsPage.totalPages > 1}">
+
+
+        <!-- PREVIOUS -->
+
+        <a
+                class="page-btn"
+
+                th:if="${newsPage.hasPrevious()}"
+
+                th:href="@{/newsList(
+                    page=${newsPage.number - 1},
+                    keyword=${keyword},
+                    category=${category},
+                    sortBy=${sortBy}
+                )}">
+
+            ←
+
+        </a>
+
+
+      <!-- PAGE NUMBERS -->
+
+<a
+        class="page-btn"
+
+        th:each="i : ${#numbers.sequence(
+            T(java.lang.Math).max(0, newsPage.number - 2),
+            T(java.lang.Math).min(
+                newsPage.totalPages - 1,
+                newsPage.number + 2
+            )
+        )}"
+
+        th:classappend="${i == newsPage.number ? ' active' : ''}"
+
+        th:href="@{/newsList(
+            page=${i},
+            keyword=${keyword},
+            category=${category},
+            sortBy=${sortBy}
+        )}"
+
+        th:text="${i + 1}">
+
+    1
+
+</a>
+
+
+        <!-- NEXT -->
+
+        <a
+                class="page-btn"
+
+                th:if="${newsPage.hasNext()}"
+
+                th:href="@{/newsList(
+                    page=${newsPage.number + 1},
+                    keyword=${keyword},
+                    category=${category},
+                    sortBy=${sortBy}
+                )}">
+
+            →
+
+        </a>
+
+    </div>
+
+
+</main>
+
+
+</body>
+
+</html>

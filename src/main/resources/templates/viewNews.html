@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title th:text="${news.title + ' — News Portal'}">
+        News Article — News Portal
+    </title>
+
+    <link rel="stylesheet"
+          th:href="@{/newsportal.css}">
+
+</head>
+
+<body>
+
+<!-- READING PROGRESS -->
+
+<div id="readingProgress"
+     class="reading-progress">
+</div>
+
+
+<!-- NAVBAR -->
+
+<div th:replace="~{fragments/navbar :: navbar}">
+</div>
+
+
+
+
+    <!-- =====================================================
+         ARTICLE HEADER
+         ===================================================== -->
+
+    <header class="article-header">
+
+        <div class="editorial-container article-header-inner">
+
+
+            <div class="article-kicker">
+
+                <span
+                        th:text="${news.category != null
+                            ? news.category
+                            : 'NEWS'}">
+
+                    TECHNOLOGY
+
+                </span>
+
+                <span class="article-kicker-line"></span>
+
+                <span>
+                    NEWS PORTAL
+                </span>
+
+            </div>
+
+
+            <h1
+                    class="article-page-title"
+                    th:text="${news.title}">
+
+                Article headline
+
+            </h1>
+
+
+            <p
+                    class="article-lead"
+                    th:if="${news.content != null
+                        and !news.content.isEmpty()}">
+
+                <span
+                        th:if="${#strings.length(news.content) > 260}"
+                        th:text="${#strings.substring(news.content,0,260) + '...'}">
+                </span>
+
+                <span
+                        th:if="${#strings.length(news.content) <= 260}"
+                        th:text="${news.content}">
+                </span>
+
+            </p>
+
+
+            <div class="article-meta">
+
+                <span
+                        th:if="${news.sourceName != null
+                            and !news.sourceName.isEmpty()}"
+                        th:text="${news.sourceName}">
+
+                    SOURCE
+
+                </span>
+
+                <span>/</span>
+
+                <span
+                        th:if="${news.author != null
+                            and !news.author.isEmpty()}"
+                        th:text="'BY ' + ${news.author}">
+
+                    BY AUTHOR
+
+                </span>
+
+                <span>/</span>
+
+                <span
+                        th:text="${news.publishedDate}">
+
+                    DATE
+
+                </span>
+
+                <span>/</span>
+
+                <span>
+
+                    <strong
+                            th:text="${news.viewCount != null
+                                ? news.viewCount
+                                : 0}">
+                        0
+                    </strong>
+
+                    READS
+
+                </span>
+
+            </div>
+
+
+            <!-- HERO IMAGE -->
+
+            <div class="article-hero">
+
+                <div class="article-hero-image">
+
+
+                    <img
+                            th:if="${news.imageUrl != null
+                                and !news.imageUrl.isEmpty()
+                                and (news.imageUrl.startsWith('http://')
+                                or news.imageUrl.startsWith('https://'))}"
+
+                            th:src="@{/images/proxy(url=${news.imageUrl})}"
+
+                            th:alt="${news.title}"
+
+                            onerror="this.style.display='none';">
+
+
+                    <img
+                            th:if="${news.imageUrl != null
+                                and !news.imageUrl.isEmpty()
+                                and !news.imageUrl.startsWith('http://')
+                                and !news.imageUrl.startsWith('https://')}"
+
+                            th:src="${news.imageUrl}"
+
+                            th:alt="${news.title}"
+
+                            onerror="this.style.display='none';">
+
+
+                    <div
+                            class="article-image-fallback"
+                            th:if="${news.imageUrl == null
+                                or news.imageUrl.isEmpty()}">
+
+                        NEWS PORTAL
+
+                    </div>
+
+                </div>
+
+
+                <div
+                        class="article-caption"
+                        th:if="${news.sourceName != null
+                            and !news.sourceName.isEmpty()}">
+
+                    STORY SOURCE —
+                    <span th:text="${news.sourceName}">
+                        SOURCE
+                    </span>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         ARTICLE BODY
+         ===================================================== -->
+
+    <section class="article-body-section">
+
+        <div class="editorial-container article-layout">
+
+
+            <!-- MAIN ARTICLE -->
+
+            <article class="article-main">
+
+
+                <!-- ACTION BAR -->
+
+                <div class="article-actions">
+
+                    <div class="article-actions-label">
+                        STORY ACTIONS
+                    </div>
+
+
+                    <div class="article-actions-buttons">
+
+
+                        <!-- SAVE -->
+
+                        <div sec:authorize="isAuthenticated()">
+
+                            <form
+                                    th:if="${!isBookmarked}"
+                                    th:action="@{/bookmarks/save/{id}(id=${news.id})}"
+                                    method="post">
+
+                                <button
+                                        type="submit"
+                                        class="article-action">
+
+                                    SAVE STORY
+
+                                </button>
+
+                            </form>
+
+
+                            <form
+                                    th:if="${isBookmarked}"
+                                    th:action="@{/bookmarks/remove/{id}(id=${news.id})}"
+                                    method="post">
+
+                                <button
+                                        type="submit"
+                                        class="article-action active">
+
+                                    SAVED
+
+                                </button>
+
+                            </form>
+
+                        </div>
+
+
+                        <!-- LOGIN -->
+
+                        <a
+                                sec:authorize="!isAuthenticated()"
+                                href="/login"
+                                class="article-action">
+
+                            SAVE STORY
+
+                        </a>
+
+
+                        <!-- SHARE -->
+
+                        <button
+                                type="button"
+                                class="article-action"
+                                onclick="shareArticle()">
+
+                            SHARE
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+
+                <!-- CONTENT -->
+
+                <div
+                        class="article-content"
+                        th:utext="${news.content}">
+
+                    Article content
+
+                </div>
+
+
+                <!-- SOURCE -->
+
+                <div
+                        class="article-source"
+                        th:if="${news.sourceUrl != null
+                            and !news.sourceUrl.isEmpty()}">
+
+                    <span>
+                        ORIGINAL REPORT
+                    </span>
+
+                    <a
+                            th:href="${news.sourceUrl}"
+                            target="_blank"
+                            rel="noopener noreferrer">
+
+                        Read Original Story
+                        →
+                    </a>
+
+                </div>
+
+            </article>
+
+
+            <!-- SIDEBAR -->
+
+            <aside class="article-sidebar">
+
+
+                <div class="article-side-block">
+
+                    <span class="article-side-label">
+                        SECTION
+                    </span>
+
+                    <strong
+                            th:text="${news.category != null
+                                ? news.category
+                                : 'News'}">
+
+                        Technology
+
+                    </strong>
+
+                </div>
+
+
+                <div class="article-side-block">
+
+                    <span class="article-side-label">
+                        SOURCE
+                    </span>
+
+                    <strong
+                            th:text="${news.sourceName != null
+                                and !news.sourceName.isEmpty()
+                                ? news.sourceName
+                                : 'News Portal'}">
+
+                        News Portal
+
+                    </strong>
+
+                </div>
+
+
+                <div class="article-side-block">
+
+                    <span class="article-side-label">
+                        PUBLISHED
+                    </span>
+
+                    <strong
+                            th:text="${news.publishedDate}">
+
+                        DATE
+
+                    </strong>
+
+                </div>
+
+
+                <div class="article-side-block">
+
+                    <span class="article-side-label">
+                        READERSHIP
+                    </span>
+
+                    <strong>
+
+                        <span
+                                th:text="${news.viewCount != null
+                                    ? news.viewCount
+                                    : 0}">
+                            0
+                        </span>
+
+                        READS
+
+                    </strong>
+
+                </div>
+
+
+                <!-- EDITOR -->
+
+                <div
+                        class="article-side-block"
+                        sec:authorize="hasAnyRole('EDITOR','ADMIN')">
+
+                    <span class="article-side-label">
+                        EDITORIAL
+                    </span>
+
+                    <div class="article-editor-actions">
+
+                        <a
+                                th:href="@{/editNews/{id}(id=${news.id})}">
+
+                            EDIT
+
+                        </a>
+
+                        <a
+                                th:href="@{/deleteNews/{id}(id=${news.id})}"
+                                class="delete"
+                                onclick="return confirm('Delete this article?')">
+
+                            DELETE
+
+                        </a>
+
+                    </div>
+
+                </div>
+
+            </aside>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         RELATED STORIES
+         ===================================================== -->
+
+    <section
+            class="article-related"
+            th:if="${relatedNews != null
+                and !relatedNews.isEmpty()}">
+
+        <div class="editorial-container">
+
+            <div class="article-related-heading">
+
+                <span>
+                    CONTINUE READING
+                </span>
+
+                <h2>
+                    More Stories
+                </h2>
+
+            </div>
+
+
+            <div class="article-related-grid">
+
+
+                <article
+                        class="article-related-card"
+                        th:each="related : ${relatedNews}">
+
+
+                    <a
+                            class="article-related-image"
+                            th:href="@{/viewNews/{id}(id=${related.id})}">
+
+
+                        <img
+                                th:if="${related.imageUrl != null
+                                    and !related.imageUrl.isEmpty()
+                                    and (related.imageUrl.startsWith('http://')
+                                    or related.imageUrl.startsWith('https://'))}"
+
+                                th:src="@{/images/proxy(url=${related.imageUrl})}"
+
+                                th:alt="${related.title}"
+
+                                loading="lazy">
+
+
+                        <img
+                                th:if="${related.imageUrl != null
+                                    and !related.imageUrl.isEmpty()
+                                    and !related.imageUrl.startsWith('http://')
+                                    and !related.imageUrl.startsWith('https://')}"
+
+                                th:src="${related.imageUrl}"
+
+                                th:alt="${related.title}"
+
+                                loading="lazy">
+
+
+                        <div
+                                class="article-related-fallback"
+                                th:if="${related.imageUrl == null
+                                    or related.imageUrl.isEmpty()}">
+
+                            NEWS
+
+                        </div>
+
+                    </a>
+
+
+                    <span
+                            class="article-related-category"
+                            th:text="${related.category != null
+                                ? related.category
+                                : 'NEWS'}">
+
+                        TECHNOLOGY
+
+                    </span>
+
+
+                    <h3>
+
+                        <a
+                                th:href="@{/viewNews/{id}(id=${related.id})}"
+                                th:text="${related.title}">
+
+                            Related story
+
+                        </a>
+
+                    </h3>
+
+                </article>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+<!-- FOOTER -->
+
+<footer class="site-footer">
+
+    <div class="editorial-container footer-grid">
+
+        <div>
+
+            <div class="footer-brand">
+                NEWS PORTAL
+            </div>
+
+            <p>
+                Independent reporting and stories
+                shaping the day ahead.
+            </p>
+
+        </div>
+
+
+        <div class="footer-links">
+
+            <a href="/">HOME</a>
+
+            <a href="/newsList">NEWS</a>
+
+            <a href="/newsList?category=India">INDIA</a>
+
+            <a href="/newsList?category=World">WORLD</a>
+
+            <a href="/newsList?category=Technology">TECHNOLOGY</a>
+
+            <a href="/newsList?category=Business">BUSINESS</a>
+
+            <a href="/newsList?category=Sports">SPORTS</a>
+
+        </div>
+
+    </div>
+
+
+    <div class="editorial-container footer-bottom">
+
+        <span>
+            © 2026 News Portal
+        </span>
+
+        <span>
+            Developed by Ayush Trivedi
+        </span>
+
+    </div>
+
+</footer>
+
+
+<script>
+
+    /* =====================================================
+       READING PROGRESS
+       ===================================================== */
+
+    window.addEventListener(
+        "scroll",
+        function () {
+
+            const progress =
+                document.getElementById(
+                    "readingProgress"
+                );
+
+            if (!progress) {
+                return;
+            }
+
+            const scrollTop =
+                window.scrollY;
+
+            const totalHeight =
+                document.documentElement.scrollHeight
+                - window.innerHeight;
+
+            if (totalHeight <= 0) {
+                return;
+            }
+
+            const percentage =
+                (scrollTop / totalHeight) * 100;
+
+            progress.style.width =
+                Math.min(
+                    100,
+                    Math.max(
+                        0,
+                        percentage
+                    )
+                ) + "%";
+
+        }
+    );
+
+
+    /* =====================================================
+       SHARE
+       ===================================================== */
+
+    function shareArticle() {
+
+        const title =
+            document.title;
+
+        const url =
+            window.location.href;
+
+
+        if (navigator.share) {
+
+            navigator.share({
+                title: title,
+                url: url
+            });
+
+            return;
+        }
+
+
+        if (navigator.clipboard) {
+
+            navigator.clipboard
+                .writeText(url)
+                .then(function () {
+
+                    alert(
+                        "Article link copied."
+                    );
+
+                });
+
+            return;
+        }
+
+
+        window.prompt(
+            "Copy article link:",
+            url
+        );
+
+    }
+
+</script>
+
+
+<script th:src="@{/newsportal.js}">
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>
+        News Portal — Latest News
+    </title>
+
+    <link rel="stylesheet"
+          th:href="@{/newsportal.css}">
+
+</head>
+
+
+<body>
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+
+<div th:replace="~{fragments/navbar :: navbar}">
+</div>
+
+
+<main>
+
+<!-- =====================================================
+     BREAKING NEWS TICKER
+     ===================================================== -->
+
+<section class="breaking-ticker">
+
+    <div class="breaking-live">
+
+        <div class="live-word">
+            LIVE
+        </div>
+
+        <div class="live-time"
+             id="istClock">
+            09:45
+        </div>
+
+    </div>
+
+
+    <div class="breaking-title">
+        BREAKING NEWS
+    </div>
+
+
+    <div class="breaking-window">
+
+        <div class="breaking-track"
+             id="breakingTrack">
+
+            <th:block
+                    th:if="${latestNews != null}"
+                    th:each="news : ${latestNews}">
+
+                <a
+                        class="breaking-story"
+                        th:href="@{/viewNews/{id}(id=${news.id})}">
+
+                    <span
+                            class="breaking-category"
+                            th:text="${news.category != null
+                                      ? news.category
+                                      : 'NEWS'}">
+                        NEWS
+                    </span>
+
+                    <span
+                            class="breaking-headline"
+                            th:text="${news.title}">
+                        Latest breaking news headline
+                    </span>
+
+                    <span class="breaking-arrow">
+                        →
+                    </span>
+
+                </a>
+
+                <span class="breaking-divider">
+                    /
+                </span>
+
+            </th:block>
+
+
+            <!-- DUPLICATE TRACK -->
+
+            <th:block
+                    th:if="${latestNews != null}"
+                    th:each="news : ${latestNews}">
+
+                <a
+                        class="breaking-story"
+                        th:href="@{/viewNews/{id}(id=${news.id})}">
+
+                    <span
+                            class="breaking-category"
+                            th:text="${news.category != null
+                                      ? news.category
+                                      : 'NEWS'}">
+                        NEWS
+                    </span>
+
+                    <span
+                            class="breaking-headline"
+                            th:text="${news.title}">
+                        Latest breaking news headline
+                    </span>
+
+                    <span class="breaking-arrow">
+                        →
+                    </span>
+
+                </a>
+
+                <span class="breaking-divider">
+                    /
+                </span>
+
+            </th:block>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     HERO
+     ===================================================== -->
+
+<section class="home-hero">
+
+    <div class="editorial-container">
+
+
+        <!-- HERO TOPLINE -->
+
+        <div class="home-hero-topline">
+
+            <span>
+                NEWS PORTAL
+            </span>
+
+            <span>
+                DAILY EDITION
+            </span>
+
+            <span>
+                <span id="currentDate"></span>
+            </span>
+
+        </div>
+
+
+        <!-- HERO GRID -->
+
+        <div class="home-hero-grid">
+
+
+            <!-- =================================================
+                 HERO COPY
+                 ================================================= -->
+
+            <div class="home-hero-copy">
+
+                <span class="home-kicker">
+
+                    THE STORIES
+
+                    <span class="home-kicker-line"></span>
+
+                    SHAPING TODAY
+
+                </span>
+
+
+                <h1 class="home-hero-title">
+
+                    News that
+
+                    <em>matters.</em>
+
+                </h1>
+
+
+                <p class="home-hero-description">
+
+                    Independent stories, breaking developments
+                    and the ideas shaping India and the world.
+
+                </p>
+
+
+                <div class="home-hero-actions">
+
+
+                    <!-- FEATURED STORY -->
+
+                    <a
+                            th:if="${featuredNews != null}"
+                            th:href="@{/viewNews/{id}(id=${featuredNews.id})}"
+                            class="home-primary-button">
+
+                        Read Featured Story
+
+                        <span>
+                            →
+                        </span>
+
+                    </a>
+
+
+                    <!-- EXPLORE -->
+
+                    <a
+                            href="/newsList"
+                            class="home-secondary-button">
+
+                        Explore News
+
+                    </a>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 FEATURED STORY
+                 ================================================= -->
+
+            <article
+                    class="home-featured"
+                    th:if="${featuredNews != null}">
+
+
+                <!-- FEATURED IMAGE -->
+
+                <a
+                        class="home-featured-image"
+                        th:href="@{/viewNews/{id}(id=${featuredNews.id})}">
+
+
+                    <!-- LOCAL IMAGE -->
+
+                    <img
+                            th:if="${featuredNews.imageUrl != null
+                                    and !featuredNews.imageUrl.isEmpty()
+                                    and !featuredNews.imageUrl.startsWith('http://')
+                                    and !featuredNews.imageUrl.startsWith('https://')}"
+
+                            th:src="${featuredNews.imageUrl}"
+
+                            th:alt="${featuredNews.title}"
+
+                            loading="eager"
+
+                            onerror="
+                                this.style.display='none';
+                                this.classList.add('image-error');
+                                this.parentElement.classList.add('image-error');
+                            ">
+
+
+                    <!-- EXTERNAL IMAGE -->
+
+                    <img
+                            th:if="${featuredNews.imageUrl != null
+                                    and !featuredNews.imageUrl.isEmpty()
+                                    and (featuredNews.imageUrl.startsWith('http://')
+                                    or featuredNews.imageUrl.startsWith('https://'))}"
+
+                            th:src="@{/images/proxy(url=${featuredNews.imageUrl})}"
+
+                            th:alt="${featuredNews.title}"
+
+                            loading="eager"
+
+                            onerror="
+                                this.style.display='none';
+                                this.classList.add('image-error');
+                                this.parentElement.classList.add('image-error');
+                            ">
+
+
+                    <!-- FALLBACK -->
+
+                    <div class="home-featured-fallback">
+
+                        NEWS PORTAL
+
+                    </div>
+
+
+                    <!-- FEATURED BADGE -->
+
+                    <span class="home-featured-tag">
+
+                        FEATURED
+
+                    </span>
+
+                </a>
+
+
+                <!-- FEATURED CONTENT -->
+
+                <div class="home-featured-content">
+
+                    <span
+                            class="home-article-category"
+                            th:text="${featuredNews.category != null
+                                      ? featuredNews.category
+                                      : 'NEWS'}">
+
+                        NEWS
+
+                    </span>
+
+
+                    <h2>
+
+                        <a
+                                th:href="@{/viewNews/{id}(id=${featuredNews.id})}"
+                                th:text="${featuredNews.title}">
+
+                            Featured headline
+
+                        </a>
+
+                    </h2>
+
+
+                    <p
+                            th:if="${featuredNews.content != null}">
+
+                        <span
+                                th:if="${#strings.length(featuredNews.content) > 180}"
+                                th:text="${#strings.substring(featuredNews.content, 0, 180) + '...'}">
+                        </span>
+
+                        <span
+                                th:if="${#strings.length(featuredNews.content) <= 180}"
+                                th:text="${featuredNews.content}">
+                        </span>
+
+                    </p>
+
+
+                    <div class="home-featured-meta">
+
+                        <span
+                                th:if="${featuredNews.sourceName != null
+                                        and !featuredNews.sourceName.isEmpty()}"
+                                th:text="${featuredNews.sourceName}">
+
+                            SOURCE
+
+                        </span>
+
+                        <span>
+                            /
+                        </span>
+
+                        <span
+                                th:text="${featuredNews.publishedDate}">
+
+                            DATE
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     LATEST STORIES
+     ===================================================== -->
+
+<section class="home-latest">
+
+    <div class="editorial-container">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    THE NEWSROOM
+                </span>
+
+                <h2>
+                    Latest Stories
+                </h2>
+
+            </div>
+
+
+            <a
+                    href="/newsList"
+                    class="section-link">
+
+                View All Stories
+                →
+
+            </a>
+
+        </div>
+
+
+        <div class="home-news-grid">
+
+
+            <article
+                    class="home-news-card"
+                    th:each="news, stat : ${latestNews}"
+                    th:if="${stat.index > 0}">
+
+
+                <!-- IMAGE -->
+
+                <a
+                        class="home-news-image"
+                        th:href="@{/viewNews/{id}(id=${news.id})}">
+
+
+                    <!-- LOCAL IMAGE -->
+
+                    <img
+                            th:if="${news.imageUrl != null
+                                    and !news.imageUrl.isEmpty()
+                                    and !news.imageUrl.startsWith('http://')
+                                    and !news.imageUrl.startsWith('https://')}"
+
+                            th:src="${news.imageUrl}"
+
+                            th:alt="${news.title}"
+
+                            loading="lazy"
+
+                            onerror="
+                                this.style.display='none';
+                                this.classList.add('image-error');
+                                this.parentElement.classList.add('image-error');
+                            ">
+
+
+                    <!-- EXTERNAL IMAGE -->
+
+                    <img
+                            th:if="${news.imageUrl != null
+                                    and !news.imageUrl.isEmpty()
+                                    and (news.imageUrl.startsWith('http://')
+                                    or news.imageUrl.startsWith('https://'))}"
+
+                            th:src="@{/images/proxy(url=${news.imageUrl})}"
+
+                            th:alt="${news.title}"
+
+                            loading="lazy"
+
+                            onerror="
+                                this.style.display='none';
+                                this.classList.add('image-error');
+                                this.parentElement.classList.add('image-error');
+                            ">
+
+
+                    <!-- FALLBACK -->
+
+                    <div class="home-image-fallback">
+
+                        NEWS
+
+                    </div>
+
+                </a>
+
+
+                <!-- CONTENT -->
+
+                <div class="home-news-content">
+
+                    <span
+                            class="home-article-category"
+                            th:text="${news.category != null
+                                      ? news.category
+                                      : 'NEWS'}">
+
+                        NEWS
+
+                    </span>
+
+
+                    <h3>
+
+                        <a
+                                th:href="@{/viewNews/{id}(id=${news.id})}"
+                                th:text="${news.title}">
+
+                            News headline
+
+                        </a>
+
+                    </h3>
+
+
+                    <p
+                            th:if="${news.content != null}">
+
+                        <span
+                                th:if="${#strings.length(news.content) > 110}"
+                                th:text="${#strings.substring(news.content, 0, 110) + '...'}">
+                        </span>
+
+                        <span
+                                th:if="${#strings.length(news.content) <= 110}"
+                                th:text="${news.content}">
+                        </span>
+
+                    </p>
+
+
+                    <div class="home-news-meta">
+
+                        <span
+                                th:if="${news.sourceName != null
+                                        and !news.sourceName.isEmpty()}"
+                                th:text="${news.sourceName}">
+
+                            SOURCE
+
+                        </span>
+
+                        <span>
+                            /
+                        </span>
+
+                        <span
+                                th:text="${news.publishedDate}">
+
+                            DATE
+
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     MOST READ
+     ===================================================== -->
+
+<section
+        class="home-most-read"
+        th:if="${trendingNews != null
+                and !trendingNews.isEmpty()}">
+
+    <div class="editorial-container">
+
+
+        <div class="section-heading">
+
+            <div>
+
+                <span class="section-kicker">
+                    READER INTEREST
+                </span>
+
+                <h2>
+                    Most Read
+                </h2>
+
+            </div>
+
+        </div>
+
+
+        <div class="most-read-list">
+
+
+            <article
+                    class="most-read-item"
+                    th:each="news, stat : ${trendingNews}">
+
+
+                <span
+                        class="most-read-number"
+                        th:text="${stat.count < 10
+                                  ? '0' + stat.count
+                                  : stat.count}">
+
+                    01
+
+                </span>
+
+
+                <div class="most-read-main">
+
+                    <span
+                            class="home-article-category"
+                            th:text="${news.category != null
+                                      ? news.category
+                                      : 'NEWS'}">
+
+                        NEWS
+
+                    </span>
+
+
+                    <h3>
+
+                        <a
+                                th:href="@{/viewNews/{id}(id=${news.id})}"
+                                th:text="${news.title}">
+
+                            Most read headline
+
+                        </a>
+
+                    </h3>
+
+                </div>
+
+
+                <div class="most-read-views">
+
+                    <span
+                            th:text="${news.viewCount != null
+                                      ? news.viewCount
+                                      : 0}">
+
+                        0
+
+                    </span>
+
+                    READS
+
+                </div>
+
+            </article>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     CATEGORIES
+     ===================================================== -->
+
+<section class="home-categories">
+
+    <div class="editorial-container">
+
+        <span class="section-kicker">
+            EXPLORE
+        </span>
+
+
+        <h2>
+            Browse the newsroom
+        </h2>
+
+
+        <div class="category-list">
+
+
+            <a
+                    href="/newsList"
+                    class="category-link">
+
+                All News
+
+                <span>
+                    →
+                </span>
+
+            </a>
+
+
+            <a
+                    th:each="category : ${categories}"
+                    th:href="@{/newsList(category=${category})}"
+                    class="category-link">
+
+                <span
+                        th:text="${category}">
+
+                    Technology
+
+                </span>
+
+                <span>
+                    →
+                </span>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     DAILY BRIEFING
+     ===================================================== -->
+
+<section class="home-briefing">
+
+    <div class="editorial-container">
+
+        <div class="briefing-inner">
+
+            <div>
+
+                <span class="section-kicker">
+                    THE DAILY BRIEFING
+                </span>
+
+                <h2>
+                    Stay informed.
+                </h2>
+
+                <p>
+                    A concise look at the stories
+                    worth knowing today.
+                </p>
+
+            </div>
+
+
+            <a
+                    href="/newsList"
+                    class="home-primary-button">
+
+                Read Today's News
+
+                <span>
+                    →
+                </span>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<!-- =========================================================
+     FOOTER
+     ========================================================= -->
+
+<footer class="site-footer">
+
+    <div class="editorial-container footer-grid">
+
+
+        <div>
+
+            <div class="footer-brand">
+                NEWS PORTAL
+            </div>
+
+            <p>
+                Independent reporting and stories
+                shaping the day ahead.
+            </p>
+
+        </div>
+
+
+        <div class="footer-links">
+
+            <a href="/">
+                HOME
+            </a>
+
+            <a href="/newsList">
+                NEWS
+            </a>
+
+            <a href="/newsList?category=India">
+                INDIA
+            </a>
+
+            <a href="/newsList?category=World">
+                WORLD
+            </a>
+
+            <a href="/newsList?category=Technology">
+                TECHNOLOGY
+            </a>
+
+            <a href="/newsList?category=Business">
+                BUSINESS
+            </a>
+
+            <a href="/newsList?category=Sports">
+                SPORTS
+            </a>
+
+            <a href="/weather">
+                WEATHER
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <div class="editorial-container footer-bottom">
+
+        <span>
+            © 2026 News Portal
+        </span>
+
+        <span>
+            Developed by Ayush Trivedi
+        </span>
+
+    </div>
+
+</footer>
+
+
+<script th:src="@{/newsportal.js}"></script>
+
+</body>
+
+</html>

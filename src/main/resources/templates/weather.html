@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Weather Center | News Portal</title>
+
+    <link rel="stylesheet"
+          th:href="@{/css/weather.css}">
+
+</head>
+
+
+<body>
+
+<div class="weather-page">
+
+    <!-- ================================================= -->
+    <!-- HEADER -->
+    <!-- ================================================= -->
+
+    <header class="weather-header">
+
+        <a href="/" class="brand">
+            NP
+        </a>
+
+        <div class="header-title">
+
+            <p class="eyebrow">
+                NEWS PORTAL
+            </p>
+
+            <h1>
+                Weather Center
+            </h1>
+
+        </div>
+
+        <a href="/" class="back-link">
+            ← Back to News
+        </a>
+
+    </header>
+
+
+    <!-- ================================================= -->
+    <!-- LOCATION REQUEST -->
+    <!-- ================================================= -->
+
+    <section
+            id="location-section"
+            class="location-section">
+
+        <p class="eyebrow">
+            LOCAL WEATHER
+        </p>
+
+        <h2>
+            Weather around<br>
+            you.
+        </h2>
+
+        <p class="location-description">
+            Allow location access to get
+            real-time weather information
+            for your area.
+        </p>
+
+        <button
+                id="location-button"
+                class="primary-button">
+
+            USE MY LOCATION
+
+        </button>
+
+        <p
+                id="location-error"
+                class="error-message">
+        </p>
+
+
+        <div class="manual-location">
+
+            <span>
+                Or search for a city
+            </span>
+
+            <div class="city-search">
+
+                <input
+                        id="city-input"
+                        type="text"
+                        placeholder="Enter city name">
+
+                <button
+                        id="city-button"
+                        type="button">
+
+                    Search
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- LOADING -->
+    <!-- ================================================= -->
+
+    <section
+            id="loading-section"
+            class="loading-section hidden">
+
+        <div class="loader"></div>
+
+        <p>
+            Reading the sky...
+        </p>
+
+    </section>
+
+
+    <!-- ================================================= -->
+    <!-- WEATHER CONTENT -->
+    <!-- ================================================= -->
+
+    <main
+            id="weather-content"
+            class="weather-content hidden">
+
+
+        <!-- ================================================= -->
+        <!-- LOCATION -->
+        <!-- ================================================= -->
+
+        <section class="location-heading">
+
+            <div>
+
+                <p class="eyebrow">
+                    CURRENT LOCATION
+                </p>
+
+                <h2 id="location-name">
+                    —
+                </h2>
+
+                <p id="location-country">
+                    —
+                </p>
+
+            </div>
+
+            <button
+                    id="refresh-weather"
+                    class="refresh-button">
+
+                ↻ Refresh
+
+            </button>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- ANIMATED WEATHER HERO -->
+        <!-- ================================================= -->
+
+        <section
+                id="weather-scene"
+                class="weather-scene">
+
+
+            <!-- SUN -->
+
+            <div class="sun"></div>
+
+
+            <!-- MOON -->
+
+            <div class="moon"></div>
+
+
+            <!-- STARS -->
+
+            <div class="stars">
+
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+
+            <!-- CLOUDS -->
+
+            <div class="cloud cloud-one">
+
+                <i></i>
+                <i></i>
+                <i></i>
+
+            </div>
+
+
+            <div class="cloud cloud-two">
+
+                <i></i>
+                <i></i>
+                <i></i>
+
+            </div>
+
+
+            <!-- RAIN -->
+
+            <div class="rain">
+
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+
+            </div>
+
+
+            <!-- SNOW -->
+
+            <div class="snow">
+
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+                <span>•</span>
+
+            </div>
+
+
+            <!-- LIGHTNING -->
+
+            <div class="lightning"></div>
+
+
+            <!-- WEATHER INFO -->
+
+            <div class="scene-content">
+
+                <div class="scene-weather">
+
+                    <p class="eyebrow">
+                        RIGHT NOW
+                    </p>
+
+                    <div class="temperature">
+
+                        <span id="temperature">
+                            —
+                        </span>
+
+                        <span>
+                            °C
+                        </span>
+
+                    </div>
+
+                    <h3 id="condition">
+                        —
+                    </h3>
+
+                    <p id="description">
+                        —
+                    </p>
+
+                </div>
+
+
+                <img
+                        id="weather-icon"
+                        class="weather-icon"
+                        src=""
+                        alt="Weather condition">
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- WEATHER DETAILS -->
+        <!-- ================================================= -->
+
+        <section class="weather-details">
+
+            <div class="detail">
+
+                <span>
+                    Feels like
+                </span>
+
+                <strong id="feels-like">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Humidity
+                </span>
+
+                <strong id="humidity">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Wind
+                </span>
+
+                <strong id="wind">
+                    —
+                </strong>
+
+            </div>
+
+
+            <div class="detail">
+
+                <span>
+                    Pressure
+                </span>
+
+                <strong id="pressure">
+                    —
+                </strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- FORECAST -->
+        <!-- ================================================= -->
+
+        <section class="forecast-section">
+
+            <div class="section-heading">
+
+                <p class="eyebrow">
+                    LOOK AHEAD
+                </p>
+
+                <h2>
+                    Forecast
+                </h2>
+
+            </div>
+
+
+            <div
+                    id="forecast-list"
+                    class="forecast-list">
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- WEATHER REPORT -->
+        <!-- ================================================= -->
+
+        <section class="summary-section">
+
+            <p class="eyebrow">
+                WEATHER REPORT
+            </p>
+
+            <h2>
+                Today's conditions.
+            </h2>
+
+            <p id="weather-summary">
+                —
+            </p>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script
+        th:src="@{/js/weather.js}">
+</script>
+
+</body>
+
+</html>
