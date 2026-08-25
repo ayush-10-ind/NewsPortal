@@ -37,7 +37,4 @@ application.properties
 application.yml
 .env
 .env.*
-
-# Application secrets
-src/main/resources/application.properties
-src/main/resources/application-*.properties
+application-*.properties
