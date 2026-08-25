@@ -19,7 +19,6 @@ public class NotificationController {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-
     public NotificationController(
             NotificationRepository notificationRepository,
             UserRepository userRepository) {
@@ -41,23 +40,15 @@ public class NotificationController {
             Authentication authentication,
             Model model) {
 
-        User user =
-                getCurrentUser(authentication);
-
+        User user = getCurrentUser(authentication);
 
         List<Notification> notifications =
                 notificationRepository
-                        .findByUserOrderByCreatedAtDesc(
-                                user
-                        );
-
+                        .findByUserOrderByCreatedAtDesc(user);
 
         long unreadCount =
                 notificationRepository
-                        .countByUserAndReadFalse(
-                                user
-                        );
-
+                        .countByUserAndReadFalse(user);
 
         model.addAttribute(
                 "notifications",
@@ -69,7 +60,6 @@ public class NotificationController {
                 unreadCount
         );
 
-
         return "notifications";
     }
 
@@ -78,42 +68,27 @@ public class NotificationController {
     // MARK AS READ
     // =====================================================
 
-    @GetMapping("/notifications/read/{id}")
+    @PostMapping("/notifications/read/{id}")
     public String markAsRead(
             @PathVariable Long id,
             Authentication authentication) {
 
-        User user =
-                getCurrentUser(authentication);
-
+        User user = getCurrentUser(authentication);
 
         Notification notification =
                 notificationRepository
                         .findById(id)
                         .orElse(null);
 
-
         if (notification != null
-                && notification.getUser()
-                        .getId()
+                && notification.getUser() != null
+                && notification.getUser().getId()
                         .equals(user.getId())) {
 
             notification.setRead(true);
 
-            notificationRepository.save(
-                    notification
-            );
-
-
-            if (notification.getLink() != null
-                    && !notification.getLink()
-                            .isBlank()) {
-
-                return "redirect:"
-                        + notification.getLink();
-            }
+            notificationRepository.save(notification);
         }
-
 
         return "redirect:/notifications";
     }
@@ -127,32 +102,20 @@ public class NotificationController {
     public String markAllAsRead(
             Authentication authentication) {
 
-        User user =
-                getCurrentUser(authentication);
-
+        User user = getCurrentUser(authentication);
 
         List<Notification> notifications =
                 notificationRepository
-                        .findByUserOrderByCreatedAtDesc(
-                                user
-                        );
+                        .findByUserOrderByCreatedAtDesc(user);
 
-
-        for (Notification notification
-                : notifications) {
+        for (Notification notification : notifications) {
 
             if (!notification.isRead()) {
-
                 notification.setRead(true);
-
             }
         }
 
-
-        notificationRepository.saveAll(
-                notifications
-        );
-
+        notificationRepository.saveAll(notifications);
 
         return "redirect:/notifications";
     }
@@ -167,26 +130,20 @@ public class NotificationController {
             @PathVariable Long id,
             Authentication authentication) {
 
-        User user =
-                getCurrentUser(authentication);
-
+        User user = getCurrentUser(authentication);
 
         Notification notification =
                 notificationRepository
                         .findById(id)
                         .orElse(null);
 
-
         if (notification != null
-                && notification.getUser()
-                        .getId()
+                && notification.getUser() != null
+                && notification.getUser().getId()
                         .equals(user.getId())) {
 
-            notificationRepository.delete(
-                    notification
-            );
+            notificationRepository.delete(notification);
         }
-
 
         return "redirect:/notifications";
     }
@@ -200,9 +157,7 @@ public class NotificationController {
             Authentication authentication) {
 
         return userRepository
-                .findByEmail(
-                        authentication.getName()
-                )
+                .findByEmail(authentication.getName())
                 .orElseThrow(() ->
                         new RuntimeException(
                                 "Current user not found"

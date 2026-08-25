@@ -18,7 +18,6 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-
     public NotificationService(
             NotificationRepository notificationRepository,
             UserRepository userRepository) {
@@ -32,7 +31,7 @@ public class NotificationService {
 
 
     // =====================================================
-    // NOTIFY USERS ABOUT NEW ARTICLE
+    // MANUAL / NORMAL ARTICLE NOTIFICATION
     // =====================================================
 
     @Transactional
@@ -40,15 +39,10 @@ public class NotificationService {
             News news,
             String authorEmail) {
 
-
         if (news == null) {
             return;
         }
 
-
-        // =================================================
-        // FIND ALL ENABLED USERS
-        // =================================================
 
         List<User> users =
                 userRepository.findAll()
@@ -57,17 +51,21 @@ public class NotificationService {
                         .toList();
 
 
-        // =================================================
-        // CREATE NOTIFICATION
-        // =================================================
+        String category =
+                news.getCategory();
+
+
+        if (category == null
+                || category.trim().isEmpty()) {
+
+            category = "General";
+        }
+
 
         for (User user : users) {
 
-
-            // ---------------------------------------------
-            // DON'T NOTIFY THE AUTHOR
-            // ---------------------------------------------
-
+            // Don't notify the person who created
+            // the article manually.
             if (authorEmail != null
                     && user.getEmail() != null
                     && user.getEmail()
@@ -77,23 +75,12 @@ public class NotificationService {
             }
 
 
-            String category =
-                    news.getCategory();
-
-
-            if (category == null
-                    || category.trim().isEmpty()) {
-
-                category = "General";
-            }
-
-
             Notification notification =
                     new Notification(
 
                             user,
 
-                            "📰 New Article Published",
+                            "New Article Published",
 
                             "A new "
                                     + category
@@ -103,6 +90,82 @@ public class NotificationService {
 
                             "/viewNews/"
                                     + news.getId()
+                    );
+
+
+            notificationRepository.save(
+                    notification
+            );
+        }
+    }
+
+
+    // =====================================================
+    // API IMPORT NOTIFICATION
+    // =====================================================
+
+    @Transactional
+    public void notifyUsersAboutImportedNews(
+            int importedCount) {
+
+        if (importedCount <= 0) {
+            return;
+        }
+
+
+        List<User> users =
+                userRepository.findAll()
+                        .stream()
+                        .filter(User::isEnabled)
+                        .toList();
+
+
+        // ---------------------------------------------
+        // SMART MESSAGE
+        // ---------------------------------------------
+
+        String title;
+
+        String message;
+
+
+        if (importedCount == 1) {
+
+            title =
+                    "New Story Added";
+
+            message =
+                    "1 new story has been added "
+                            + "to News Portal.";
+
+        } else {
+
+            title =
+                    "New Stories Added";
+
+            message =
+                    importedCount
+                            + " new stories have been added "
+                            + "to News Portal.";
+        }
+
+
+        // ---------------------------------------------
+        // CREATE ONE NOTIFICATION PER USER
+        // ---------------------------------------------
+
+        for (User user : users) {
+
+            Notification notification =
+                    new Notification(
+
+                            user,
+
+                            title,
+
+                            message,
+
+                            "/newsList"
                     );
 
 

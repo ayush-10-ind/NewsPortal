@@ -24,6 +24,9 @@ public class NewsImportService {
     private final ImageStorageService
             imageStorageService;
 
+    private final NotificationService
+            notificationService;
+
 
     // =====================================================
     // CONSTRUCTOR
@@ -33,7 +36,8 @@ public class NewsImportService {
             NewsApiService newsApiService,
             NewsRepository newsRepository,
             NewsArticleGenerationService articleGenerationService,
-            ImageStorageService imageStorageService) {
+            ImageStorageService imageStorageService,
+            NotificationService notificationService) {
 
         this.newsApiService =
                 newsApiService;
@@ -46,6 +50,9 @@ public class NewsImportService {
 
         this.imageStorageService =
                 imageStorageService;
+
+        this.notificationService =
+                notificationService;
     }
 
 
@@ -149,12 +156,6 @@ public class NewsImportService {
 
                 // =============================================
                 // DOWNLOAD IMAGE LOCALLY
-                //
-                // This performs the real validation.
-                //
-                // If the server returns 403, 404, HTML,
-                // invalid content, timeout, etc.,
-                // this returns null.
                 // =============================================
 
                 String localImageUrl =
@@ -206,10 +207,6 @@ public class NewsImportService {
                 // CATEGORY
                 // =============================================
 
-                /*
-                 * Category is assigned by NewsApiService.
-                 */
-
                 String category =
                         article.getCategory();
 
@@ -258,16 +255,6 @@ public class NewsImportService {
                 // =============================================
                 // LOCAL IMAGE
                 // =============================================
-
-                /*
-                 * IMPORTANT:
-                 *
-                 * We no longer save the external image URL.
-                 *
-                 * Instead we save something like:
-                 *
-                 * /uploads/news/abc123.jpg
-                 */
 
                 news.setImageUrl(
                         localImageUrl
@@ -367,6 +354,26 @@ public class NewsImportService {
                                 + e.getMessage()
                 );
             }
+        }
+
+
+        // =====================================================
+        // SMART NOTIFICATION
+        // =====================================================
+
+        if (importedCount > 0) {
+
+            System.out.println(
+                    "Creating notification for "
+                            + importedCount
+                            + " newly imported articles..."
+            );
+
+
+            notificationService
+                    .notifyUsersAboutImportedNews(
+                            importedCount
+                    );
         }
 
 
