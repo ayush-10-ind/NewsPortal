@@ -1,5 +1,7 @@
 <!DOCTYPE html>
+
 <html
+    lang="en"
     xmlns:th="http://www.thymeleaf.org"
     xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
@@ -11,188 +13,1105 @@
         name="viewport"
         content="width=device-width, initial-scale=1">
 
-    <title>Dashboard - News Portal</title>
+    <title>Dashboard | News Portal</title>
 
+
+    <!-- =====================================================
+         BOOTSTRAP
+         ===================================================== -->
 
     <link
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
         rel="stylesheet">
 
 
+    <!-- =====================================================
+         GLOBAL NEWS PORTAL CSS
+         ===================================================== -->
+
+    <link
+        rel="stylesheet"
+        th:href="@{/newsportal.css}">
+
+
     <style>
 
+        /* =====================================================
+           BASE
+           ===================================================== */
+
         body {
-            background: #f5f7fb;
+
+            margin: 0;
+
+            background: #f1f3f5;
+
+            color: #111827;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
         }
 
 
-        /* =========================
-           HERO
-           ========================= */
+        /* =====================================================
+           DASHBOARD HEADER
+           ===================================================== */
 
-        .dashboard-hero {
+        .dashboard-header {
 
-            background:
-                linear-gradient(
-                    135deg,
-                    #0d6efd,
-                    #6610f2
-                );
+            max-width: 1380px;
 
-            color: white;
+            margin: 0 auto;
 
-            padding: 55px 0;
+            padding:
+                68px 32px
+                48px;
+
+            border-bottom:
+                1px solid #aeb6c0;
         }
 
 
-        /* =========================
-           STAT CARDS
-           ========================= */
+        .dashboard-kicker {
 
-        .stat-card {
+            margin-bottom: 14px;
 
-            background: white;
+            color: #16466d;
 
-            border: none;
+            font-size: 10px;
 
-            border-radius: 18px;
+            font-weight: 700;
 
-            padding: 25px;
+            letter-spacing: 3px;
 
-            box-shadow:
-                0 8px 25px
-                rgba(0, 0, 0, .08);
-
-            transition: .25s;
+            text-transform: uppercase;
         }
 
 
-        .stat-card:hover {
-
-            transform: translateY(-5px);
-
-            box-shadow:
-                0 15px 30px
-                rgba(0, 0, 0, .12);
-        }
-
-
-        .stat-icon {
-
-            width: 55px;
-
-            height: 55px;
-
-            border-radius: 14px;
+        .dashboard-header-row {
 
             display: flex;
 
-            align-items: center;
+            justify-content: space-between;
 
-            justify-content: center;
+            align-items: flex-end;
 
-            font-size: 26px;
+            gap: 40px;
+        }
 
-            background: #e9f2ff;
 
-            margin-bottom: 15px;
+        .dashboard-header h1 {
+
+            margin: 0;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size:
+                clamp(52px, 7vw, 92px);
+
+            line-height: .9;
+
+            font-weight: 400;
+
+            letter-spacing: -4px;
+
+            color: #111827;
+        }
+
+
+        .dashboard-intro {
+
+            max-width: 430px;
+
+            margin: 0 0 6px;
+
+            color: #687383;
+
+            font-size: 15px;
+
+            line-height: 1.65;
+        }
+
+
+        /* =====================================================
+           QUICK STATS
+           ===================================================== */
+
+        .dashboard-stats {
+
+            max-width: 1380px;
+
+            margin: 0 auto;
+
+            padding:
+                28px 32px 0;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, 1fr);
+
+            gap: 1px;
+
+            background: #b8c0c8;
+        }
+
+
+        .stat-item {
+
+            min-height: 170px;
+
+            padding: 25px 28px;
+
+            background: #ffffff;
+        }
+
+
+        .stat-label {
+
+            display: block;
+
+            margin-bottom: 24px;
+
+            color: #687383;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: 2px;
+
+            text-transform: uppercase;
         }
 
 
         .stat-number {
 
-            font-size: 30px;
+            display: block;
+
+            margin-bottom: 9px;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 48px;
+
+            line-height: 1;
+
+            font-weight: 400;
+
+            color: #111827;
+        }
+
+
+        .stat-link {
+
+            color: #174f78;
+
+            font-size: 12px;
 
             font-weight: 700;
+
+            text-decoration: none;
         }
 
 
-        /* =========================
-           SECTIONS
-           ========================= */
+        .stat-link:hover {
 
-        .dashboard-section {
-
-            background: white;
-
-            border-radius: 18px;
-
-            padding: 30px;
-
-            box-shadow:
-                0 8px 25px
-                rgba(0, 0, 0, .07);
+            text-decoration: underline;
         }
 
 
-        .section-title {
+        .stat-description {
 
-            font-weight: 700;
-
-            margin-bottom: 5px;
-        }
-
-
-        /* =========================
-           NEWS CARD
-           ========================= */
-
-        .news-card {
-
-            border: none;
-
-            border-radius: 15px;
-
-            background: #f8f9fa;
-
-            transition: .25s;
-        }
-
-
-        .news-card:hover {
-
-            transform: translateY(-4px);
-
-            box-shadow:
-                0 8px 20px
-                rgba(0, 0, 0, .10);
-        }
-
-
-        .category {
-
-            display: inline-block;
-
-            background: #0d6efd;
-
-            color: white;
-
-            padding: 4px 11px;
-
-            border-radius: 20px;
+            color: #687383;
 
             font-size: 12px;
         }
 
 
-        .bookmark-item {
+        /* =====================================================
+           MAIN CONTENT
+           ===================================================== */
 
-            border-bottom:
-                1px solid #eee;
+        .dashboard-content {
 
-            padding: 15px 0;
+            max-width: 1380px;
+
+            margin: 0 auto;
+
+            padding:
+                55px 32px
+                90px;
         }
 
 
-        .bookmark-item:last-child {
+        /* =====================================================
+           SECTION
+           ===================================================== */
+
+        .dashboard-section {
+
+            margin-bottom: 65px;
+
+            padding-top: 22px;
+
+            border-top:
+                1px solid #aeb6c0;
+        }
+
+
+        .section-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: flex-end;
+
+            gap: 30px;
+
+            margin-bottom: 28px;
+        }
+
+
+        .section-kicker {
+
+            margin-bottom: 8px;
+
+            color: #16466d;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: 2.5px;
+
+            text-transform: uppercase;
+        }
+
+
+        .section-title {
+
+            margin: 0;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size:
+                clamp(38px, 5vw, 62px);
+
+            line-height: .95;
+
+            font-weight: 400;
+
+            letter-spacing: -2px;
+
+            color: #111827;
+        }
+
+
+        .section-description {
+
+            max-width: 400px;
+
+            margin: 0;
+
+            color: #687383;
+
+            font-size: 13px;
+
+            line-height: 1.6;
+
+            text-align: right;
+        }
+
+
+        .section-link {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            min-height: 38px;
+
+            padding:
+                0 15px;
+
+            border:
+                1px solid #9da8b3;
+
+            color: #173f5f;
+
+            background: transparent;
+
+            font-size: 11px;
+
+            font-weight: 700;
+
+            letter-spacing: .8px;
+
+            text-decoration: none;
+
+            text-transform: uppercase;
+
+            transition:
+                background .2s ease,
+                color .2s ease;
+        }
+
+
+        .section-link:hover {
+
+            background: #111827;
+
+            border-color: #111827;
+
+            color: #ffffff;
+        }
+
+
+        /* =====================================================
+           RECENTLY READ
+           ===================================================== */
+
+        .reading-list {
+
+            background: #ffffff;
+
+            border:
+                1px solid #d4d9df;
+        }
+
+
+        .reading-item {
+
+            display: grid;
+
+            grid-template-columns:
+                70px
+                minmax(0, 1fr)
+                auto;
+
+            gap: 25px;
+
+            align-items: center;
+
+            padding:
+                25px 28px;
+
+            border-bottom:
+                1px solid #e1e5e9;
+
+            transition:
+                background .2s ease;
+        }
+
+
+        .reading-item:last-child {
 
             border-bottom: none;
         }
 
 
-        footer {
+        .reading-item:hover {
 
-            margin-top: 70px;
+            background: #f8fafb;
+        }
+
+
+        .reading-index {
+
+            color: #9aa3ad;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 32px;
+
+            font-weight: 400;
+        }
+
+
+        .article-category {
+
+            display: inline-block;
+
+            margin-bottom: 9px;
+
+            color: #174f78;
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            letter-spacing: 1.5px;
+
+            text-transform: uppercase;
+        }
+
+
+        .reading-title {
+
+            display: block;
+
+            margin-bottom: 7px;
+
+            color: #111827;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 20px;
+
+            line-height: 1.2;
+
+            text-decoration: none;
+        }
+
+
+        .reading-title:hover {
+
+            color: #174f78;
+        }
+
+
+        .reading-date {
+
+            color: #7b8591;
+
+            font-size: 11px;
+        }
+
+
+        .read-button {
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            min-height: 38px;
+
+            padding:
+                0 15px;
+
+            background: #111827;
+
+            border:
+                1px solid #111827;
+
+            color: #ffffff;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            letter-spacing: .7px;
+
+            text-decoration: none;
+
+            text-transform: uppercase;
+
+            transition:
+                background .2s ease;
+        }
+
+
+        .read-button:hover {
+
+            background: #173f5f;
+
+            border-color: #173f5f;
+
+            color: #ffffff;
+        }
+
+
+        /* =====================================================
+           EMPTY STATE
+           ===================================================== */
+
+        .dashboard-empty {
+
+            padding:
+                55px 30px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #d4d9df;
+
+            text-align: center;
+        }
+
+
+        .dashboard-empty h3 {
+
+            margin-bottom: 10px;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 30px;
+
+            font-weight: 400;
+        }
+
+
+        .dashboard-empty p {
+
+            margin-bottom: 24px;
+
+            color: #687383;
+
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           SAVED STORIES
+           ===================================================== */
+
+        .saved-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, minmax(0, 1fr));
+
+            gap: 20px;
+        }
+
+
+        .saved-item {
+
+            padding:
+                26px 28px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #d4d9df;
+
+            transition:
+                transform .2s ease,
+                box-shadow .2s ease;
+        }
+
+
+        .saved-item:hover {
+
+            transform:
+                translateY(-3px);
+
+            box-shadow:
+                0 14px 30px
+                rgba(15, 23, 42, .08);
+        }
+
+
+        .saved-category {
+
+            display: inline-block;
+
+            margin-bottom: 15px;
+
+            padding:
+                5px 9px;
+
+            border:
+                1px solid #a5b3bf;
+
+            background: #f4f7f9;
+
+            color: #173f5f;
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            letter-spacing: 1.3px;
+
+            text-transform: uppercase;
+        }
+
+
+        .saved-title {
+
+            margin: 0 0 15px;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 25px;
+
+            line-height: 1.12;
+
+            font-weight: 400;
+        }
+
+
+        .saved-title a {
+
+            color: #111827;
+
+            text-decoration: none;
+        }
+
+
+        .saved-title a:hover {
+
+            color: #174f78;
+        }
+
+
+        .saved-meta {
+
+            margin-bottom: 20px;
+
+            color: #7b8591;
+
+            font-size: 11px;
+        }
+
+
+        /* =====================================================
+           LATEST NEWS
+           ===================================================== */
+
+        .latest-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
+
+            gap: 20px;
+        }
+
+
+        .news-card {
+
+            display: flex;
+
+            flex-direction: column;
+
+            min-height: 320px;
+
+            padding: 26px;
+
+            background: #ffffff;
+
+            border:
+                1px solid #d4d9df;
+
+            transition:
+                transform .22s ease,
+                box-shadow .22s ease;
+        }
+
+
+        .news-card:hover {
+
+            transform:
+                translateY(-4px);
+
+            box-shadow:
+                0 16px 34px
+                rgba(15, 23, 42, .09);
+        }
+
+
+        .news-category {
+
+            margin-bottom: 18px;
+
+            color: #174f78;
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            letter-spacing: 1.5px;
+
+            text-transform: uppercase;
+        }
+
+
+        .news-title {
+
+            margin: 0 0 14px;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 25px;
+
+            line-height: 1.12;
+
+            font-weight: 400;
+        }
+
+
+        .news-title a {
+
+            color: #111827;
+
+            text-decoration: none;
+        }
+
+
+        .news-title a:hover {
+
+            color: #174f78;
+        }
+
+
+        .news-meta {
+
+            margin-bottom: 18px;
+
+            color: #7b8591;
+
+            font-size: 11px;
+        }
+
+
+        .news-summary {
+
+            margin: 0;
+
+            color: #5f6874;
+
+            font-size: 13px;
+
+            line-height: 1.65;
+        }
+
+
+        .news-footer {
+
+            margin-top: auto;
+
+            padding-top: 25px;
+        }
+
+
+        /* =====================================================
+           POPULAR NEWS
+           ===================================================== */
+
+        .popular-list {
+
+            background: #ffffff;
+
+            border:
+                1px solid #d4d9df;
+        }
+
+
+        .popular-item {
+
+            display: grid;
+
+            grid-template-columns:
+                70px
+                minmax(0, 1fr)
+                100px;
+
+            align-items: center;
+
+            gap: 25px;
+
+            padding:
+                24px 28px;
+
+            border-bottom:
+                1px solid #e1e5e9;
+        }
+
+
+        .popular-item:last-child {
+
+            border-bottom: none;
+        }
+
+
+        .popular-rank {
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 42px;
+
+            line-height: 1;
+
+            color: #a0a8b1;
+        }
+
+
+        .popular-title {
+
+            margin: 0;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 21px;
+
+            line-height: 1.2;
+
+            font-weight: 400;
+        }
+
+
+        .popular-title a {
+
+            color: #111827;
+
+            text-decoration: none;
+        }
+
+
+        .popular-title a:hover {
+
+            color: #174f78;
+        }
+
+
+        .popular-category {
+
+            margin-top: 7px;
+
+            color: #687383;
+
+            font-size: 10px;
+
+            text-transform: uppercase;
+
+            letter-spacing: 1px;
+        }
+
+
+        .popular-views {
+
+            text-align: right;
+
+            color: #687383;
+
+            font-size: 11px;
+        }
+
+
+        .popular-views strong {
+
+            display: block;
+
+            color: #111827;
+
+            font-family:
+                Georgia,
+                "Times New Roman",
+                serif;
+
+            font-size: 22px;
+
+            font-weight: 400;
+        }
+
+
+        /* =====================================================
+           FOOTER
+           ===================================================== */
+
+        .dashboard-footer {
+
+            border-top:
+                1px solid #c8ced5;
+
+            padding:
+                28px 32px;
+
+            text-align: center;
+
+            color: #687383;
+
+            font-size: 12px;
+
+            letter-spacing: .3px;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 1000px) {
+
+            .dashboard-stats {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .latest-grid {
+
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
+            }
+
+        }
+
+
+        @media (max-width: 800px) {
+
+            .dashboard-header-row {
+
+                display: block;
+            }
+
+
+            .dashboard-intro {
+
+                margin-top: 22px;
+            }
+
+
+            .section-header {
+
+                display: block;
+            }
+
+
+            .section-description {
+
+                margin-top: 15px;
+
+                text-align: left;
+            }
+
+
+            .saved-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .popular-item {
+
+                grid-template-columns:
+                    50px
+                    minmax(0, 1fr);
+            }
+
+
+            .popular-views {
+
+                display: none;
+            }
+
+        }
+
+
+        @media (max-width: 650px) {
+
+            .dashboard-header {
+
+                padding:
+                    50px 20px
+                    35px;
+            }
+
+
+            .dashboard-content {
+
+                padding:
+                    40px 20px
+                    60px;
+            }
+
+
+            .dashboard-stats {
+
+                padding:
+                    20px 20px 0;
+            }
+
+
+            .dashboard-header h1 {
+
+                font-size: 54px;
+
+                letter-spacing: -2px;
+            }
+
+
+            .latest-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+
+            .reading-item {
+
+                grid-template-columns:
+                    40px
+                    minmax(0, 1fr);
+
+                gap: 15px;
+
+                padding:
+                    22px 18px;
+            }
+
+
+            .reading-item .read-button {
+
+                grid-column:
+                    2;
+                width: fit-content;
+            }
+
+
+            .reading-index {
+
+                font-size: 24px;
+            }
+
+
+            .section-title {
+
+                font-size: 42px;
+            }
+
         }
 
     </style>
@@ -212,18 +1131,22 @@
 </div>
 
 
-
 <!-- =====================================================
-     DASHBOARD HERO
+     DASHBOARD HEADER
      ===================================================== -->
 
-<section class="dashboard-hero">
+<header class="dashboard-header">
 
-    <div class="container">
+    <div class="dashboard-kicker">
+        News Portal / Dashboard
+    </div>
 
-        <h1 class="fw-bold">
 
-            👋 Welcome back,
+    <div class="dashboard-header-row">
+
+        <h1>
+
+            Welcome back,
             <span th:text="${user.name}">
                 User
             </span>
@@ -231,219 +1154,203 @@
         </h1>
 
 
-        <p class="lead mb-0">
+        <p class="dashboard-intro">
 
-            Here's what's happening in your News Portal.
+            Your personal overview of the stories
+            you've read, saved, and the latest news
+            worth following.
 
         </p>
 
     </div>
 
-</section>
+</header>
 
 
+<!-- =====================================================
+     QUICK STATS
+     ===================================================== -->
 
-<div class="container my-5">
-
-
-    <!-- =================================================
-         STATISTICS
-         ================================================= -->
-
-    <div class="row g-4">
+<section class="dashboard-stats">
 
 
-        <!-- TOTAL NEWS -->
+    <!-- TOTAL NEWS -->
 
-        <div class="col-lg-4 col-md-6">
+    <div class="stat-item">
 
-            <div class="stat-card">
+        <span class="stat-label">
+            Total Stories
+        </span>
 
-                <div class="stat-icon">
-
-                    📰
-
-                </div>
-
-
-                <div class="text-muted">
-
-                    Total News
-
-                </div>
-
-
-                <div
-                    class="stat-number"
-                    th:text="${totalNews}">
-
-                    0
-
-                </div>
-
-
-                <a
-                    href="/newsList"
-                    class="text-decoration-none">
-
-                    Browse News →
-
-                </a>
-
-            </div>
-
-        </div>
-
-
-
-        <!-- SAVED NEWS -->
-
-        <div class="col-lg-4 col-md-6">
-
-            <div class="stat-card">
-
-                <div class="stat-icon">
-
-                    🔖
-
-                </div>
-
-
-                <div class="text-muted">
-
-                    Saved News
-
-                </div>
-
-
-                <div
-                    class="stat-number"
-                    th:text="${savedNewsCount}">
-
-                    0
-
-                </div>
-
-
-                <a
-                    href="/bookmarks"
-                    class="text-decoration-none">
-
-                    View Saved News →
-
-                </a>
-
-            </div>
-
-        </div>
-
-
-
- <div class="col-lg-4 col-md-6">
-
-    <div class="stat-card">
-
-        <div class="stat-icon">
-            📖
-        </div>
-
-        <div class="text-muted">
-            Articles Read
-        </div>
-
-        <div
+        <span
             class="stat-number"
-            th:text="${articlesReadCount}">
+            th:text="${totalNews}">
 
             0
 
-        </div>
-
-        <span class="text-muted">
-            Your reading history
         </span>
-
-    </div>
-
-</div>
-
-<!-- =================================================
-     RECENTLY READ
-     ================================================= -->
-
-<div class="dashboard-section mt-5">
-
-    <div
-        class="d-flex
-               justify-content-between
-               align-items-center
-               mb-4">
-
-        <div>
-
-            <h3 class="section-title">
-
-                📖 Recently Read
-
-            </h3>
-
-            <p class="text-muted mb-0">
-
-                Articles you've recently opened.
-
-            </p>
-
-        </div>
-
-    </div>
-
-
-    <!-- NO HISTORY -->
-
-    <div
-        th:if="${#lists.isEmpty(recentReadingHistory)}"
-        class="text-center py-4">
-
-        <div style="font-size: 45px;">
-            📖
-        </div>
-
-        <p class="text-muted">
-
-            You haven't read any articles yet.
-
-        </p>
 
         <a
             href="/newsList"
-            class="btn btn-primary">
+            class="stat-link">
 
-            Explore News
+            Browse all stories →
 
         </a>
 
     </div>
 
 
-    <!-- READING HISTORY -->
+    <!-- SAVED -->
 
-    <div
-        th:unless="${#lists.isEmpty(recentReadingHistory)}">
+    <div class="stat-item">
+
+        <span class="stat-label">
+            Saved Stories
+        </span>
+
+        <span
+            class="stat-number"
+            th:text="${savedNewsCount}">
+
+            0
+
+        </span>
+
+        <a
+            href="/bookmarks"
+            class="stat-link">
+
+            Open saved stories →
+
+        </a>
+
+    </div>
+
+
+    <!-- READ -->
+
+    <div class="stat-item">
+
+        <span class="stat-label">
+            Articles Read
+        </span>
+
+        <span
+            class="stat-number"
+            th:text="${articlesReadCount}">
+
+            0
+
+        </span>
+
+        <span class="stat-description">
+
+            Your reading activity
+
+        </span>
+
+    </div>
+
+</section>
+
+
+<!-- =====================================================
+     MAIN
+     ===================================================== -->
+
+<main class="dashboard-content">
+
+
+    <!-- =================================================
+         RECENTLY READ
+         ================================================= -->
+
+    <section class="dashboard-section">
+
+
+        <div class="section-header">
+
+            <div>
+
+                <div class="section-kicker">
+                    Reading History
+                </div>
+
+                <h2 class="section-title">
+                    Recently Read
+                </h2>
+
+            </div>
+
+
+            <p class="section-description">
+
+                Pick up where you left off
+                and return to stories you've
+                already explored.
+
+            </p>
+
+        </div>
+
+
+        <!-- EMPTY -->
 
         <div
-            class="bookmark-item"
-            th:each="history : ${recentReadingHistory}">
+            th:if="${#lists.isEmpty(recentReadingHistory)}"
+            class="dashboard-empty">
 
-            <div
-                class="d-flex
-                       justify-content-between
-                       align-items-center
-                       gap-3">
+            <h3>
+                Your reading history is empty.
+            </h3>
+
+            <p>
+                Start exploring the latest stories
+                and they will appear here.
+            </p>
+
+            <a
+                href="/newsList"
+                class="read-button">
+
+                Explore News
+
+            </a>
+
+        </div>
+
+
+        <!-- HISTORY -->
+
+        <div
+            th:unless="${#lists.isEmpty(recentReadingHistory)}"
+            class="reading-list">
+
+
+            <article
+                class="reading-item"
+                th:each="history, stat : ${recentReadingHistory}">
+
+
+                <div class="reading-index">
+
+                    <span
+                        th:text="${stat.count < 10
+                            ? '0' + stat.count
+                            : stat.count}">
+
+                        01
+
+                    </span>
+
+                </div>
+
 
                 <div>
 
                     <span
-                        class="category"
+                        class="article-category"
                         th:text="${history.news.category != null
                             ? history.news.category
                             : 'General'}">
@@ -453,21 +1360,17 @@
                     </span>
 
 
-                    <h5 class="mt-2 mb-1">
+                    <a
+                        th:href="@{/viewNews/{id}(id=${history.news.id})}"
+                        class="reading-title"
+                        th:text="${history.news.title}">
 
-                        <a
-                            th:href="@{/viewNews/{id}(id=${history.news.id})}"
-                            class="text-decoration-none text-dark"
-                            th:text="${history.news.title}">
+                        News Title
 
-                            News Title
-
-                        </a>
-
-                    </h5>
+                    </a>
 
 
-                    <small class="text-muted">
+                    <span class="reading-date">
 
                         Last read:
 
@@ -478,62 +1381,51 @@
 
                         </span>
 
-                    </small>
+                    </span>
 
                 </div>
 
 
                 <a
                     th:href="@{/viewNews/{id}(id=${history.news.id})}"
-                    class="btn btn-sm btn-primary">
+                    class="read-button">
 
                     Read Again
 
                 </a>
 
-            </div>
+            </article>
 
         </div>
 
-    </div>
+    </section>
 
-</div>
 
     <!-- =================================================
          RECENTLY SAVED
          ================================================= -->
 
-    <div class="dashboard-section mt-5">
+    <section class="dashboard-section">
 
 
-        <div
-            class="d-flex
-                   justify-content-between
-                   align-items-center
-                   mb-3">
-
+        <div class="section-header">
 
             <div>
 
-                <h3 class="section-title">
+                <div class="section-kicker">
+                    Your Library
+                </div>
 
-                    🔖 Recently Saved
-
-                </h3>
-
-
-                <p class="text-muted mb-0">
-
-                    Your latest bookmarked articles.
-
-                </p>
+                <h2 class="section-title">
+                    Saved Stories
+                </h2>
 
             </div>
 
 
             <a
                 href="/bookmarks"
-                class="btn btn-outline-primary">
+                class="section-link">
 
                 View All
 
@@ -542,201 +1434,152 @@
         </div>
 
 
-
-        <!-- NO BOOKMARKS -->
+        <!-- EMPTY -->
 
         <div
             th:if="${#lists.isEmpty(recentBookmarks)}"
-            class="text-center py-4">
+            class="dashboard-empty">
 
+            <h3>
+                Nothing saved yet.
+            </h3>
 
-            <div style="font-size: 45px;">
-
-                🔖
-
-            </div>
-
-
-            <p class="text-muted">
-
-                You haven't saved any news yet.
-
+            <p>
+                Save stories you want to return
+                to later.
             </p>
-
 
             <a
                 href="/newsList"
-                class="btn btn-primary">
+                class="read-button">
 
-                Explore News
+                Browse News
 
             </a>
 
         </div>
 
 
-
-        <!-- BOOKMARKS -->
+        <!-- SAVED -->
 
         <div
-            th:unless="${#lists.isEmpty(recentBookmarks)}">
+            th:unless="${#lists.isEmpty(recentBookmarks)}"
+            class="saved-grid">
 
 
-            <div
-                class="bookmark-item"
+            <article
+                class="saved-item"
                 th:each="bookmark : ${recentBookmarks}">
 
 
-                <div
-                    class="d-flex
-                           justify-content-between
-                           align-items-center
-                           gap-3">
+                <span
+                    class="saved-category"
+                    th:text="${bookmark.news.category != null
+                        ? bookmark.news.category
+                        : 'General'}">
+
+                    Technology
+
+                </span>
 
 
-                    <div>
-
-
-                        <span
-                            class="category"
-                            th:text="${bookmark.news.category != null
-                                ? bookmark.news.category
-                                : 'General'}">
-
-                            Technology
-
-                        </span>
-
-
-                        <h5 class="mt-2 mb-1">
-
-                            <a
-                                th:href="@{/viewNews/{id}(id=${bookmark.news.id})}"
-                                class="text-decoration-none text-dark"
-                                th:text="${bookmark.news.title}">
-
-                                News Title
-
-                            </a>
-
-                        </h5>
-
-
-                        <small class="text-muted">
-
-                            Saved on
-
-                            <span
-                                th:text="${bookmark.createdAt}">
-
-                                Date
-
-                            </span>
-
-                        </small>
-
-                    </div>
-
+                <h3 class="saved-title">
 
                     <a
                         th:href="@{/viewNews/{id}(id=${bookmark.news.id})}"
-                        class="btn btn-sm btn-primary">
+                        th:text="${bookmark.news.title}">
 
-                        Read
+                        News Title
 
                     </a>
 
+                </h3>
+
+
+                <div class="saved-meta">
+
+                    Saved on
+
+                    <span
+                        th:text="${bookmark.createdAt}">
+
+                        Date
+
+                    </span>
+
                 </div>
+
+
+                <a
+                    th:href="@{/viewNews/{id}(id=${bookmark.news.id})}"
+                    class="read-button">
+
+                    Read Story
+
+                </a>
+
+            </article>
+
+        </div>
+
+    </section>
+
+
+    <!-- =================================================
+         LATEST NEWS
+         ================================================= -->
+
+    <section class="dashboard-section">
+
+
+        <div class="section-header">
+
+            <div>
+
+                <div class="section-kicker">
+                    News Desk
+                </div>
+
+                <h2 class="section-title">
+                    Latest News
+                </h2>
+
+            </div>
+
+
+            <div>
+
+                <p class="section-description mb-3">
+
+                    The newest stories published
+                    across the portal.
+
+                </p>
+
+                <a
+                    href="/newsList"
+                    class="section-link">
+
+                    View All
+
+                </a>
 
             </div>
 
         </div>
 
-    </div>
 
-<!-- =================================================
-     PERSONALIZED NEWS
-     ================================================= -->
-
-<div class="dashboard-section mt-5">
-
-    <div
-        class="d-flex
-               justify-content-between
-               align-items-center
-               mb-4">
-
-        <div>
-
-            <h3 class="section-title">
-
-                🎯 Recommended For You
-
-            </h3>
-
-            <p class="text-muted mb-0">
-
-                News selected based on your reading activity.
-
-            </p>
-
-        </div>
+        <div class="latest-grid">
 
 
-        <a
-            href="/newsList"
-            class="btn btn-outline-primary">
-
-            Explore All
-
-        </a>
-
-    </div>
+            <article
+                class="news-card"
+                th:each="news : ${latestNews}">
 
 
-    <!-- NO RECOMMENDATIONS -->
-
-    <div
-        th:if="${#lists.isEmpty(recommendedNews)}"
-        class="text-center py-4">
-
-        <div style="font-size:45px;">
-
-            🎯
-
-        </div>
-
-        <p class="text-muted mb-0">
-
-            Read a few articles to get personalized recommendations.
-
-        </p>
-
-    </div>
-
-
-    <!-- RECOMMENDED NEWS -->
-
-    <div
-        class="row g-4"
-        th:unless="${#lists.isEmpty(recommendedNews)}">
-
-
-        <div
-            class="col-lg-4 col-md-6"
-            th:each="news : ${recommendedNews}">
-
-
-            <div class="card news-card h-100">
-
-
-                <div class="card-body">
-
-
-                    <!-- CATEGORY -->
+                <div class="news-category">
 
                     <span
-                        class="category"
                         th:text="${news.category != null
                             ? news.category
                             : 'General'}">
@@ -745,129 +1588,116 @@
 
                     </span>
 
+                </div>
 
-                    <!-- TITLE -->
 
-                    <h5
-                        class="fw-bold mt-3"
+                <h3 class="news-title">
+
+                    <a
+                        th:href="@{/viewNews/{id}(id=${news.id})}"
                         th:text="${news.title}">
 
                         News Title
 
-                    </h5>
+                    </a>
+
+                </h3>
 
 
-                    <!-- DATE + VIEWS -->
+                <div class="news-meta">
 
-                    <p class="text-muted small">
+                    <span
+                        th:text="${news.publishedDate}">
 
-                        📅
+                        Date
 
-                        <span
-                            th:text="${news.publishedDate}">
+                    </span>
 
-                            Date
+                    <span>
+                        &nbsp; / &nbsp;
+                    </span>
 
-                        </span>
+                    <span
+                        th:text="${news.viewCount != null
+                            ? news.viewCount
+                            : 0}">
 
-                        &nbsp; • &nbsp;
+                        0
 
-                        👁️
+                    </span>
 
-                        <span
-                            th:text="${news.viewCount != null
-                                ? news.viewCount
-                                : 0}">
+                    views
 
-                            0
-
-                        </span>
-
-                    </p>
+                </div>
 
 
-                    <!-- CONTENT -->
-
-                    <p
-                        class="text-muted"
-                        th:if="${news.content != null}">
-
-                        <span
-                            th:if="${#strings.length(news.content) > 120}"
-                            th:text="${#strings.substring(
-                                news.content,
-                                0,
-                                120
-                            ) + '...'}">
-
-                        </span>
+                <p
+                    class="news-summary"
+                    th:if="${news.content != null}">
 
 
-                        <span
-                            th:unless="${#strings.length(news.content) > 120}"
-                            th:text="${news.content}">
+                    <span
+                        th:if="${#strings.length(news.content) > 140}"
+                        th:text="${#strings.substring(
+                            news.content,
+                            0,
+                            140
+                        ) + '...'}">
+                    </span>
 
-                        </span>
 
-                    </p>
+                    <span
+                        th:unless="${#strings.length(news.content) > 140}"
+                        th:text="${news.content}">
+                    </span>
+
+                </p>
 
 
-                    <!-- READ -->
+                <div class="news-footer">
 
                     <a
                         th:href="@{/viewNews/{id}(id=${news.id})}"
-                        class="btn btn-primary btn-sm">
+                        class="read-button">
 
                         Read Article
 
                     </a>
 
-
                 </div>
 
-            </div>
+            </article>
 
         </div>
 
-    </div>
+    </section>
 
-</div>
 
     <!-- =================================================
-         LATEST NEWS
+         POPULAR NEWS
          ================================================= -->
 
-    <div class="dashboard-section mt-5">
+    <section class="dashboard-section">
 
 
-        <div
-            class="d-flex
-                   justify-content-between
-                   align-items-center
-                   mb-4">
-
+        <div class="section-header">
 
             <div>
 
-                <h3 class="section-title">
+                <div class="section-kicker">
+                    Most Read
+                </div>
 
-                    📰 Latest News
-
-                </h3>
-
-
-                <p class="text-muted mb-0">
-
-                    The newest stories on the portal.
-
-                </p>
+                <h2 class="section-title">
+                    Popular Stories
+                </h2>
 
             </div>
 
 
             <a
-                href="/newsList"
-                class="btn btn-outline-primary">
+                href="/newsList?sort=mostViewed"
+                class="section-link">
 
                 View All
 
@@ -876,23 +1706,68 @@
         </div>
 
 
-        <div class="row g-4">
+        <!-- EMPTY -->
+
+        <div
+            th:if="${#lists.isEmpty(trendingNews)}"
+            class="dashboard-empty">
+
+            <h3>
+                No popular stories yet.
+            </h3>
+
+            <p>
+                Popular stories will appear here
+                as readers engage with the portal.
+            </p>
+
+        </div>
 
 
-            <div
-                class="col-lg-4 col-md-6"
-                th:each="news : ${latestNews}">
+        <!-- POPULAR -->
+
+        <div
+            th:unless="${#lists.isEmpty(trendingNews)}"
+            class="popular-list">
 
 
-                <div
-                    class="card news-card h-100">
+            <article
+                class="popular-item"
+                th:each="news, stat : ${trendingNews}">
 
 
-                    <div class="card-body">
+                <div class="popular-rank">
 
+                    <span
+                        th:text="${stat.count < 10
+                            ? '0' + stat.count
+                            : stat.count}">
+
+                        01
+
+                    </span>
+
+                </div>
+
+
+                <div>
+
+                    <h3 class="popular-title">
+
+                        <a
+                            th:href="@{/viewNews/{id}(id=${news.id})}"
+                            th:text="${news.title}">
+
+                            News Title
+
+                        </a>
+
+                    </h3>
+
+
+                    <div class="popular-category">
 
                         <span
-                            class="category"
                             th:text="${news.category != null
                                 ? news.category
                                 : 'General'}">
@@ -901,236 +1776,59 @@
 
                         </span>
 
-
-                        <h5
-                            class="fw-bold mt-3"
-                            th:text="${news.title}">
-
-                            News Title
-
-                        </h5>
-
-
-                        <p
-                            class="text-muted small">
-
-                            📅
-
-                            <span
-                                th:text="${news.publishedDate}">
-
-                                Date
-
-                            </span>
-
-                            &nbsp; • &nbsp;
-
-                            👁️
-
-                            <span
-                                th:text="${news.viewCount != null
-                                    ? news.viewCount
-                                    : 0}">
-
-                                0
-
-                            </span>
-
-                        </p>
-
-
-                        <p
-                            class="text-muted"
-                            th:if="${news.content != null}">
-
-                            <span
-                                th:if="${#strings.length(news.content) > 120}"
-                                th:text="${#strings.substring(
-                                    news.content,
-                                    0,
-                                    120
-                                ) + '...'}">
-                            </span>
-
-
-                            <span
-                                th:unless="${#strings.length(news.content) > 120}"
-                                th:text="${news.content}">
-                            </span>
-
-                        </p>
-
-
-                        <a
-                            th:href="@{/viewNews/{id}(id=${news.id})}"
-                            class="btn btn-primary btn-sm">
-
-                            Read Article
-
-                        </a>
-
                     </div>
 
                 </div>
 
-            </div>
 
-        </div>
+                <div class="popular-views">
 
-    </div>
+                    <strong
+                        th:text="${news.viewCount != null
+                            ? news.viewCount
+                            : 0}">
 
+                        0
 
+                    </strong>
 
-    <!-- =================================================
-         POPULAR NEWS
-         ================================================= -->
-
-    <div class="dashboard-section mt-5">
-
-
-        <div
-            class="d-flex
-                   justify-content-between
-                   align-items-center
-                   mb-4">
-
-
-            <div>
-
-                <h3 class="section-title">
-
-                    🔥 Popular News
-
-                </h3>
-
-
-                <p class="text-muted mb-0">
-
-                    Articles getting the most attention.
-
-                </p>
-
-            </div>
-
-
-            <a
-                href="/newsList?sort=mostViewed"
-                class="btn btn-outline-primary">
-
-                More Popular
-
-            </a>
-
-        </div>
-
-
-        <div class="row g-3">
-
-
-            <div
-                class="col-lg-6"
-                th:each="news : ${popularNews}">
-
-
-                <div
-                    class="card news-card">
-
-
-                    <div class="card-body">
-
-
-                        <div
-                            class="d-flex
-                                   justify-content-between
-                                   align-items-start">
-
-
-                            <div>
-
-
-                                <span
-                                    class="category"
-                                    th:text="${news.category != null
-                                        ? news.category
-                                        : 'General'}">
-
-                                    Technology
-
-                                </span>
-
-
-                                <h5
-                                    class="fw-bold mt-2"
-                                    th:text="${news.title}">
-
-                                    News Title
-
-                                </h5>
-
-                            </div>
-
-
-                            <span
-                                class="badge bg-danger">
-
-                                👁️
-
-                                <span
-                                    th:text="${news.viewCount != null
-                                        ? news.viewCount
-                                        : 0}">
-
-                                    0
-
-                                </span>
-
-                            </span>
-
-                        </div>
-
-
-                        <a
-                            th:href="@{/viewNews/{id}(id=${news.id})}"
-                            class="btn btn-sm btn-primary mt-2">
-
-                            Read Article
-
-                        </a>
-
-                    </div>
+                    views
 
                 </div>
 
-            </div>
+            </article>
 
         </div>
 
-    </div>
+    </section>
 
-</div>
-
+</main>
 
 
 <!-- =====================================================
      FOOTER
      ===================================================== -->
 
-<footer
-    class="bg-dark
-           text-white
-           text-center
-           p-3">
+<footer class="dashboard-footer">
 
-    © 2026 News Portal | Developed by Ayush Trivedi
+    © 2026 News Portal
+    <span aria-hidden="true">|</span>
+    Developed by Ayush Trivedi
 
 </footer>
 
+
+<!-- =====================================================
+     BOOTSTRAP JS
+     ===================================================== -->
 
 <script
     src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
 </script>
 
+<script
+    th:src="@{/newsportal.js}">
+</script>
 
 </body>
-
 </html>

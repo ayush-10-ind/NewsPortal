@@ -305,15 +305,11 @@ select {
 /* =========================================================
    USER MENU
    ========================================================= */
-/* =========================================================
-   PROFESSIONAL USER MENU
-   ========================================================= */
 
 .user-menu {
     position: relative;
     z-index: 2000;
 }
-
 
 /* =========================================================
    USER TRIGGER
@@ -323,25 +319,18 @@ select {
     border: 0;
     background: transparent;
     padding: 6px 0;
-
     display: flex;
     align-items: center;
     gap: 9px;
-
     color: var(--ink);
-
     cursor: pointer;
-
     font-family: var(--sans);
-
-    transition:
-        opacity .2s ease;
+    transition: opacity 0.2s ease;
 }
 
 .user-trigger:hover {
-    opacity: .72;
+    opacity: 0.72;
 }
-
 
 /* =========================================================
    USER AVATAR
@@ -350,10 +339,8 @@ select {
 .user-initial {
     width: 34px;
     height: 34px;
-
     display: grid;
     place-items: center;
-
     flex-shrink: 0;
 
     background: var(--ink);
@@ -367,9 +354,8 @@ select {
     overflow: hidden;
 }
 
-
 /* =========================================================
-   USER EMAIL
+   USER NAME
    ========================================================= */
 
 .user-name {
@@ -385,7 +371,6 @@ select {
     color: var(--ink);
 }
 
-
 /* =========================================================
    CHEVRON
    ========================================================= */
@@ -400,22 +385,17 @@ select {
 
     color: var(--ink);
 
-    transition:
-        transform .25s ease;
+    transition: transform 0.25s ease;
 }
 
 .user-chevron svg {
     display: block;
 }
 
-
-/* Rotate chevron when menu opens */
-
-.user-menu:has(.user-dropdown.open)
-.user-chevron {
+/* Rotate when menu is open */
+.user-menu.open .user-chevron {
     transform: rotate(180deg);
 }
-
 
 /* =========================================================
    DROPDOWN
@@ -436,37 +416,35 @@ select {
     border-radius: 0;
 
     box-shadow:
-        0 20px 55px rgba(0, 0, 0, .14);
+        0 20px 55px rgba(0, 0, 0, 0.14);
 
     overflow: hidden;
 
     opacity: 0;
     visibility: hidden;
 
-    transform:
-        translateY(-7px);
+    transform: translateY(-7px);
 
     transition:
-        opacity .18s ease,
-        transform .18s ease,
-        visibility .18s ease;
+        opacity 0.18s ease,
+        transform 0.18s ease,
+        visibility 0.18s ease;
 
     pointer-events: none;
 }
 
+/* =========================================================
+   OPEN STATE
+   ========================================================= */
 
-/* OPEN */
-
-.user-dropdown.open {
+.user-menu.open .user-dropdown {
     opacity: 1;
     visibility: visible;
 
-    transform:
-        translateY(0);
+    transform: translateY(0);
 
     pointer-events: auto;
 }
-
 
 /* =========================================================
    ACCOUNT HEADER
@@ -483,8 +461,9 @@ select {
     gap: 5px;
 }
 
-
-/* LABEL */
+/* =========================================================
+   LABEL
+   ========================================================= */
 
 .dropdown-label {
     font-family: var(--sans);
@@ -497,8 +476,9 @@ select {
     color: var(--muted);
 }
 
-
-/* EMAIL */
+/* =========================================================
+   EMAIL
+   ========================================================= */
 
 .dropdown-user strong {
     display: block;
@@ -517,7 +497,6 @@ select {
     color: var(--ink);
 }
 
-
 /* =========================================================
    DROPDOWN LINKS
    ========================================================= */
@@ -526,24 +505,20 @@ select {
     padding: 10px 0;
 }
 
-
 /* =========================================================
-   ITEM
+   DROPDOWN ITEM
    ========================================================= */
 
 .dropdown-item {
     width: 100%;
-
     min-height: 54px;
 
     padding: 0 23px;
 
     border: 0;
-
     background: transparent;
 
     display: flex;
-
     align-items: center;
 
     gap: 17px;
@@ -551,28 +526,23 @@ select {
     text-align: left;
 
     color: var(--ink);
-
     text-decoration: none;
 
     cursor: pointer;
 
     font-family: var(--sans);
-
     font-size: 13px;
     font-weight: 500;
 
     transition:
-        background .18s ease,
-        color .18s ease;
+        background 0.18s ease,
+        color 0.18s ease;
 }
 
-
-/* HOVER */
-
+/* Hover */
 .dropdown-item:hover {
     background: #eeebe4;
 }
-
 
 /* =========================================================
    SVG ICON
@@ -598,7 +568,6 @@ select {
     display: block;
 }
 
-
 /* =========================================================
    NOTIFICATION COUNT
    ========================================================= */
@@ -622,7 +591,6 @@ select {
     font-weight: 700;
 }
 
-
 /* =========================================================
    ADMIN / LOGOUT SECTIONS
    ========================================================= */
@@ -632,7 +600,6 @@ select {
 
     border-top: 1px solid var(--line);
 }
-
 
 /* =========================================================
    LOGOUT
@@ -646,7 +613,6 @@ select {
     color: var(--ink);
 }
 
-
 /* =========================================================
    REMOVE DEFAULT FORM SPACING
    ========================================================= */
@@ -655,7 +621,6 @@ select {
     margin: 0;
     padding: 0;
 }
-
 
 /* =========================================================
    ACCESSIBILITY
@@ -666,7 +631,6 @@ select {
     outline: 2px solid var(--ink);
     outline-offset: -2px;
 }
-
 
 /* =========================================================
    MOBILE
@@ -686,7 +650,6 @@ select {
         left: 14px;
 
         width: auto;
-
         max-width: none;
     }
 
@@ -699,7 +662,6 @@ select {
         padding: 0 20px;
     }
 }
-
 /* =========================================================
    MOBILE NAV
    ========================================================= */

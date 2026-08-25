@@ -787,6 +787,76 @@
 
 </nav>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const userMenu = document.querySelector(".user-menu");
+    const userMenuButton = document.getElementById("userMenuButton");
+    const userDropdown = document.getElementById("userDropdown");
+
+    if (!userMenu || !userMenuButton || !userDropdown) {
+        return;
+    }
+
+    // Open / close user dropdown
+    userMenuButton.addEventListener("click", function (event) {
+        event.stopPropagation();
+
+        const isOpen = userMenu.classList.toggle("open");
+
+        userMenuButton.setAttribute(
+            "aria-expanded",
+            isOpen ? "true" : "false"
+        );
+
+        userDropdown.setAttribute(
+            "aria-hidden",
+            isOpen ? "false" : "true"
+        );
+    });
+
+    // Prevent clicks inside dropdown from closing it
+    userDropdown.addEventListener("click", function (event) {
+        event.stopPropagation();
+    });
+
+    // Close when clicking anywhere outside
+    document.addEventListener("click", function () {
+        userMenu.classList.remove("open");
+
+        userMenuButton.setAttribute(
+            "aria-expanded",
+            "false"
+        );
+
+        userDropdown.setAttribute(
+            "aria-hidden",
+            "true"
+        );
+    });
+
+    // Close with Escape
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+            userMenu.classList.remove("open");
+
+            userMenuButton.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+            userDropdown.setAttribute(
+                "aria-hidden",
+                "true"
+            );
+
+            userMenuButton.focus();
+        }
+    });
+
+});
+</script>
+
 </body>
 
 </html>

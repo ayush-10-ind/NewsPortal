@@ -9,126 +9,53 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function addWeatherNavigation() {
 
-        /*
-         * The navbar is loaded through:
-         *
-         * fragments/navbar.html
-         *
-         * Find the actual desktop navigation container.
-         */
-
         const desktopNavigation =
             document.querySelector(".desktop-navigation");
 
-
         if (!desktopNavigation) {
-
             console.warn(
                 "News Portal: .desktop-navigation not found."
             );
-
             return;
-
         }
-
-
-        /*
-         * Don't add it twice.
-         */
 
         if (
             desktopNavigation.querySelector(
                 ".weather-nav-link"
             )
         ) {
-
             return;
-
         }
-
-
-        /*
-         * Create Weather link.
-         */
 
         const weatherLink =
             document.createElement("a");
 
-
         weatherLink.href = "/weather";
-
-        weatherLink.className =
-            "weather-nav-link";
-
-        weatherLink.title =
-            "Weather";
-
-
-        /*
-         * Weather logo.
-         *
-         * This uses the image you provided:
-         *
-         * static/images/weather-logo.png
-         */
+        weatherLink.className = "weather-nav-link";
+        weatherLink.title = "Weather";
 
         const weatherLogo =
             document.createElement("img");
 
-
         weatherLogo.src =
             "/images/weather-logo.png";
 
-
-        weatherLogo.alt =
-            "Weather";
-
-
-        weatherLogo.className =
-            "weather-nav-logo";
-
-
-        /*
-         * Weather text.
-         */
+        weatherLogo.alt = "Weather";
+        weatherLogo.className = "weather-nav-logo";
 
         const weatherText =
             document.createElement("span");
 
+        weatherText.textContent = "WEATHER";
+        weatherText.className = "weather-nav-text";
 
-        weatherText.textContent =
-            "WEATHER";
-
-
-        weatherText.className =
-            "weather-nav-text";
-
-
-        /*
-         * Build link.
-         */
-
-        weatherLink.appendChild(
-            weatherLogo
-        );
-
-        weatherLink.appendChild(
-            weatherText
-        );
-
-
-        /*
-         * Find SPORTS.
-         *
-         * Weather will appear immediately
-         * after SPORTS.
-         */
+        weatherLink.appendChild(weatherLogo);
+        weatherLink.appendChild(weatherText);
 
         const navigationLinks =
             Array.from(
                 desktopNavigation.querySelectorAll("a")
             );
-
 
         const sportsLink =
             navigationLinks.find(function (link) {
@@ -136,16 +63,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 return (
                     link.textContent
                         .trim()
-                        .toUpperCase()
-                    === "SPORTS"
+                        .toUpperCase() === "SPORTS"
                 );
 
             });
-
-
-        /*
-         * Insert after SPORTS.
-         */
 
         if (sportsLink) {
 
@@ -156,28 +77,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
         } else {
 
-            /*
-             * Fallback:
-             * if SPORTS isn't found, put Weather
-             * at the end of the desktop navigation.
-             */
-
             desktopNavigation.appendChild(
                 weatherLink
             );
-
         }
 
 
-        /*
-         * Add Weather to mobile navigation too.
-         */
+        /* MOBILE WEATHER */
 
         const mobileNavigation =
             document.querySelector(
                 ".mobile-navigation"
             );
-
 
         if (
             mobileNavigation &&
@@ -186,44 +97,29 @@ document.addEventListener("DOMContentLoaded", function () {
             )
         ) {
 
-
             const mobileWeather =
                 document.createElement("a");
 
-
-            mobileWeather.href =
-                "/weather";
-
+            mobileWeather.href = "/weather";
 
             mobileWeather.className =
                 "weather-mobile-link";
 
-
             mobileWeather.innerHTML =
-
                 '<img ' +
                 'src="/images/weather-logo.png" ' +
                 'alt="Weather" ' +
                 'class="weather-nav-logo">' +
-
                 '<span>WEATHER</span>';
-
 
             mobileNavigation.appendChild(
                 mobileWeather
             );
-
         }
-
     }
 
 
-    /*
-     * Run immediately.
-     */
-
     addWeatherNavigation();
-
 
 
     /* =========================================================
@@ -235,23 +131,15 @@ document.addEventListener("DOMContentLoaded", function () {
             "currentDate"
         );
 
-
     if (currentDate) {
 
-        const now =
-            new Date();
-
+        const now = new Date();
 
         const options = {
-
             day: "2-digit",
-
             month: "short",
-
             year: "numeric"
-
         };
-
 
         currentDate.textContent =
             now
@@ -260,9 +148,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     options
                 )
                 .toUpperCase();
-
     }
-
 
 
     /* =========================================================
@@ -274,54 +160,36 @@ document.addEventListener("DOMContentLoaded", function () {
             "istClock"
         );
 
-
     function updateISTClock() {
 
         if (!istClock) {
             return;
         }
 
-
-        const now =
-            new Date();
-
+        const now = new Date();
 
         const time =
             now.toLocaleTimeString(
                 "en-IN",
                 {
-                    timeZone:
-                        "Asia/Kolkata",
-
-                    hour:
-                        "2-digit",
-
-                    minute:
-                        "2-digit",
-
-                    second:
-                        "2-digit",
-
-                    hour12:
-                        false
+                    timeZone: "Asia/Kolkata",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                    second: "2-digit",
+                    hour12: false
                 }
             );
 
-
         istClock.textContent =
             time + " IST";
-
     }
 
-
     updateISTClock();
-
 
     setInterval(
         updateISTClock,
         1000
     );
-
 
 
     /* =========================================================
@@ -333,53 +201,38 @@ document.addEventListener("DOMContentLoaded", function () {
             "breakingTrack"
         );
 
-
     if (breakingTrack) {
 
         let position = 0;
-
         let animationFrame;
-
 
         function animateBreakingNews() {
 
             position -= 0.35;
 
-
             const firstWidth =
                 breakingTrack.scrollWidth / 2;
-
 
             if (
                 Math.abs(position)
                 >= firstWidth
             ) {
-
                 position = 0;
-
             }
-
 
             breakingTrack.style.transform =
                 "translateX(" +
                 position +
                 "px)";
 
-
             animationFrame =
                 requestAnimationFrame(
                     animateBreakingNews
                 );
-
         }
-
 
         animateBreakingNews();
 
-
-        /*
-         * Pause when mouse is over ticker.
-         */
 
         breakingTrack.addEventListener(
             "mouseenter",
@@ -401,20 +254,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
         );
-
     }
-
 
 
     /* =========================================================
        USER DROPDOWN
        ========================================================= */
 
+    const userMenu =
+        document.querySelector(
+            ".user-menu"
+        );
+
     const userTrigger =
         document.querySelector(
             ".user-trigger"
         );
-
 
     const userDropdown =
         document.querySelector(
@@ -423,37 +278,56 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     if (
+        userMenu &&
         userTrigger &&
         userDropdown
     ) {
 
 
+        /* -----------------------------------------
+           OPEN / CLOSE
+           ----------------------------------------- */
+
         userTrigger.addEventListener(
             "click",
             function (event) {
 
+                event.preventDefault();
                 event.stopPropagation();
 
-
-                userDropdown.classList.toggle(
+                userMenu.classList.toggle(
                     "open"
                 );
 
             }
         );
 
+
+        /* -----------------------------------------
+           CLOSE WHEN CLICKING OUTSIDE
+           ----------------------------------------- */
 
         document.addEventListener(
             "click",
-            function () {
+            function (event) {
 
-                userDropdown.classList.remove(
-                    "open"
-                );
+                if (
+                    !userMenu.contains(event.target)
+                ) {
+
+                    userMenu.classList.remove(
+                        "open"
+                    );
+
+                }
 
             }
         );
 
+
+        /* -----------------------------------------
+           KEEP OPEN WHEN CLICKING INSIDE
+           ----------------------------------------- */
 
         userDropdown.addEventListener(
             "click",
@@ -464,8 +338,29 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         );
 
-    }
 
+        /* -----------------------------------------
+           ESCAPE KEY
+           ----------------------------------------- */
+
+        document.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Escape"
+                ) {
+
+                    userMenu.classList.remove(
+                        "open"
+                    );
+
+                }
+
+            }
+        );
+
+    }
 
 
     /* =========================================================
@@ -477,18 +372,15 @@ document.addEventListener("DOMContentLoaded", function () {
             ".mobile-menu-button"
         );
 
-
     const mobileNavigation =
         document.querySelector(
             ".mobile-navigation"
         );
 
-
     if (
         mobileMenuButton &&
         mobileNavigation
     ) {
-
 
         mobileMenuButton.addEventListener(
             "click",
@@ -500,9 +392,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
         );
-
     }
-
 
 
     /* =========================================================
@@ -514,58 +404,34 @@ document.addEventListener("DOMContentLoaded", function () {
             "img"
         );
 
-
     images.forEach(function (image) {
-
 
         image.addEventListener(
             "error",
             function () {
 
-                /*
-                 * Don't repeatedly trigger
-                 * the same error.
-                 */
-
                 if (
                     image.dataset.fallbackHandled
                 ) {
-
                     return;
-
                 }
-
 
                 image.dataset.fallbackHandled =
                     "true";
 
-
-                /*
-                 * Hide broken image.
-                 */
-
                 image.style.display =
                     "none";
 
-
-                /*
-                 * Show parent's fallback
-                 * if available.
-                 */
-
                 const parent =
                     image.parentElement;
-
 
                 if (!parent) {
                     return;
                 }
 
-
                 parent.classList.add(
                     "image-error"
                 );
-
 
                 const fallback =
                     parent.querySelector(
@@ -573,7 +439,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         ".home-featured-fallback, " +
                         ".image-fallback"
                     );
-
 
                 if (fallback) {
 
@@ -588,7 +453,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 
-
     /* =========================================================
        SMOOTH PAGE TRANSITIONS
        ========================================================= */
@@ -598,7 +462,6 @@ document.addEventListener("DOMContentLoaded", function () {
             'a[href="/weather"]'
         )
         .forEach(function (link) {
-
 
             link.addEventListener(
                 "click",
@@ -612,6 +475,5 @@ document.addEventListener("DOMContentLoaded", function () {
             );
 
         });
-
 
 });
