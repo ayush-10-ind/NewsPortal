@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+    <title>Email Verification - News Portal</title>
+
+    <link
+        rel="stylesheet"
+        th:href="@{/newsportal.css}">
+
+</head>
+
+
+<body>
+
+<div
+    th:replace="~{fragments/navbar :: navbar}">
+</div>
+
+
+<main class="auth-page">
+
+    <div class="auth-container">
+
+
+        <!-- ================================================= -->
+        <!-- LEFT -->
+        <!-- ================================================= -->
+
+        <section class="auth-intro">
+
+            <span class="auth-kicker">
+                EMAIL VERIFICATION
+            </span>
+
+            <h1>
+                Almost
+                <em>there.</em>
+            </h1>
+
+            <p>
+                Your email address has been verified.
+                Now create a secure password for your account.
+            </p>
+
+            <div class="auth-intro-line"></div>
+
+            <span class="auth-edition">
+                NEWS PORTAL / SECURITY
+            </span>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- RIGHT -->
+        <!-- ================================================= -->
+
+        <section class="auth-form-section">
+
+
+            <!-- ================================================= -->
+            <!-- ERROR -->
+            <!-- ================================================= -->
+
+            <div
+                th:if="${error}"
+                class="auth-error"
+                th:text="${error}">
+
+                Verification failed.
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- SUCCESS -->
+            <!-- ================================================= -->
+
+            <div
+                th:if="${success}"
+                class="auth-success"
+                th:text="${success}">
+
+                Verification successful.
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- PASSWORD FORM -->
+            <!-- ================================================= -->
+
+            <div
+                th:if="${token}">
+
+
+                <div class="auth-form-header">
+
+                    <span class="auth-form-kicker">
+                        WELCOME
+                    </span>
+
+                    <h2>
+                        Create your password
+                    </h2>
+
+                    <p>
+
+                        Hello
+                        <strong th:text="${userName}">
+                            Member
+                        </strong>.
+
+                        Your email has been verified.
+
+                    </p>
+
+                </div>
+
+
+                <form
+                    th:action="@{/verify-email}"
+                    th:object="${setPasswordRequest}"
+                    method="post"
+                    class="auth-form">
+
+
+                    <!-- TOKEN -->
+
+                    <input
+                        type="hidden"
+                        name="token"
+                        th:value="${token}">
+
+
+                    <!-- PASSWORD -->
+
+                    <div class="auth-field">
+
+                        <label for="password">
+                            PASSWORD
+                        </label>
+
+                        <input
+                            id="password"
+                            type="password"
+                            th:field="*{password}"
+                            placeholder="Create a password"
+                            autocomplete="new-password"
+                            required>
+
+                        <div
+                            th:if="${#fields.hasErrors('password')}"
+                            class="auth-error"
+                            th:errors="*{password}">
+                        </div>
+
+                    </div>
+
+
+                    <!-- CONFIRM PASSWORD -->
+
+                    <div class="auth-field">
+
+                        <label for="confirmPassword">
+                            CONFIRM PASSWORD
+                        </label>
+
+                        <input
+                            id="confirmPassword"
+                            type="password"
+                            th:field="*{confirmPassword}"
+                            placeholder="Repeat your password"
+                            autocomplete="new-password"
+                            required>
+
+                        <div
+                            th:if="${#fields.hasErrors('confirmPassword')}"
+                            class="auth-error"
+                            th:errors="*{confirmPassword}">
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        type="submit"
+                        class="auth-submit">
+
+                        VERIFY & CREATE ACCOUNT
+
+                        <span>
+                            →
+                        </span>
+
+                    </button>
+
+                </form>
+
+            </div>
+
+
+            <!-- ================================================= -->
+            <!-- LOGIN AFTER SUCCESS -->
+            <!-- ================================================= -->
+
+            <div
+                th:if="${success}"
+                class="auth-footer">
+
+                <a href="/login">
+                    SIGN IN TO NEWS PORTAL
+                </a>
+
+            </div>
+
+
+        </section>
+
+    </div>
+
+</main>
+
+
+</body>
+
+</html>

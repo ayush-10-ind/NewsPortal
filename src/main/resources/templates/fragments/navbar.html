@@ -83,8 +83,6 @@
                         xmlns="http://www.w3.org/2000/svg"
                         aria-hidden="true">
 
-                        <!-- SUN -->
-
                         <circle
                             cx="60"
                             cy="36"
@@ -93,9 +91,6 @@
                             stroke="#172B3F"
                             stroke-width="3">
                         </circle>
-
-
-                        <!-- SUN RAYS -->
 
                         <g
                             stroke="#172B3F"
@@ -111,9 +106,6 @@
                             <path d="M80 16L74 22"/>
 
                         </g>
-
-
-                        <!-- CLOUD -->
 
                         <path
                             d="
@@ -230,7 +222,6 @@
 
                 </svg>
 
-
                 <span
                     th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}"
                     th:text="${unreadNotificationCount}"
@@ -262,6 +253,9 @@
                     aria-label="Open account menu"
                     aria-expanded="false">
 
+
+                    <!-- USER INITIAL -->
+
                     <span
                         class="user-initial"
                         sec:authentication="name">
@@ -269,6 +263,9 @@
                         U
 
                     </span>
+
+
+                    <!-- USER NAME -->
 
                     <span
                         class="user-name"
@@ -460,9 +457,6 @@
                                 Notifications
                             </span>
 
-
-                            <!-- NOTIFICATION COUNT -->
-
                             <span
                                 class="dropdown-count"
                                 th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}"
@@ -653,7 +647,6 @@
         class="mobile-navigation"
         id="mobileNavigation">
 
-
         <a href="/">
             HOME
         </a>
@@ -683,9 +676,7 @@
         </a>
 
 
-        <!-- =====================================================
-             MOBILE WEATHER
-             ===================================================== -->
+        <!-- MOBILE WEATHER -->
 
         <a
             href="/weather"
@@ -699,9 +690,6 @@
                     xmlns="http://www.w3.org/2000/svg"
                     aria-hidden="true">
 
-
-                    <!-- SUN -->
-
                     <circle
                         cx="60"
                         cy="36"
@@ -710,9 +698,6 @@
                         stroke="#172B3F"
                         stroke-width="3">
                     </circle>
-
-
-                    <!-- SUN RAYS -->
 
                     <g
                         stroke="#172B3F"
@@ -728,9 +713,6 @@
                         <path d="M80 16L74 22"/>
 
                     </g>
-
-
-                    <!-- CLOUD -->
 
                     <path
                         d="
@@ -787,57 +769,73 @@
 
 </nav>
 
+
 <script>
+
 document.addEventListener("DOMContentLoaded", function () {
 
-    const userMenu = document.querySelector(".user-menu");
-    const userMenuButton = document.getElementById("userMenuButton");
-    const userDropdown = document.getElementById("userDropdown");
+    const userMenu =
+        document.querySelector(".user-menu");
 
-    if (!userMenu || !userMenuButton || !userDropdown) {
+    const userMenuButton =
+        document.getElementById("userMenuButton");
+
+    const userDropdown =
+        document.getElementById("userDropdown");
+
+
+    if (!userMenu ||
+        !userMenuButton ||
+        !userDropdown) {
+
         return;
+
     }
 
+
     // Open / close user dropdown
-    userMenuButton.addEventListener("click", function (event) {
-        event.stopPropagation();
 
-        const isOpen = userMenu.classList.toggle("open");
+    userMenuButton.addEventListener(
+        "click",
+        function (event) {
 
-        userMenuButton.setAttribute(
-            "aria-expanded",
-            isOpen ? "true" : "false"
-        );
+            event.stopPropagation();
 
-        userDropdown.setAttribute(
-            "aria-hidden",
-            isOpen ? "false" : "true"
-        );
-    });
+            const isOpen =
+                userMenu.classList.toggle("open");
+
+            userMenuButton.setAttribute(
+                "aria-expanded",
+                isOpen ? "true" : "false"
+            );
+
+            userDropdown.setAttribute(
+                "aria-hidden",
+                isOpen ? "false" : "true"
+            );
+
+        }
+    );
+
 
     // Prevent clicks inside dropdown from closing it
-    userDropdown.addEventListener("click", function (event) {
-        event.stopPropagation();
-    });
+
+    userDropdown.addEventListener(
+        "click",
+        function (event) {
+
+            event.stopPropagation();
+
+        }
+    );
+
 
     // Close when clicking anywhere outside
-    document.addEventListener("click", function () {
-        userMenu.classList.remove("open");
 
-        userMenuButton.setAttribute(
-            "aria-expanded",
-            "false"
-        );
+    document.addEventListener(
+        "click",
+        function () {
 
-        userDropdown.setAttribute(
-            "aria-hidden",
-            "true"
-        );
-    });
-
-    // Close with Escape
-    document.addEventListener("keydown", function (event) {
-        if (event.key === "Escape") {
             userMenu.classList.remove("open");
 
             userMenuButton.setAttribute(
@@ -850,11 +848,39 @@ document.addEventListener("DOMContentLoaded", function () {
                 "true"
             );
 
-            userMenuButton.focus();
         }
-    });
+    );
+
+
+    // Close with Escape
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (event.key === "Escape") {
+
+                userMenu.classList.remove("open");
+
+                userMenuButton.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+
+                userDropdown.setAttribute(
+                    "aria-hidden",
+                    "true"
+                );
+
+                userMenuButton.focus();
+
+            }
+
+        }
+    );
 
 });
+
 </script>
 
 </body>

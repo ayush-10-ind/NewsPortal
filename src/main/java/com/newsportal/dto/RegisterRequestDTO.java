@@ -2,29 +2,64 @@ package com.newsportal.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class RegisterRequestDTO {
 
+    // =====================================================
+    // FULL NAME
+    // =====================================================
+
     @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @Size(
+        max = 100,
+        message = "Name must not exceed 100 characters"
+    )
     private String name;
 
+
+    // =====================================================
+    // USERNAME
+    // =====================================================
+
+    @NotBlank(message = "Username is required")
+    @Size(
+        min = 3,
+        max = 50,
+        message = "Username must be between 3 and 50 characters"
+    )
+    @Pattern(
+        regexp = "^[a-zA-Z0-9_]+$",
+        message = "Username can contain only letters, numbers and underscores"
+    )
+    private String username;
+
+
+    // =====================================================
+    // EMAIL
+    // =====================================================
+
     @NotBlank(message = "Email is required")
-    @Email(message = "Enter a valid email address")
+    @Email(message = "Please enter a valid email address")
+    @Size(
+        max = 255,
+        message = "Email address is too long"
+    )
     private String email;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 8, message = "Password must contain at least 8 characters")
-    private String password;
 
-    @NotBlank(message = "Please confirm your password")
-    private String confirmPassword;
-
+    // =====================================================
+    // CONSTRUCTOR
+    // =====================================================
 
     public RegisterRequestDTO() {
     }
 
+
+    // =====================================================
+    // NAME
+    // =====================================================
 
     public String getName() {
         return name;
@@ -35,29 +70,28 @@ public class RegisterRequestDTO {
     }
 
 
+    // =====================================================
+    // USERNAME
+    // =====================================================
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+
+    // =====================================================
+    // EMAIL
+    // =====================================================
+
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
-    }
-
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-
-    public String getConfirmPassword() {
-        return confirmPassword;
-    }
-
-    public void setConfirmPassword(String confirmPassword) {
-        this.confirmPassword = confirmPassword;
     }
 }

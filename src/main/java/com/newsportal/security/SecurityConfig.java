@@ -4,8 +4,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -15,6 +13,8 @@ public class SecurityConfig {
 
     private final CustomAuthenticationFailureHandler authenticationFailureHandler;
 
+    private final CustomOAuth2UserService customOAuth2UserService;
+
 
     // =====================================================
     // CONSTRUCTOR
@@ -22,26 +22,23 @@ public class SecurityConfig {
 
     public SecurityConfig(
             CustomAccessDeniedHandler accessDeniedHandler,
-            CustomAuthenticationFailureHandler authenticationFailureHandler) {
+            CustomAuthenticationFailureHandler authenticationFailureHandler,
+            CustomOAuth2UserService customOAuth2UserService) {
 
         this.accessDeniedHandler =
                 accessDeniedHandler;
 
         this.authenticationFailureHandler =
                 authenticationFailureHandler;
+
+        this.customOAuth2UserService =
+                customOAuth2UserService;
     }
 
 
     // =====================================================
     // PASSWORD ENCODER
     // =====================================================
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-
-        return new BCryptPasswordEncoder();
-    }
-
 
     // =====================================================
     // SECURITY FILTER CHAIN
@@ -62,7 +59,7 @@ public class SecurityConfig {
 
 
                 // =============================================
-                // PUBLIC PAGES + STATIC RESOURCES
+                // PUBLIC PAGES
                 // =============================================
 
                 .requestMatchers(
@@ -72,39 +69,50 @@ public class SecurityConfig {
                     "/login",
 
                     "/register",
+                    
+                    "/verify-email",
 
                     "/access-denied",
 
 
-                    // CSS
+                    // =========================================
+                    // STATIC CSS
+                    // =========================================
 
                     "/css/**",
 
                     "/newsportal.css",
 
 
-                    // JavaScript
+                    // =========================================
+                    // STATIC JAVASCRIPT
+                    // =========================================
 
                     "/js/**",
 
                     "/newsportal.js",
 
 
-                    // Images
+                    // =========================================
+                    // IMAGES / UPLOADS
+                    // =========================================
 
                     "/images/**",
 
                     "/uploads/**",
-                    
-                    // weather
-                    
+
+
+                    // =========================================
+                    // WEATHER
+                    // =========================================
+
                     "/weather",
+
                     "/api/weather/**",
 
 
                     // =========================================
-                    // IMPORTANT:
-                    // OAuth2 authorization + callback
+                    // OAUTH2
                     // =========================================
 
                     "/oauth2/**",
@@ -225,15 +233,43 @@ public class SecurityConfig {
 
             .oauth2Login(oauth -> oauth
 
+
                 // ---------------------------------------------
-                // OAuth login entry point
+                // LOGIN PAGE
                 // ---------------------------------------------
 
                 .loginPage("/login")
 
 
                 // ---------------------------------------------
-                // Successful OAuth login
+                // CUSTOM OAUTH USER SERVICE
+                // ---------------------------------------------
+
+                /*
+                 * IMPORTANT:
+                 *
+                 * This connects Spring Security to our
+                 * CustomOAuth2UserService.
+                 *
+                 * The service:
+                 *
+                 * 1. Finds existing users by email.
+                 * 2. Prevents duplicate accounts.
+                 * 3. Preserves ROLE_ADMIN / ROLE_EDITOR.
+                 * 4. Gives new OAuth accounts ROLE_USER.
+                 * 5. Rejects disabled accounts.
+                 */
+
+                .userInfoEndpoint(userInfo ->
+
+                    userInfo.userService(
+                        customOAuth2UserService
+                    )
+                )
+
+
+                // ---------------------------------------------
+                // SUCCESS
                 // ---------------------------------------------
 
                 .defaultSuccessUrl(
@@ -243,7 +279,7 @@ public class SecurityConfig {
 
 
                 // ---------------------------------------------
-                // OAuth failure
+                // FAILURE
                 // ---------------------------------------------
 
                 .failureUrl(

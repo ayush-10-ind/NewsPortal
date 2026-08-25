@@ -1,25 +1,30 @@
 <!DOCTYPE html>
 
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org">
+<html
+    lang="en"
+    xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
     <meta charset="UTF-8">
 
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>Join News Portal</title>
 
-    <link rel="stylesheet"
-          th:href="@{/newsportal.css}">
+    <link
+        rel="stylesheet"
+        th:href="@{/newsportal.css}">
 
 </head>
 
+
 <body>
 
-<div th:replace="~{fragments/navbar :: navbar}">
+<div
+    th:replace="~{fragments/navbar :: navbar}">
 </div>
 
 
@@ -28,7 +33,9 @@
     <div class="auth-container">
 
 
-        <!-- LEFT SIDE -->
+        <!-- ================================================= -->
+        <!-- LEFT -->
+        <!-- ================================================= -->
 
         <section class="auth-intro">
 
@@ -55,9 +62,12 @@
         </section>
 
 
-        <!-- RIGHT SIDE -->
+        <!-- ================================================= -->
+        <!-- RIGHT -->
+        <!-- ================================================= -->
 
         <section class="auth-form-section">
+
 
             <div class="auth-form-header">
 
@@ -76,37 +86,34 @@
             </div>
 
 
+            <!-- ================================================= -->
             <!-- ERROR -->
+            <!-- ================================================= -->
 
             <div
-                    th:if="${error}"
-                    class="auth-error"
-                    th:text="${error}">
+                th:if="${error}"
+                class="auth-error"
+                th:text="${error}">
 
                 Registration failed.
 
             </div>
 
 
-            <!-- SUCCESS -->
-
-            <div
-                    th:if="${message}"
-                    class="auth-success"
-                    th:text="${message}">
-
-                Account created successfully.
-
-            </div>
-
+            <!-- ================================================= -->
+            <!-- FORM -->
+            <!-- ================================================= -->
 
             <form
-                    th:action="@{/register}"
-                    method="post"
-                    class="auth-form">
+                th:action="@{/register}"
+                th:object="${registerRequest}"
+                method="post"
+                class="auth-form">
 
 
+                <!-- ================================================= -->
                 <!-- NAME -->
+                <!-- ================================================= -->
 
                 <div class="auth-field">
 
@@ -115,17 +122,63 @@
                     </label>
 
                     <input
-                            id="name"
-                            name="name"
-                            type="text"
-                            placeholder="Your name"
-                            autocomplete="name"
-                            required>
+                        id="name"
+                        type="text"
+                        th:field="*{name}"
+                        placeholder="Your name"
+                        autocomplete="name"
+                        required>
+
+                    <div
+                        th:if="${#fields.hasErrors('name')}"
+                        class="auth-error"
+                        th:errors="*{name}">
+                    </div>
 
                 </div>
 
 
+                <!-- ================================================= -->
+                <!-- USERNAME -->
+                <!-- ================================================= -->
+
+                <div class="auth-field">
+
+                    <label for="username">
+                        USERNAME
+                    </label>
+
+                    <input
+                        id="username"
+                        type="text"
+                        th:field="*{username}"
+                        placeholder="Choose a unique username"
+                        autocomplete="username"
+                        required>
+
+                    <small
+                        style="
+                            display:block;
+                            margin-top:8px;
+                            color:#6b7280;
+                        ">
+
+                        This username must be unique.
+
+                    </small>
+
+                    <div
+                        th:if="${#fields.hasErrors('username')}"
+                        class="auth-error"
+                        th:errors="*{username}">
+                    </div>
+
+                </div>
+
+
+                <!-- ================================================= -->
                 <!-- EMAIL -->
+                <!-- ================================================= -->
 
                 <div class="auth-field">
 
@@ -134,59 +187,43 @@
                     </label>
 
                     <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            placeholder="you@example.com"
-                            autocomplete="email"
-                            required>
+                        id="email"
+                        type="email"
+                        th:field="*{email}"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required>
+
+                    <small
+                        style="
+                            display:block;
+                            margin-top:8px;
+                            color:#6b7280;
+                        ">
+
+                        We will send a verification link to this email.
+                        You will create your password after verification.
+
+                    </small>
+
+                    <div
+                        th:if="${#fields.hasErrors('email')}"
+                        class="auth-error"
+                        th:errors="*{email}">
+                    </div>
 
                 </div>
 
 
-                <!-- PASSWORD -->
-
-                <div class="auth-field">
-
-                    <label for="password">
-                        PASSWORD
-                    </label>
-
-                    <input
-                            id="password"
-                            name="password"
-                            type="password"
-                            placeholder="Create a password"
-                            autocomplete="new-password"
-                            required>
-
-                </div>
-
-
-                <!-- CONFIRM -->
-
-                <div class="auth-field">
-
-                    <label for="confirmPassword">
-                        CONFIRM PASSWORD
-                    </label>
-
-                    <input
-                            id="confirmPassword"
-                            name="confirmPassword"
-                            type="password"
-                            placeholder="Repeat your password"
-                            autocomplete="new-password"
-                            required>
-
-                </div>
-
+                <!-- ================================================= -->
+                <!-- SUBMIT -->
+                <!-- ================================================= -->
 
                 <button
-                        type="submit"
-                        class="auth-submit">
+                    type="submit"
+                    class="auth-submit">
 
-                    CREATE ACCOUNT
+                    SEND VERIFICATION EMAIL
 
                     <span>
                         →
@@ -194,9 +231,12 @@
 
                 </button>
 
-
             </form>
 
+
+            <!-- ================================================= -->
+            <!-- FOOTER -->
+            <!-- ================================================= -->
 
             <div class="auth-footer">
 
@@ -209,6 +249,7 @@
                 </a>
 
             </div>
+
 
         </section>
 
@@ -233,6 +274,7 @@
             </p>
 
         </div>
+
 
         <div class="footer-links">
 

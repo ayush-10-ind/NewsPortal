@@ -1,6 +1,7 @@
 package com.newsportal.entity;
 
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -10,6 +11,7 @@ import java.util.Set;
     name = "users",
     uniqueConstraints = {
         @UniqueConstraint(columnNames = "email"),
+        @UniqueConstraint(columnNames = "username"),
         @UniqueConstraint(columnNames = "phone")
     }
 )
@@ -19,42 +21,111 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+
+    // =====================================================
+    // NAME
+    // =====================================================
+
     @Column(nullable = false, length = 100)
     private String name;
 
-    @Column(nullable = false, unique = true, length = 255)
+
+    // =====================================================
+    // USERNAME
+    // =====================================================
+
+    @Column(
+        nullable = false,
+        unique = true,
+        length = 50
+    )
+    private String username;
+
+
+    // =====================================================
+    // EMAIL
+    // =====================================================
+
+    @Column(
+        nullable = false,
+        unique = true,
+        length = 255
+    )
     private String email;
 
+
+    // =====================================================
+    // PASSWORD
+    // =====================================================
+
     /*
-     * Password can be NULL because users who sign in
-     * through Google/GitHub may not have a local password.
+     * Password is NULL until the user
+     * verifies their email.
      */
     @Column(length = 255)
     private String password;
 
+
+    // =====================================================
+    // PHONE
+    // =====================================================
+
     @Column(unique = true, length = 20)
     private String phone;
 
-    @Column(name = "profile_image", length = 500)
+
+    // =====================================================
+    // PROFILE IMAGE
+    // =====================================================
+
+    @Column(
+        name = "profile_image",
+        length = 500
+    )
     private String profileImage;
 
-    @Column(nullable = false)
-    private boolean enabled = true;
 
-    @Column(name = "created_at", nullable = false)
+    // =====================================================
+    // ENABLED
+    // =====================================================
+
+    /*
+     * New accounts remain disabled until
+     * email verification + password creation.
+     */
+    @Column(nullable = false)
+    private boolean enabled = false;
+
+
+    // =====================================================
+    // EMAIL VERIFIED
+    // =====================================================
+
+    @Column(
+        name = "email_verified",
+        nullable = false
+    )
+    private boolean emailVerified = false;
+
+
+    // =====================================================
+    // DATES
+    // =====================================================
+
+    @Column(
+        name = "created_at",
+        nullable = false
+    )
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    /*
-     * One user can have one or more roles.
-     *
-     * Example:
-     * Ayush → ROLE_ADMIN
-     * Rahul → ROLE_EDITOR
-     * Amit  → ROLE_USER
-     */
+
+    // =====================================================
+    // ROLES
+    // =====================================================
+
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "user_roles",
@@ -64,40 +135,53 @@ public class User {
     private Set<Role> roles = new HashSet<>();
 
 
-    // =========================
+    // =====================================================
     // CONSTRUCTORS
-    // =========================
+    // =====================================================
 
     public User() {
     }
 
-    public User(String name, String email, String password) {
+
+    public User(
+            String name,
+            String username,
+            String email) {
+
         this.name = name;
+        this.username = username;
         this.email = email;
-        this.password = password;
-        this.enabled = true;
+
+        this.enabled = false;
+        this.emailVerified = false;
     }
 
 
-    // =========================
-    // LIFECYCLE METHODS
-    // =========================
+    // =====================================================
+    // LIFECYCLE
+    // =====================================================
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+
         updatedAt = LocalDateTime.now();
     }
+
 
     @PreUpdate
     protected void onUpdate() {
+
         updatedAt = LocalDateTime.now();
     }
 
 
-    // =========================
-    // GETTERS AND SETTERS
-    // =========================
+    // =====================================================
+    // ID
+    // =====================================================
 
     public Long getId() {
         return id;
@@ -107,6 +191,11 @@ public class User {
         this.id = id;
     }
 
+
+    // =====================================================
+    // NAME
+    // =====================================================
+
     public String getName() {
         return name;
     }
@@ -114,6 +203,24 @@ public class User {
     public void setName(String name) {
         this.name = name;
     }
+
+
+    // =====================================================
+    // USERNAME
+    // =====================================================
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+
+    // =====================================================
+    // EMAIL
+    // =====================================================
 
     public String getEmail() {
         return email;
@@ -123,6 +230,11 @@ public class User {
         this.email = email;
     }
 
+
+    // =====================================================
+    // PASSWORD
+    // =====================================================
+
     public String getPassword() {
         return password;
     }
@@ -130,6 +242,11 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
+
+
+    // =====================================================
+    // PHONE
+    // =====================================================
 
     public String getPhone() {
         return phone;
@@ -139,6 +256,11 @@ public class User {
         this.phone = phone;
     }
 
+
+    // =====================================================
+    // PROFILE IMAGE
+    // =====================================================
+
     public String getProfileImage() {
         return profileImage;
     }
@@ -146,6 +268,11 @@ public class User {
     public void setProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }
+
+
+    // =====================================================
+    // ENABLED
+    // =====================================================
 
     public boolean isEnabled() {
         return enabled;
@@ -155,6 +282,24 @@ public class User {
         this.enabled = enabled;
     }
 
+
+    // =====================================================
+    // EMAIL VERIFIED
+    // =====================================================
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
+    }
+
+
+    // =====================================================
+    // DATES
+    // =====================================================
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -163,6 +308,11 @@ public class User {
         return updatedAt;
     }
 
+
+    // =====================================================
+    // ROLES
+    // =====================================================
+
     public Set<Role> getRoles() {
         return roles;
     }
@@ -170,6 +320,7 @@ public class User {
     public void setRoles(Set<Role> roles) {
         this.roles = roles;
     }
+
 
     public void addRole(Role role) {
         this.roles.add(role);
