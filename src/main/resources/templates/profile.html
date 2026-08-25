@@ -1,75 +1,292 @@
 <!DOCTYPE html>
-<html
-    xmlns:th="http://www.thymeleaf.org"
-    xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
     <meta charset="UTF-8">
 
     <meta name="viewport"
-          content="width=device-width, initial-scale=1">
+          content="width=device-width, initial-scale=1.0">
 
-    <title>My Profile - News Portal</title>
+    <title>My Profile — News Portal</title>
 
-    <link
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        rel="stylesheet">
+    <link rel="stylesheet"
+          th:href="@{/newsportal.css}">
 
     <style>
 
-        body {
-            background: #f5f7fb;
+        .profile-page {
+            min-height: calc(100vh - 76px);
+            background: var(--paper);
+            padding: 70px 0 100px;
         }
 
-        .profile-container {
-            max-width: 800px;
-            margin: 60px auto;
+        .profile-wrapper {
+            width: min(900px, calc(100% - 64px));
+            margin: 0 auto;
+        }
+
+        .profile-kicker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px;
+
+            color: var(--accent);
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .profile-kicker::before {
+            content: "";
+            width: 38px;
+            height: 1px;
+            background: var(--accent);
+        }
+
+        .profile-title {
+            margin: 0 0 45px;
+
+            font-family: var(--serif);
+            font-size: clamp(55px, 7vw, 90px);
+            font-weight: 400;
+            line-height: .9;
+            letter-spacing: -4px;
         }
 
         .profile-card {
-            background: white;
-            border: none;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,.1);
-            overflow: hidden;
+            background: var(--paper-light);
+            border: 1px solid var(--line);
         }
 
-        .profile-header {
-            background: linear-gradient(
-                135deg,
-                #0d6efd,
-                #6610f2
-            );
-
-            color: white;
-            padding: 40px;
-            text-align: center;
-        }
-
-        .avatar {
-            width: 90px;
-            height: 90px;
-            background: white;
-            color: #0d6efd;
-            border-radius: 50%;
+        .profile-card-header {
+            padding: 38px 42px;
+            border-bottom: 1px solid var(--line);
 
             display: flex;
             align-items: center;
+            gap: 24px;
+        }
+
+        .profile-avatar {
+            width: 76px;
+            height: 76px;
+
+            flex-shrink: 0;
+
+            display: grid;
+            place-items: center;
+
+            border-radius: 50%;
+
+            background: var(--ink);
+            color: var(--paper);
+
+            font-family: var(--serif);
+            font-size: 30px;
+        }
+
+        .profile-header-text h2 {
+            margin: 0 0 4px;
+
+            font-family: var(--serif);
+            font-size: 30px;
+            font-weight: 400;
+        }
+
+        .profile-header-text p {
+            margin: 0;
+
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .profile-body {
+            padding: 35px 42px 42px;
+        }
+
+        .profile-message {
+            margin-bottom: 28px;
+            padding: 14px 16px;
+
+            border: 1px solid #b8d8c1;
+            background: #edf7f0;
+
+            color: #285c37;
+
+            font-size: 13px;
+        }
+
+        .profile-section-title {
+            margin: 0 0 22px;
+
+            font-family: var(--serif);
+            font-size: 27px;
+            font-weight: 400;
+        }
+
+        .profile-info {
+            border-top: 1px solid var(--line);
+        }
+
+        .profile-row {
+            min-height: 65px;
+
+            display: grid;
+            grid-template-columns: 180px 1fr;
+
+            align-items: center;
+
+            border-bottom: 1px solid var(--line);
+        }
+
+        .profile-label {
+            color: var(--muted);
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+        }
+
+        .profile-value {
+            font-size: 14px;
+        }
+
+        .role-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .role-badge {
+            display: inline-flex;
+            align-items: center;
+
+            padding: 5px 10px;
+
+            background: var(--ink);
+            color: var(--paper);
+
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+
+            padding: 5px 10px;
+
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: #e8f4eb;
+            color: #28643a;
+        }
+
+        .status-disabled {
+            background: #f8e8e8;
+            color: #9a3434;
+        }
+
+        .profile-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+
+            margin-top: 32px;
+        }
+
+        .profile-button {
+            display: inline-flex;
+            align-items: center;
             justify-content: center;
 
-            font-size: 40px;
-            margin: 0 auto 15px;
+            min-height: 44px;
+            padding: 0 18px;
+
+            border: 1px solid var(--ink);
+
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+
+            transition:
+                background .2s ease,
+                color .2s ease;
         }
 
-        .info-row {
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
+        .profile-button-primary {
+            background: var(--ink);
+            color: var(--paper);
         }
 
-        .info-label {
-            font-weight: bold;
-            color: #6c757d;
+        .profile-button-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .profile-button-secondary {
+            background: transparent;
+            color: var(--ink);
+        }
+
+        .profile-button-secondary:hover {
+            background: var(--ink);
+            color: var(--paper);
+        }
+
+        @media (max-width: 650px) {
+
+            .profile-page {
+                padding: 45px 0 70px;
+            }
+
+            .profile-wrapper {
+                width: min(100% - 32px, 900px);
+            }
+
+            .profile-title {
+                font-size: 52px;
+                letter-spacing: -2.5px;
+            }
+
+            .profile-card-header {
+                padding: 28px 22px;
+            }
+
+            .profile-body {
+                padding: 28px 22px;
+            }
+
+            .profile-row {
+                grid-template-columns: 1fr;
+                gap: 6px;
+                padding: 15px 0;
+            }
+
+            .profile-avatar {
+                width: 62px;
+                height: 62px;
+                font-size: 25px;
+            }
+
+            .profile-header-text h2 {
+                font-size: 24px;
+            }
+
         }
 
     </style>
@@ -81,223 +298,273 @@
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
 
-<div class="container profile-container">
+<main class="profile-page">
 
-    <div class="profile-card">
+    <div class="profile-wrapper">
 
-        <div class="profile-header">
-
-            <div class="avatar">
-                👤
-            </div>
-
-            <h2 th:text="${user.name}">
-                User
-            </h2>
-
-            <p class="mb-0"
-               th:text="${user.email}">
-                user@example.com
-            </p>
-
+        <div class="profile-kicker">
+            Account
         </div>
 
-
-        <div class="card-body p-4">
-
-            <!-- SUCCESS -->
-
-            <div
-                th:if="${param.updated}"
-                class="alert alert-success">
-
-                Profile updated successfully.
-
-            </div>
+        <h1 class="profile-title">
+            My Profile
+        </h1>
 
 
-            <div
-                th:if="${param.passwordChanged}"
-                class="alert alert-success">
-
-                Password changed successfully.
-
-            </div>
+        <section class="profile-card">
 
 
-            <h4 class="mb-4">
-                Account Information
-            </h4>
+            <!-- HEADER -->
 
+            <div class="profile-card-header">
 
-            <!-- NAME -->
-
-            <div class="info-row row">
-
-                <div class="col-sm-4 info-label">
-                    Name
+                <div class="profile-avatar"
+                     th:text="${#strings.substring(user.name, 0, 1).toUpperCase()}">
+                    A
                 </div>
 
-                <div class="col-sm-8"
-                     th:text="${user.name}">
+                <div class="profile-header-text">
 
-                    User
+                    <h2 th:text="${user.name}">
+                        User
+                    </h2>
+
+                    <p th:text="${user.email}">
+                        user@example.com
+                    </p>
 
                 </div>
 
             </div>
 
 
-            <!-- EMAIL -->
+            <!-- BODY -->
 
-            <div class="info-row row">
+            <div class="profile-body">
 
-                <div class="col-sm-4 info-label">
-                    Email
+
+                <!-- SUCCESS -->
+
+                <div
+                    th:if="${param.updated}"
+                    class="profile-message">
+
+                    Your profile has been updated successfully.
+
                 </div>
 
-                <div class="col-sm-8"
-                     th:text="${user.email}">
 
-                    user@example.com
+                <div
+                    th:if="${param.passwordChanged}"
+                    class="profile-message">
+
+                    Your password has been changed successfully.
+
+                </div>
+
+
+                <h2 class="profile-section-title">
+                    Account Information
+                </h2>
+
+
+                <div class="profile-info">
+
+
+                    <!-- NAME -->
+
+                    <div class="profile-row">
+
+                        <div class="profile-label">
+                            Name
+                        </div>
+
+                        <div
+                            class="profile-value"
+                            th:text="${user.name}">
+
+                            User
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- EMAIL -->
+
+                    <div class="profile-row">
+
+                        <div class="profile-label">
+                            Email
+                        </div>
+
+                        <div
+                            class="profile-value"
+                            th:text="${user.email}">
+
+                            user@example.com
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- PHONE -->
+
+                    <div class="profile-row">
+
+                        <div class="profile-label">
+                            Phone
+                        </div>
+
+                        <div class="profile-value">
+
+                            <span
+                                th:if="${user.phone != null and !#strings.isEmpty(user.phone)}"
+                                th:text="${user.phone}">
+
+                                Phone
+
+                            </span>
+
+                            <span
+                                th:unless="${user.phone != null and !#strings.isEmpty(user.phone)}"
+                                style="color: var(--muted);">
+
+                                Not provided
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ROLE -->
+
+                    <div class="profile-row">
+
+                        <div class="profile-label">
+                            Role
+                        </div>
+
+                        <div class="profile-value role-list">
+
+                            <span
+                                th:each="role : ${user.roles}"
+                                class="role-badge"
+                                th:text="${#strings.replace(role.name, 'ROLE_', '')}">
+
+                                USER
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- STATUS -->
+
+                    <div class="profile-row">
+
+                        <div class="profile-label">
+                            Account Status
+                        </div>
+
+                        <div class="profile-value">
+
+                            <span
+                                th:if="${user.enabled}"
+                                class="status-badge status-active">
+
+                                Active
+
+                            </span>
+
+                            <span
+                                th:unless="${user.enabled}"
+                                class="status-badge status-disabled">
+
+                                Disabled
+
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- MEMBER SINCE -->
+
+                    <div class="profile-row">
+
+                        <div class="profile-label">
+                            Member Since
+                        </div>
+
+                        <div
+                            class="profile-value"
+                            th:text="${#temporals.format(user.createdAt, 'dd MMMM yyyy')}">
+
+                            25 August 2026
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- ACTIONS -->
+
+                <div class="profile-actions">
+
+                    <a
+                        href="/profile/edit"
+                        class="profile-button profile-button-primary">
+
+                        Edit Profile
+
+                    </a>
+
+                    <a
+                        href="/profile/change-password"
+                        class="profile-button profile-button-secondary">
+
+                        Change Password
+
+                    </a>
 
                 </div>
 
             </div>
 
-
-            <!-- PHONE -->
-
-            <div class="info-row row">
-
-                <div class="col-sm-4 info-label">
-                    Phone
-                </div>
-
-                <div class="col-sm-8">
-
-                    <span
-                        th:if="${user.phone != null and !user.phone.isEmpty()}"
-                        th:text="${user.phone}">
-                    </span>
-
-                    <span
-                        th:unless="${user.phone != null and !user.phone.isEmpty()}"
-                        class="text-muted">
-
-                        Not provided
-
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- ROLE -->
-
-            <div class="info-row row">
-
-                <div class="col-sm-4 info-label">
-                    Role
-                </div>
-
-                <div class="col-sm-8">
-
-                    <span
-                        th:each="role : ${user.roles}"
-                        class="badge bg-primary me-1"
-                        th:text="${role.name}">
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- STATUS -->
-
-            <div class="info-row row">
-
-                <div class="col-sm-4 info-label">
-                    Status
-                </div>
-
-                <div class="col-sm-8">
-
-                    <span
-                        th:if="${user.enabled}"
-                        class="badge bg-success">
-
-                        Active
-
-                    </span>
-
-                    <span
-                        th:unless="${user.enabled}"
-                        class="badge bg-danger">
-
-                        Disabled
-
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- CREATED -->
-
-            <div class="info-row row">
-
-                <div class="col-sm-4 info-label">
-                    Member Since
-                </div>
-
-                <div class="col-sm-8"
-                     th:text="${user.createdAt}">
-
-                    Date
-
-                </div>
-
-            </div>
-
-
-            <!-- ACTIONS -->
-
-            <div class="mt-4 d-flex gap-2">
-
-                <a
-                    href="/profile/edit"
-                    class="btn btn-primary">
-
-                    ✏️ Edit Profile
-
-                </a>
-
-                <a
-                    href="/profile/change-password"
-                    class="btn btn-outline-secondary">
-
-                    🔐 Change Password
-
-                </a>
-
-            </div>
-
-        </div>
+        </section>
 
     </div>
 
-</div>
+</main>
 
 
-<footer class="bg-dark text-white text-center p-3 mt-5">
+<footer class="site-footer">
 
-    © 2026 News Portal | Developed by Ayush Trivedi
+    <div class="editorial-container footer-bottom">
+
+        <span>
+            © 2026 News Portal
+        </span>
+
+        <span>
+            Developed by Ayush Trivedi
+        </span>
+
+    </div>
 
 </footer>
+
+
+<script th:src="@{/newsportal.js}"></script>
 
 </body>
 

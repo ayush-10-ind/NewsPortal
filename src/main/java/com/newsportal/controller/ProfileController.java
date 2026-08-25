@@ -7,6 +7,7 @@ import com.newsportal.repository.UserRepository;
 
 import jakarta.validation.Valid;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -29,10 +30,9 @@ public class ProfileController {
         this.passwordEncoder = passwordEncoder;
     }
 
-
-    // ==========================================
+    // =========================================================
     // VIEW PROFILE
-    // ==========================================
+    // =========================================================
 
     @GetMapping
     public String profile(
@@ -46,10 +46,9 @@ public class ProfileController {
         return "profile";
     }
 
-
-    // ==========================================
+    // =========================================================
     // EDIT PROFILE PAGE
-    // ==========================================
+    // =========================================================
 
     @GetMapping("/edit")
     public String editProfile(
@@ -58,21 +57,20 @@ public class ProfileController {
 
         User user = getCurrentUser(authentication);
 
-        ProfileUpdateDTO dto =
-                new ProfileUpdateDTO(
-                        user.getName(),
-                        user.getPhone()
-                );
+        ProfileUpdateDTO dto = new ProfileUpdateDTO(
+                user.getName(),
+                user.getPhone()
+        );
 
         model.addAttribute("profileUpdate", dto);
+        model.addAttribute("user", user);
 
         return "editProfile";
     }
 
-
-    // ==========================================
+    // =========================================================
     // UPDATE PROFILE
-    // ==========================================
+    // =========================================================
 
     @PostMapping("/edit")
     public String updateProfile(
@@ -84,22 +82,87 @@ public class ProfileController {
 
         User user = getCurrentUser(authentication);
 
+        // ---------------------------------------------
+        // VALIDATION ERRORS
+        // ---------------------------------------------
+
         if (result.hasErrors()) {
+
+            model.addAttribute("user", user);
+
             return "editProfile";
         }
 
-        user.setName(dto.getName());
-        user.setPhone(dto.getPhone());
+        // ---------------------------------------------
+        // NORMALIZE PHONE
+        // ---------------------------------------------
 
-        userRepository.save(user);
+        String phone = dto.getPhone();
+
+        if (phone != null) {
+            phone = phone.trim();
+
+            if (phone.isEmpty()) {
+                phone = null;
+            }
+        }
+
+        // ---------------------------------------------
+        // CHECK PHONE DUPLICATE
+        // ---------------------------------------------
+
+        if (phone != null) {
+
+            boolean phoneTaken =
+                    userRepository.existsByPhoneAndIdNot(
+                            phone,
+                            user.getId()
+                    );
+
+            if (phoneTaken) {
+
+                result.rejectValue(
+                        "phone",
+                        "duplicate",
+                        "This phone number is already associated with another account."
+                );
+
+                model.addAttribute("user", user);
+
+                return "editProfile";
+            }
+        }
+
+        // ---------------------------------------------
+        // UPDATE USER
+        // ---------------------------------------------
+
+        user.setName(dto.getName().trim());
+        user.setPhone(phone);
+
+        try {
+
+            userRepository.save(user);
+
+        } catch (DataIntegrityViolationException ex) {
+
+            result.rejectValue(
+                    "phone",
+                    "duplicate",
+                    "This phone number is already in use."
+            );
+
+            model.addAttribute("user", user);
+
+            return "editProfile";
+        }
 
         return "redirect:/profile?updated=true";
     }
 
-
-    // ==========================================
+    // =========================================================
     // CHANGE PASSWORD PAGE
-    // ==========================================
+    // =========================================================
 
     @GetMapping("/change-password")
     public String changePasswordPage(
@@ -113,10 +176,9 @@ public class ProfileController {
         return "changePassword";
     }
 
-
-    // ==========================================
+    // =========================================================
     // CHANGE PASSWORD
-    // ==========================================
+    // =========================================================
 
     @PostMapping("/change-password")
     public String changePassword(
@@ -128,16 +190,22 @@ public class ProfileController {
 
         User user = getCurrentUser(authentication);
 
+        // ---------------------------------------------
+        // VALIDATION
+        // ---------------------------------------------
+
         if (result.hasErrors()) {
             return "changePassword";
         }
 
+        // ---------------------------------------------
+        // CURRENT PASSWORD
+        // ---------------------------------------------
 
-        // Verify current password
-
-        if (!passwordEncoder.matches(
-                dto.getCurrentPassword(),
-                user.getPassword())) {
+        if (user.getPassword() == null ||
+                !passwordEncoder.matches(
+                        dto.getCurrentPassword(),
+                        user.getPassword())) {
 
             model.addAttribute(
                     "error",
@@ -147,8 +215,9 @@ public class ProfileController {
             return "changePassword";
         }
 
-
-        // Verify new password confirmation
+        // ---------------------------------------------
+        // CONFIRM NEW PASSWORD
+        // ---------------------------------------------
 
         if (!dto.getNewPassword()
                 .equals(dto.getConfirmPassword())) {
@@ -161,8 +230,9 @@ public class ProfileController {
             return "changePassword";
         }
 
-
-        // Encode new password
+        // ---------------------------------------------
+        // SAVE NEW PASSWORD
+        // ---------------------------------------------
 
         user.setPassword(
                 passwordEncoder.encode(
@@ -170,20 +240,25 @@ public class ProfileController {
                 )
         );
 
-
         userRepository.save(user);
-
 
         return "redirect:/profile?passwordChanged=true";
     }
 
-
-    // ==========================================
+    // =========================================================
     // CURRENT USER
-    // ==========================================
+    // =========================================================
 
     private User getCurrentUser(
             Authentication authentication) {
+
+        if (authentication == null ||
+                authentication.getName() == null) {
+
+            throw new RuntimeException(
+                    "User is not authenticated"
+            );
+        }
 
         return userRepository
                 .findByEmail(authentication.getName())
