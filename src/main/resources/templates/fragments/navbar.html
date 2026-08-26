@@ -464,7 +464,7 @@
 
 
         /* =====================================================
-           PREMIUM USER DROPDOWN
+           USER DROPDOWN
            ===================================================== */
 
         .editorial-nav .user-dropdown {
@@ -635,44 +635,6 @@
 
 
         /* =====================================================
-           THEME
-           ===================================================== */
-
-        .agni-theme-button {
-            width: 27px;
-            height: 27px;
-            display: grid;
-            place-items: center;
-            border: 0;
-            padding: 0;
-            background: transparent;
-            color: #11110f;
-            cursor: pointer;
-            position: relative;
-            font-size: 17px;
-            line-height: 1;
-        }
-
-        .agni-theme-sun,
-        .agni-theme-moon {
-            position: absolute;
-            transition:
-                opacity .25s ease,
-                transform .3s ease;
-        }
-
-        .agni-theme-sun {
-            opacity: 1;
-            transform: scale(1);
-        }
-
-        .agni-theme-moon {
-            opacity: 0;
-            transform: scale(.5) rotate(-45deg);
-        }
-
-
-        /* =====================================================
            MOBILE BUTTON
            ===================================================== */
 
@@ -800,6 +762,10 @@
         }
 
 
+        /* =====================================================
+           SMALL MOBILE
+           ===================================================== */
+
         @media (max-width: 600px) {
 
             .editorial-nav .nav-inner {
@@ -832,170 +798,6 @@
             }
         }
 
-
-        /* =====================================================
-           DARK MODE
-           ===================================================== */
-
-        html.agni-dark .editorial-nav {
-            background: #101112;
-            border-color: #303236;
-            color: #f2f0eb;
-        }
-
-        html.agni-dark .editorial-nav .brand-name {
-            color: #f2f0eb;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .desktop-navigation > a {
-            color: #d8d6d0;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .weather-nav-text {
-            color: #d8d6d0;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .nav-search svg,
-        html.agni-dark
-        .editorial-nav
-        .nav-notification svg {
-            stroke: #f2f0eb;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .nav-editor-link {
-            color: #f2f0eb;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .user-trigger {
-            color: #f2f0eb;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .user-initial {
-            background: #f2f0eb;
-            color: #101112;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .user-chevron {
-            color: #f2f0eb;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .user-dropdown {
-            background: #17191b;
-            border-color: #303236;
-            box-shadow: 0 18px 45px rgba(0, 0, 0, .35);
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .dropdown-user {
-            border-color: #303236;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .dropdown-label {
-            color: #99958d;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .dropdown-user strong {
-            color: #f2f0eb;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .user-dropdown > a,
-        html.agni-dark
-        .editorial-nav
-        .user-dropdown form button {
-            color: #dedbd4;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .user-dropdown > a:hover,
-        html.agni-dark
-        .editorial-nav
-        .user-dropdown form button:hover {
-            background: #24272a;
-            color: #ffffff;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .dropdown-icon {
-            color: #aaa69e;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .dropdown-divider,
-        html.agni-dark
-        .editorial-nav
-        .user-dropdown form {
-            border-color: #303236;
-        }
-
-        html.agni-dark
-        .agni-theme-button {
-            color: #f2f0eb;
-        }
-
-        html.agni-dark
-        .agni-theme-sun {
-            opacity: 0;
-            transform: scale(.5) rotate(45deg);
-        }
-
-        html.agni-dark
-        .agni-theme-moon {
-            opacity: 1;
-            transform: scale(1) rotate(0);
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .mobile-navigation {
-            background: #101112;
-            border-color: #303236;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .mobile-navigation > a {
-            color: #f2f0eb;
-            border-color: #303236;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .mobile-menu-button {
-            border-color: #303236;
-        }
-
-        html.agni-dark
-        .editorial-nav
-        .mobile-menu-button span {
-            background: #f2f0eb;
-        }
-
     </style>
 
 
@@ -1015,7 +817,9 @@
                   aria-hidden="true">
 
                 <span class="agni-logo-line agni-logo-saffron"></span>
+
                 <span class="agni-logo-line agni-logo-white"></span>
+
                 <span class="agni-logo-line agni-logo-green"></span>
 
             </span>
@@ -1027,23 +831,39 @@
         </a>
 
 
-        <!-- DESKTOP NAVIGATION -->
+        <!-- =================================================
+             DESKTOP NAVIGATION
+             ================================================= -->
 
         <div class="desktop-navigation">
 
-            <a href="/">HOME</a>
+            <a href="/">
+                HOME
+            </a>
 
-            <a href="/newsList">NEWS</a>
+            <a href="/newsList">
+                NEWS
+            </a>
 
-            <a href="/newsList?category=India">INDIA</a>
+            <a href="/newsList?category=India">
+                INDIA
+            </a>
 
-            <a href="/newsList?category=World">WORLD</a>
+            <a href="/newsList?category=World">
+                WORLD
+            </a>
 
-            <a href="/newsList?category=Technology">TECHNOLOGY</a>
+            <a href="/newsList?category=Technology">
+                TECHNOLOGY
+            </a>
 
-            <a href="/newsList?category=Business">BUSINESS</a>
+            <a href="/newsList?category=Business">
+                BUSINESS
+            </a>
 
-            <a href="/newsList?category=Sports">SPORTS</a>
+            <a href="/newsList?category=Sports">
+                SPORTS
+            </a>
 
 
             <!-- WEATHER -->
@@ -1149,9 +969,12 @@
         </div>
 
 
-        <!-- RIGHT SIDE -->
+        <!-- =================================================
+             RIGHT SIDE
+             ================================================= -->
 
         <div class="nav-actions">
+
 
             <!-- SEARCH -->
 
@@ -1209,11 +1032,12 @@
                     viewBox="0 0 24 24"
                     aria-hidden="true">
 
-                    <path d="M18 9
-                             a6 6 0 0 0-12 0
-                             c0 7-3 7-3 9
-                             h18
-                             c0-2-3-2-3-9">
+                    <path
+                        d="M18 9
+                           a6 6 0 0 0-12 0
+                           c0 7-3 7-3 9
+                           h18
+                           c0-2-3-2-3-9">
                     </path>
 
                     <path d="M10 21h4"></path>
@@ -1230,26 +1054,6 @@
                 </span>
 
             </a>
-
-
-            <!-- THEME -->
-
-            <button
-                type="button"
-                id="agniThemeButton"
-                class="agni-theme-button"
-                aria-label="Switch theme"
-                title="Switch theme">
-
-                <span class="agni-theme-sun">
-                    ☀
-                </span>
-
-                <span class="agni-theme-moon">
-                    ☾
-                </span>
-
-            </button>
 
 
             <!-- USER MENU -->
@@ -1304,6 +1108,7 @@
                     class="user-dropdown"
                     id="userDropdown">
 
+
                     <div class="dropdown-user">
 
                         <span class="dropdown-label">
@@ -1352,7 +1157,9 @@
 
                             <svg viewBox="0 0 24 24">
 
-                                <path d="M6 4h12v16l-6-3l-6 3z"></path>
+                                <path
+                                    d="M6 4h12v16l-6-3l-6 3z">
+                                </path>
 
                             </svg>
 
@@ -1380,11 +1187,12 @@
 
                             <svg viewBox="0 0 24 24">
 
-                                <path d="M18 9
-                                         a6 6 0 0 0-12 0
-                                         c0 7-3 7-3 9
-                                         h18
-                                         c0-2-3-2-3-9">
+                                <path
+                                    d="M18 9
+                                       a6 6 0 0 0-12 0
+                                       c0 7-3 7-3 9
+                                       h18
+                                       c0-2-3-2-3-9">
                                 </path>
 
                                 <path d="M10 21h4"></path>
@@ -1421,12 +1229,13 @@
                                     r="3">
                                 </circle>
 
-                                <path d="M5 20
-                                         c0-4
-                                         3-6
-                                         7-6
-                                         s7 2
-                                         7 6">
+                                <path
+                                    d="M5 20
+                                       c0-4
+                                       3-6
+                                       7-6
+                                       s7 2
+                                       7 6">
                                 </path>
 
                             </svg>
@@ -1443,6 +1252,8 @@
                     <div class="dropdown-divider"></div>
 
 
+                    <!-- ADMIN DASHBOARD -->
+
                     <a
                         href="/admin/users"
                         class="admin-dropdown-link"
@@ -1452,23 +1263,24 @@
 
                             <svg viewBox="0 0 24 24">
 
-                                <path d="M12 3
-                                         l2.5 2
-                                         3.2.3
-                                         .8 3.1
-                                         2 2.5
-                                         -2 2.5
-                                         -.8 3.1
-                                         -3.2.3
-                                         -2.5 2
-                                         -2.5-2
-                                         -3.2-.3
-                                         -.8-3.1
-                                         -2-2.5
-                                         2-2.5
-                                         .8-3.1
-                                         3.2-.3
-                                         z">
+                                <path
+                                    d="M12 3
+                                       l2.5 2
+                                       3.2.3
+                                       .8 3.1
+                                       2 2.5
+                                       -2 2.5
+                                       -.8 3.1
+                                       -3.2.3
+                                       -2.5 2
+                                       -2.5-2
+                                       -3.2-.3
+                                       -.8-3.1
+                                       -2-2.5
+                                       2-2.5
+                                       .8-3.1
+                                       3.2-.3
+                                       z">
                                 </path>
 
                                 <circle
@@ -1487,6 +1299,8 @@
 
                     </a>
 
+
+                    <!-- LOGOUT -->
 
                     <form
                         th:action="@{/logout}"
@@ -1560,21 +1374,37 @@
         class="mobile-navigation"
         id="mobileNavigation">
 
-        <a href="/">HOME</a>
+        <a href="/">
+            HOME
+        </a>
 
-        <a href="/newsList">NEWS</a>
+        <a href="/newsList">
+            NEWS
+        </a>
 
-        <a href="/newsList?category=India">INDIA</a>
+        <a href="/newsList?category=India">
+            INDIA
+        </a>
 
-        <a href="/newsList?category=World">WORLD</a>
+        <a href="/newsList?category=World">
+            WORLD
+        </a>
 
-        <a href="/newsList?category=Technology">TECHNOLOGY</a>
+        <a href="/newsList?category=Technology">
+            TECHNOLOGY
+        </a>
 
-        <a href="/newsList?category=Business">BUSINESS</a>
+        <a href="/newsList?category=Business">
+            BUSINESS
+        </a>
 
-        <a href="/newsList?category=Sports">SPORTS</a>
+        <a href="/newsList?category=Sports">
+            SPORTS
+        </a>
 
-        <a href="/weather">WEATHER</a>
+        <a href="/weather">
+            WEATHER
+        </a>
 
         <a
             href="/live-news"
@@ -1801,6 +1631,7 @@
                                     ".editorial-nav"
                                 );
 
+
                             if (nav) {
 
                                 nav.classList.toggle(
@@ -1815,6 +1646,7 @@
                                 "aria-expanded",
                                 String(!isOpen)
                             );
+
 
                             mobileButton.setAttribute(
                                 "aria-label",
@@ -1840,10 +1672,12 @@
                                             "open"
                                         );
 
+
                                         const nav =
                                             document.querySelector(
                                                 ".editorial-nav"
                                             );
+
 
                                         if (nav) {
 
@@ -1853,10 +1687,12 @@
 
                                         }
 
+
                                         mobileButton.setAttribute(
                                             "aria-expanded",
                                             "false"
                                         );
+
 
                                         mobileButton.setAttribute(
                                             "aria-label",
@@ -1871,91 +1707,6 @@
 
                 }
 
-
-                /* =================================================
-                   DARK / LIGHT MODE
-                   ================================================= */
-
-                const themeButton =
-                    document.getElementById(
-                        "agniThemeButton"
-                    );
-
-
-                function applyTheme(theme) {
-
-                    if (
-                        theme === "dark"
-                    ) {
-
-                        document.documentElement.classList.add(
-                            "agni-dark"
-                        );
-
-                    } else {
-
-                        document.documentElement.classList.remove(
-                            "agni-dark"
-                        );
-
-                    }
-
-                }
-
-
-                const savedTheme =
-                    localStorage.getItem(
-                        "agnipress-theme"
-                    );
-
-
-                if (
-                    savedTheme === "dark"
-                ) {
-
-                    applyTheme("dark");
-
-                } else if (
-                    savedTheme === "light"
-                ) {
-
-                    applyTheme("light");
-
-                }
-
-
-                if (themeButton) {
-
-                    themeButton.addEventListener(
-                        "click",
-                        function () {
-
-                            const isDark =
-                                document.documentElement.classList.contains(
-                                    "agni-dark"
-                                );
-
-                            const newTheme =
-                                isDark
-                                    ? "light"
-                                    : "dark";
-
-
-                            applyTheme(
-                                newTheme
-                            );
-
-
-                            localStorage.setItem(
-                                "agnipress-theme",
-                                newTheme
-                            );
-
-                        }
-                    );
-
-                }
-
             }
         );
 
@@ -1964,4 +1715,5 @@
 </nav>
 
 </body>
+
 </html>

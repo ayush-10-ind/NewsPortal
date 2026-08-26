@@ -7492,3 +7492,1294 @@ html.agni-dark .agni-moon {
         height: 36px;
     }
 }
+
+/* =========================================================
+   AGNIPRESS — FINAL GLOBAL DARK MODE
+   =========================================================
+   
+   This is the ONLY dark-mode block you should keep.
+
+   Goals:
+   - Every page switches to dark mode
+   - Every text element remains readable
+   - No black text remains on dark backgrounds
+   - No white/light sections remain accidentally
+   - Cards, forms, buttons, pagination and dropdowns match
+   - Weather/navigation remain visible
+   - AgniPress accent colors remain intact
+   ========================================================= */
+
+
+/* =========================================================
+   DARK THEME VARIABLES
+   ========================================================= */
+
+html.agni-dark {
+
+    /* Editorial system */
+
+    --paper: #0a0c0e;
+    --paper-light: #121519;
+
+    --ink: #f5f5f2;
+    --muted: #a9adb2;
+
+    --line: #30353b;
+    --white: #ffffff;
+
+
+    /* AgniPress system */
+
+    --agni-bg: #08090a;
+    --agni-surface: #121518;
+
+    --agni-text: #f5f5f5;
+    --agni-muted: #a1a5aa;
+
+    --agni-border: #2d3238;
+    --agni-hover: #1c2025;
+
+
+    /* Brand */
+
+    --agni-red: #e21b23;
+    --agni-saffron: #ff8a00;
+    --agni-green: #138a42;
+}
+
+
+/* =========================================================
+   GLOBAL DOCUMENT
+   ========================================================= */
+
+html.agni-dark {
+    background: #0a0c0e !important;
+    color: #f5f5f2 !important;
+    color-scheme: dark;
+}
+
+html.agni-dark body {
+    background: #0a0c0e !important;
+    color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   GLOBAL BOX SIZING / TRANSITIONS
+   ========================================================= */
+
+html.agni-dark *,
+html.agni-dark *::before,
+html.agni-dark *::after {
+    border-color: var(--line);
+}
+
+html.agni-dark body,
+html.agni-dark .editorial-nav,
+html.agni-dark .hero-editorial,
+html.agni-dark .home-hero,
+html.agni-dark .editorial-section,
+html.agni-dark .most-read-section,
+html.agni-dark .categories-section,
+html.agni-dark .home-latest,
+html.agni-dark .home-most-read,
+html.agni-dark .home-categories,
+html.agni-dark .article-header,
+html.agni-dark .article-body-section,
+html.agni-dark .article-related,
+html.agni-dark .newsroom-page,
+html.agni-dark .auth-page,
+html.agni-dark .auth-container,
+html.agni-dark .editor-page,
+html.agni-dark .site-footer,
+html.agni-dark .briefing-section,
+html.agni-dark .home-briefing {
+    transition:
+        background-color .3s ease,
+        color .3s ease,
+        border-color .3s ease;
+}
+
+
+/* =========================================================
+   GLOBAL PAGE SECTIONS
+   ========================================================= */
+
+html.agni-dark .editorial-nav,
+html.agni-dark .hero-editorial,
+html.agni-dark .home-hero,
+html.agni-dark .editorial-section,
+html.agni-dark .most-read-section,
+html.agni-dark .categories-section,
+html.agni-dark .home-latest,
+html.agni-dark .home-most-read,
+html.agni-dark .home-categories,
+html.agni-dark .article-header,
+html.agni-dark .article-body-section,
+html.agni-dark .article-related,
+html.agni-dark .newsroom-page,
+html.agni-dark .auth-page,
+html.agni-dark .auth-form-section,
+html.agni-dark .editor-page {
+    background-color: var(--paper) !important;
+    color: var(--ink) !important;
+}
+
+
+/* =========================================================
+   SECONDARY SURFACES
+   ========================================================= */
+
+html.agni-dark .breaking-bar,
+html.agni-dark .dispatch-section,
+html.agni-dark .home-most-read,
+html.agni-dark .briefing-section,
+html.agni-dark .home-briefing {
+    background-color: var(--paper-light) !important;
+    color: var(--ink) !important;
+}
+
+
+/* =========================================================
+   UNIVERSAL TEXT CONTRAST
+   ========================================================= */
+
+html.agni-dark h1,
+html.agni-dark h2,
+html.agni-dark h3,
+html.agni-dark h4,
+html.agni-dark h5,
+html.agni-dark h6,
+html.agni-dark .home-hero-title,
+html.agni-dark .home-featured-content h2,
+html.agni-dark .home-featured-content h2 a,
+html.agni-dark .home-news-content h3,
+html.agni-dark .home-news-content h3 a,
+html.agni-dark .most-read-main h3,
+html.agni-dark .most-read-main h3 a,
+html.agni-dark .category-link,
+html.agni-dark .section-heading h2,
+html.agni-dark .home-categories h2,
+html.agni-dark .article-page-title,
+html.agni-dark .article-content,
+html.agni-dark .article-content h2,
+html.agni-dark .article-content h3,
+html.agni-dark .article-content h4,
+html.agni-dark .article-side-block strong,
+html.agni-dark .article-related-heading h2,
+html.agni-dark .article-related-card h3,
+html.agni-dark .article-related-card h3 a,
+html.agni-dark .article-title,
+html.agni-dark .article-title a,
+html.agni-dark .auth-intro h1,
+html.agni-dark .auth-form-header h2,
+html.agni-dark .editor-heading h1 {
+    color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   BODY COPY
+   ========================================================= */
+
+html.agni-dark p,
+html.agni-dark li,
+html.agni-dark .home-hero-description,
+html.agni-dark .home-featured-content p,
+html.agni-dark .home-news-content p,
+html.agni-dark .article-content p,
+html.agni-dark .article-content li,
+html.agni-dark .article-lead,
+html.agni-dark .article-description,
+html.agni-dark .auth-intro p,
+html.agni-dark .auth-form-header p,
+html.agni-dark .editor-heading p,
+html.agni-dark .editor-note p {
+    color: #c3c7cb !important;
+}
+
+
+/* =========================================================
+   MUTED / META TEXT
+   ========================================================= */
+
+html.agni-dark .home-featured-meta,
+html.agni-dark .home-news-meta,
+html.agni-dark .most-read-views,
+html.agni-dark .article-meta,
+html.agni-dark .article-caption,
+html.agni-dark .article-actions-label,
+html.agni-dark .article-source span,
+html.agni-dark .editor-date,
+html.agni-dark .editor-help,
+html.agni-dark .auth-edition,
+html.agni-dark .footer-bottom {
+    color: #9da2a8 !important;
+}
+
+
+/* =========================================================
+   LINKS
+   ========================================================= */
+
+html.agni-dark a {
+    color: inherit;
+}
+
+html.agni-dark .article-source a,
+html.agni-dark .article-editor-actions a {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .article-source a:hover,
+html.agni-dark .article-editor-actions a:hover,
+html.agni-dark .category-link:hover,
+html.agni-dark .article-related-card h3 a:hover {
+    color: var(--agni-red) !important;
+}
+
+
+/* =========================================================
+   NAVBAR
+   ========================================================= */
+
+html.agni-dark .editorial-nav {
+    background: #08090a !important;
+    color: #f5f5f5 !important;
+    border-color: #2d3238 !important;
+}
+
+
+/* Desktop navigation */
+
+html.agni-dark .editorial-nav .desktop-navigation > a,
+html.agni-dark .editorial-nav .nav-editor-link,
+html.agni-dark .editorial-nav .nav-login,
+html.agni-dark .editorial-nav .weather-nav-link,
+html.agni-dark .editorial-nav .weather-nav-text {
+    color: #f3f3f1 !important;
+}
+
+
+/* Navigation hover */
+
+html.agni-dark .editorial-nav .desktop-navigation > a:hover,
+html.agni-dark .editorial-nav .nav-editor-link:hover,
+html.agni-dark .editorial-nav .weather-nav-link:hover {
+    color: var(--agni-red) !important;
+}
+
+
+/* Brand */
+
+html.agni-dark .editorial-nav .brand,
+html.agni-dark .editorial-nav .brand-name {
+    color: #f5f5f5 !important;
+}
+
+
+/* Search / notification icons */
+
+html.agni-dark .editorial-nav .nav-search svg,
+html.agni-dark .editorial-nav .nav-notification svg {
+    stroke: #f5f5f5 !important;
+}
+
+
+/* Login */
+
+html.agni-dark .editorial-nav .nav-login {
+    border-color: #e5e5e2 !important;
+    color: #f5f5f2 !important;
+    background: transparent !important;
+}
+
+html.agni-dark .editorial-nav .nav-login:hover {
+    background: #f5f5f2 !important;
+    color: #0a0c0e !important;
+}
+
+
+/* =========================================================
+   AGNIPRESS MODERN NAVBAR
+   ========================================================= */
+
+html.agni-dark .agni-navbar {
+    background: var(--agni-bg) !important;
+    color: var(--agni-text) !important;
+    border-color: var(--agni-border) !important;
+}
+
+html.agni-dark .agni-brand {
+    color: var(--agni-text) !important;
+}
+
+html.agni-dark .agni-name,
+html.agni-dark .agni-tagline {
+    color: var(--agni-text) !important;
+}
+
+html.agni-dark .agni-tagline {
+    color: var(--agni-muted) !important;
+}
+
+html.agni-dark .agni-nav-link {
+    color: var(--agni-text) !important;
+}
+
+html.agni-dark .agni-nav-link:hover {
+    color: var(--agni-red) !important;
+}
+
+
+/* =========================================================
+   WEATHER NAVIGATION
+   ========================================================= */
+
+html.agni-dark .weather-nav-text {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .weather-nav-link {
+    color: #f5f5f2 !important;
+}
+
+
+/*
+   Important:
+   The weather SVG intentionally keeps its own
+   colors because it is an illustration.
+*/
+
+html.agni-dark .weather-nav-icon {
+    opacity: 1;
+}
+
+
+/* =========================================================
+   THEME BUTTON
+   ========================================================= */
+
+html.agni-dark .agni-theme-button,
+html.agni-dark .agni-theme-toggle,
+html.agni-dark .agni-action-button {
+    color: #f5f5f2 !important;
+    background: transparent !important;
+}
+
+html.agni-dark .agni-theme-button:hover,
+html.agni-dark .agni-theme-toggle:hover,
+html.agni-dark .agni-action-button:hover {
+    background: #1c2025 !important;
+}
+
+
+/* =========================================================
+   USER MENU
+   ========================================================= */
+
+html.agni-dark .user-trigger,
+html.agni-dark .user-name,
+html.agni-dark .user-chevron {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .user-initial {
+    background: #f5f5f2 !important;
+    color: #0a0c0e !important;
+}
+
+
+/* Dropdown */
+
+html.agni-dark .user-dropdown {
+    background: #15181b !important;
+    color: #f5f5f2 !important;
+    border-color: #30353b !important;
+
+    box-shadow:
+        0 20px 55px rgba(0, 0, 0, .5);
+}
+
+html.agni-dark .dropdown-user {
+    border-color: #30353b !important;
+}
+
+html.agni-dark .dropdown-label {
+    color: #9da2a8 !important;
+}
+
+html.agni-dark .dropdown-user strong {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .dropdown-item,
+html.agni-dark .dropdown-logout,
+html.agni-dark .user-dropdown > a,
+html.agni-dark .user-dropdown form button {
+    color: #dedfdc !important;
+}
+
+html.agni-dark .dropdown-item:hover,
+html.agni-dark .user-dropdown > a:hover,
+html.agni-dark .user-dropdown form button:hover {
+    background: #23272c !important;
+    color: #ffffff !important;
+}
+
+html.agni-dark .dropdown-icon {
+    color: #b9bdc1 !important;
+}
+
+html.agni-dark .dropdown-divider,
+html.agni-dark .dropdown-section,
+html.agni-dark .user-dropdown form {
+    border-color: #30353b !important;
+}
+
+
+/* =========================================================
+   MOBILE NAVIGATION
+   ========================================================= */
+
+html.agni-dark .mobile-menu-button {
+    background: transparent !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .mobile-menu-button span {
+    background: #f5f5f2 !important;
+}
+
+html.agni-dark .mobile-navigation {
+    background: #0a0c0e !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .mobile-navigation > a {
+    color: #f5f5f2 !important;
+    border-color: #30353b !important;
+}
+
+
+/* Modern mobile navigation */
+
+html.agni-dark .agni-nav-links {
+    background: #0d1013 !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .agni-nav-links .agni-nav-link {
+    color: #f5f5f2 !important;
+    border-color: #30353b !important;
+}
+
+
+/* =========================================================
+   BREAKING NEWS
+   ========================================================= */
+
+html.agni-dark .breaking-bar {
+    background: #111519 !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .breaking-text {
+    color: #f1f2ef !important;
+}
+
+html.agni-dark .breaking-label {
+    color: var(--agni-red) !important;
+}
+
+html.agni-dark .breaking-line {
+    background: var(--agni-red) !important;
+}
+
+
+/* =========================================================
+   PREMIUM BREAKING TICKER
+   ========================================================= */
+
+html.agni-dark .breaking-ticker {
+    background: #071a35 !important;
+    border-color: #0d2c54 !important;
+}
+
+html.agni-dark .breaking-live {
+    color: #ffffff !important;
+}
+
+html.agni-dark .live-word,
+html.agni-dark .live-time,
+html.agni-dark .ticker-item,
+html.agni-dark .ticker-label {
+    color: #ffffff !important;
+}
+
+
+/* =========================================================
+   HOME HERO
+   ========================================================= */
+
+html.agni-dark .home-hero {
+    background: #0a0c0e !important;
+}
+
+html.agni-dark .home-hero-title {
+    color: #f7f7f4 !important;
+}
+
+html.agni-dark .home-hero-description {
+    color: #b9bec3 !important;
+}
+
+
+/* =========================================================
+   HOME FEATURED STORY
+   ========================================================= */
+
+html.agni-dark .home-featured-content h2,
+html.agni-dark .home-featured-content h2 a {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .home-featured-content p {
+    color: #b9bec3 !important;
+}
+
+html.agni-dark .home-featured-meta {
+    color: #9da2a8 !important;
+}
+
+
+/* =========================================================
+   HOME NEWS CARDS
+   ========================================================= */
+
+html.agni-dark .home-news-card,
+html.agni-dark .main-editor-story,
+html.agni-dark .dispatch-card,
+html.agni-dark .article-related-card,
+html.agni-dark .editor-side-list {
+    background: transparent !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .home-news-content h3,
+html.agni-dark .home-news-content h3 a {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .home-news-content p {
+    color: #b9bec3 !important;
+}
+
+html.agni-dark .home-news-meta {
+    color: #969ca2 !important;
+    border-color: #30353b !important;
+}
+
+
+/* =========================================================
+   MOST READ
+   ========================================================= */
+
+html.agni-dark .most-read-item,
+html.agni-dark .most-read-grid {
+    border-color: #30353b !important;
+}
+
+html.agni-dark .most-read-main h3,
+html.agni-dark .most-read-main h3 a {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .most-read-views {
+    color: #969ca2 !important;
+}
+
+html.agni-dark .most-read-number {
+    color: #737980 !important;
+}
+
+
+/* =========================================================
+   CATEGORIES
+   ========================================================= */
+
+html.agni-dark .category-link,
+html.agni-dark .category-editorial {
+    color: #f5f5f2 !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .category-editorial:hover {
+    background: #f5f5f2 !important;
+    color: #0a0c0e !important;
+}
+
+
+/* =========================================================
+   SECTION HEADINGS
+   ========================================================= */
+
+html.agni-dark .section-heading h2,
+html.agni-dark .home-categories h2 {
+    color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   IMAGE CONTAINERS
+   ========================================================= */
+
+html.agni-dark .news-card-image,
+html.agni-dark .home-news-image,
+html.agni-dark .home-featured-image,
+html.agni-dark .image-wrapper,
+html.agni-dark .news-image,
+html.agni-dark .story-image,
+html.agni-dark .article-image,
+html.agni-dark .article-hero-image {
+    background: #181c20 !important;
+}
+
+
+/* Image backgrounds */
+
+html.agni-dark .news-card img,
+html.agni-dark .article-card img,
+html.agni-dark .story-card img,
+html.agni-dark .news-image img,
+html.agni-dark .story-image img,
+html.agni-dark .article-image img {
+    background: #181c20 !important;
+}
+
+
+/* =========================================================
+   FALLBACK IMAGES
+   ========================================================= */
+
+html.agni-dark .story-placeholder,
+html.agni-dark .editorial-placeholder,
+html.agni-dark .home-image-fallback,
+html.agni-dark .home-featured-fallback,
+html.agni-dark .article-image-fallback,
+html.agni-dark .article-related-fallback {
+    background: #1b1f23 !important;
+    color: #d7dadd !important;
+}
+
+
+/* =========================================================
+   NEWSROOM
+   ========================================================= */
+
+html.agni-dark .newsroom-page {
+    background: #0a0c0e !important;
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .article-title,
+html.agni-dark .article-title a {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .article-description {
+    color: #aeb3b8 !important;
+}
+
+
+/* =========================================================
+   NEWSROOM BUTTONS
+   ========================================================= */
+
+html.agni-dark .original-button,
+html.agni-dark .read-button {
+    background: transparent !important;
+    color: #f5f5f2 !important;
+    border-color: #3a4046 !important;
+}
+
+html.agni-dark .original-button:hover,
+html.agni-dark .read-button:hover {
+    background: #f5f5f2 !important;
+    color: #0a0c0e !important;
+    border-color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   PAGINATION
+   ========================================================= */
+
+html.agni-dark .page-link,
+html.agni-dark .pagination-control,
+html.agni-dark .pagination-number {
+    background: #14181c !important;
+    color: #f5f5f2 !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .page-link:hover,
+html.agni-dark .pagination-control:hover,
+html.agni-dark .pagination-number:hover {
+    background: #f5f5f2 !important;
+    color: #0a0c0e !important;
+    border-color: #f5f5f2 !important;
+}
+
+html.agni-dark .page-link.active,
+html.agni-dark .pagination-number.active {
+    background: #f5f5f2 !important;
+    color: #0a0c0e !important;
+    border-color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   ARTICLE PAGE
+   ========================================================= */
+
+html.agni-dark .article-header,
+html.agni-dark .article-body-section,
+html.agni-dark .article-related {
+    background: #0a0c0e !important;
+}
+
+html.agni-dark .article-page-title {
+    color: #f7f7f4 !important;
+}
+
+html.agni-dark .article-lead {
+    color: #bfc3c7 !important;
+}
+
+html.agni-dark .article-meta {
+    color: #9da2a8 !important;
+}
+
+html.agni-dark .article-meta strong {
+    color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   ARTICLE CONTENT
+   ========================================================= */
+
+html.agni-dark .article-content {
+    color: #d0d4d7 !important;
+}
+
+html.agni-dark .article-content p,
+html.agni-dark .article-content li {
+    color: #d0d4d7 !important;
+}
+
+html.agni-dark .article-content h2,
+html.agni-dark .article-content h3,
+html.agni-dark .article-content h4 {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .article-content strong,
+html.agni-dark .article-content b {
+    color: #ffffff !important;
+}
+
+html.agni-dark .article-content blockquote {
+    color: #d9dcdf !important;
+    border-left-color: var(--agni-red) !important;
+}
+
+
+/* =========================================================
+   ARTICLE ACTIONS
+   ========================================================= */
+
+html.agni-dark .article-actions {
+    border-color: #30353b !important;
+}
+
+html.agni-dark .article-actions-label {
+    color: #9da2a8 !important;
+}
+
+html.agni-dark .article-action {
+    background: transparent !important;
+    color: #f5f5f2 !important;
+    border-color: #3a4046 !important;
+}
+
+html.agni-dark .article-action:hover,
+html.agni-dark .article-action.active {
+    background: #f5f5f2 !important;
+    border-color: #f5f5f2 !important;
+    color: #0a0c0e !important;
+}
+
+
+/* =========================================================
+   ARTICLE SIDEBAR
+   ========================================================= */
+
+html.agni-dark .article-side-block {
+    background: transparent !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .article-side-block strong {
+    color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   RELATED ARTICLES
+   ========================================================= */
+
+html.agni-dark .article-related-heading h2 {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .article-related-card {
+    background: transparent !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .article-related-card h3,
+html.agni-dark .article-related-card h3 a {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .article-related-category {
+    color: var(--agni-red) !important;
+}
+
+
+/* =========================================================
+   AUTH / LOGIN / REGISTER
+   ========================================================= */
+
+html.agni-dark .auth-page {
+    background: #0a0c0e !important;
+}
+
+html.agni-dark .auth-container {
+    background: #0a0c0e !important;
+    border-color: #3a4046 !important;
+}
+
+html.agni-dark .auth-intro {
+    background: #121519 !important;
+    border-color: #30353b !important;
+}
+
+html.agni-dark .auth-form-section {
+    background: #0a0c0e !important;
+}
+
+
+/* Auth headings */
+
+html.agni-dark .auth-intro h1,
+html.agni-dark .auth-form-header h2 {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .auth-intro p,
+html.agni-dark .auth-form-header p {
+    color: #b7bcc1 !important;
+}
+
+
+/* Auth labels */
+
+html.agni-dark .auth-field label {
+    color: #a9adb2 !important;
+}
+
+
+/* Auth fields */
+
+html.agni-dark .auth-field input,
+html.agni-dark .auth-field textarea,
+html.agni-dark .auth-field select {
+    background: #15191d !important;
+    color: #f5f5f2 !important;
+    border-color: #363c42 !important;
+}
+
+html.agni-dark .auth-field input:focus,
+html.agni-dark .auth-field textarea:focus,
+html.agni-dark .auth-field select:focus {
+    border-color: #f5f5f2 !important;
+    outline: none;
+}
+
+
+/* Placeholder */
+
+html.agni-dark .auth-field input::placeholder,
+html.agni-dark .auth-field textarea::placeholder {
+    color: #737980 !important;
+}
+
+
+/* Auth button */
+
+html.agni-dark .auth-submit {
+    background: #f5f5f2 !important;
+    color: #0a0c0e !important;
+    border-color: #f5f5f2 !important;
+}
+
+html.agni-dark .auth-submit:hover {
+    background: var(--agni-red) !important;
+    color: #ffffff !important;
+    border-color: var(--agni-red) !important;
+}
+
+
+/* Auth footer */
+
+html.agni-dark .auth-footer {
+    border-color: #30353b !important;
+}
+
+html.agni-dark .auth-footer,
+html.agni-dark .auth-footer p {
+    color: #9da2a8 !important;
+}
+
+
+/* =========================================================
+   AUTH MESSAGES
+   ========================================================= */
+
+html.agni-dark .auth-error {
+    background: #351917 !important;
+    color: #ffb8b0 !important;
+    border-color: #6a2b27 !important;
+}
+
+html.agni-dark .auth-success {
+    background: #14261b !important;
+    color: #b4e0bc !important;
+    border-color: #285b35 !important;
+}
+
+
+/* =========================================================
+   EDITOR PAGE
+   ========================================================= */
+
+html.agni-dark .editor-page {
+    background: #0a0c0e !important;
+}
+
+html.agni-dark .editor-heading {
+    border-color: #30353b !important;
+}
+
+html.agni-dark .editor-heading h1 {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .editor-heading p,
+html.agni-dark .editor-date,
+html.agni-dark .editor-help {
+    color: #9da2a8 !important;
+}
+
+
+/* Editor labels */
+
+html.agni-dark .editor-field label {
+    color: #a9adb2 !important;
+}
+
+
+/* Editor fields */
+
+html.agni-dark .editor-field input,
+html.agni-dark .editor-field textarea,
+html.agni-dark .editor-field select {
+    background: transparent !important;
+    color: #f5f5f2 !important;
+    border-color: #363c42 !important;
+}
+
+html.agni-dark .editor-field input::placeholder,
+html.agni-dark .editor-field textarea::placeholder {
+    color: #737980 !important;
+}
+
+
+/* Editor note */
+
+html.agni-dark .editor-note {
+    border-color: #30353b !important;
+}
+
+html.agni-dark .editor-note p {
+    color: #aeb3b8 !important;
+}
+
+
+/* Editor actions */
+
+html.agni-dark .editor-actions {
+    border-color: #30353b !important;
+}
+
+
+/* Cancel */
+
+html.agni-dark .editor-cancel {
+    background: transparent !important;
+    color: #f5f5f2 !important;
+    border-color: #3a4046 !important;
+}
+
+html.agni-dark .editor-cancel:hover {
+    border-color: #f5f5f2 !important;
+}
+
+
+/* Publish */
+
+html.agni-dark .editor-publish {
+    background: #f5f5f2 !important;
+    color: #0a0c0e !important;
+    border-color: #f5f5f2 !important;
+}
+
+html.agni-dark .editor-publish:hover {
+    background: var(--agni-red) !important;
+    color: #ffffff !important;
+    border-color: var(--agni-red) !important;
+}
+
+
+/* =========================================================
+   FORMS — GLOBAL SAFETY
+   ========================================================= */
+
+html.agni-dark input,
+html.agni-dark textarea,
+html.agni-dark select {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark input::placeholder,
+html.agni-dark textarea::placeholder {
+    color: #737980 !important;
+}
+
+html.agni-dark option {
+    background: #15191d !important;
+    color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   BUTTON SAFETY
+   ========================================================= */
+
+html.agni-dark button {
+    color: inherit;
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+html.agni-dark .site-footer {
+    background: #070809 !important;
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .footer-grid {
+    border-color: #292e34 !important;
+}
+
+html.agni-dark .footer-grid p,
+html.agni-dark .footer-links a {
+    color: #9da2a8 !important;
+}
+
+html.agni-dark .footer-links a:hover {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .footer-bottom {
+    color: #737980 !important;
+}
+
+
+/* =========================================================
+   BRIEFING
+   ========================================================= */
+
+html.agni-dark .briefing-section,
+html.agni-dark .home-briefing {
+    background: #080a0c !important;
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .briefing-inner h2 {
+    color: #f5f5f2 !important;
+}
+
+html.agni-dark .briefing-inner p {
+    color: #aeb3b8 !important;
+}
+
+
+/* =========================================================
+   COMMON EDITORIAL ELEMENTS
+   ========================================================= */
+
+html.agni-dark .editorial-container,
+html.agni-dark .home-news-grid,
+html.agni-dark .home-featured,
+html.agni-dark .category-list,
+html.agni-dark .most-read-list {
+    color: inherit;
+}
+
+
+/* =========================================================
+   DIVIDERS
+   ========================================================= */
+
+html.agni-dark .editorial-nav,
+html.agni-dark .home-hero,
+html.agni-dark .editorial-section,
+html.agni-dark .dispatch-section,
+html.agni-dark .most-read-section,
+html.agni-dark .categories-section,
+html.agni-dark .home-latest,
+html.agni-dark .home-most-read,
+html.agni-dark .home-categories,
+html.agni-dark .article-header,
+html.agni-dark .article-related,
+html.agni-dark .article-actions,
+html.agni-dark .article-meta,
+html.agni-dark .article-source,
+html.agni-dark .auth-page,
+html.agni-dark .auth-container,
+html.agni-dark .auth-intro,
+html.agni-dark .auth-footer,
+html.agni-dark .editor-actions,
+html.agni-dark .editor-heading,
+html.agni-dark .category-list,
+html.agni-dark .most-read-list,
+html.agni-dark .home-news-meta {
+    border-color: #30353b !important;
+}
+
+
+/* =========================================================
+   HARDCODED LIGHT BACKGROUND PROTECTION
+   =========================================================
+   
+   These selectors protect common components that still
+   contain old light-mode backgrounds.
+   ========================================================= */
+
+html.agni-dark .auth-intro,
+html.agni-dark .auth-form-section,
+html.agni-dark .editor-page,
+html.agni-dark .newsroom-page,
+html.agni-dark .article-header,
+html.agni-dark .article-body-section,
+html.agni-dark .article-related,
+html.agni-dark .home-latest,
+html.agni-dark .home-most-read,
+html.agni-dark .home-categories,
+html.agni-dark .home-hero {
+    background-color: var(--paper) !important;
+}
+
+
+/* =========================================================
+   BLACK TEXT PROTECTION
+   =========================================================
+   
+   This is important because the existing project contains
+   old hard-coded #111 / #000 text rules.
+   ========================================================= */
+
+html.agni-dark .text-black,
+html.agni-dark .text-dark,
+html.agni-dark .text-body,
+html.agni-dark [style*="color: black"],
+html.agni-dark [style*="color:#000"],
+html.agni-dark [style*="color: #000"],
+html.agni-dark [style*="color:#111"],
+html.agni-dark [style*="color: #111"] {
+    color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   SVG / ICON CONTRAST
+   ========================================================= */
+
+html.agni-dark .nav-search svg,
+html.agni-dark .nav-notification svg,
+html.agni-dark .dropdown-icon svg {
+    stroke: currentColor;
+}
+
+
+/* =========================================================
+   FOCUS STATES
+   ========================================================= */
+
+html.agni-dark :focus-visible {
+    outline-color: #f5f5f2 !important;
+}
+
+
+/* =========================================================
+   SELECTION
+   ========================================================= */
+
+html.agni-dark ::selection {
+    background: var(--agni-red);
+    color: #ffffff;
+}
+
+
+/* =========================================================
+   FINAL BODY SAFETY
+   ========================================================= */
+
+html.agni-dark body::before,
+html.agni-dark body::after {
+    background-color: transparent;
+}
+
+
+/* =========================================================
+   FINAL THEME TRANSITION
+   ========================================================= */
+
+html.agni-dark,
+html.agni-dark body,
+html.agni-dark a,
+html.agni-dark button,
+html.agni-dark input,
+html.agni-dark textarea,
+html.agni-dark select {
+    transition:
+        background-color .25s ease,
+        color .25s ease,
+        border-color .25s ease;
+}
