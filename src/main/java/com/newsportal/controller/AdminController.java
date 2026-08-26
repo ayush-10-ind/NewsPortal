@@ -8,11 +8,13 @@ import com.newsportal.repository.UserRepository;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/admin")
@@ -38,20 +40,79 @@ public class AdminController {
     @GetMapping("/users")
     public String users(Model model) {
 
-        var users = userRepository.findAll();
+        /*
+         * =====================================================
+         * ONLY FULLY REGISTERED USERS ARE SHOWN
+         * =====================================================
+         *
+         * A user appears in the Admin Dashboard ONLY when:
+         *
+         * 1. Email is verified
+         * 2. Account is enabled
+         * 3. Password has been successfully created
+         *
+         * This prevents incomplete registration records from
+         * appearing as registered users.
+         */
+
+        List<User> users =
+                userRepository.findAll()
+                        .stream()
+                        .filter(User::isEmailVerified)
+                        .filter(User::isEnabled)
+                        .filter(user ->
+                                user.getPassword() != null
+                                        && !user.getPassword().isBlank()
+                        )
+                        .collect(Collectors.toList());
+
+
+        // =====================================================
+        // ACTIVE USERS
+        // =====================================================
 
         long activeUsers =
                 users.stream()
                         .filter(User::isEnabled)
                         .count();
 
+
+        // =====================================================
+        // DISABLED USERS
+        // =====================================================
+
+        /*
+         * NOTE:
+         *
+         * Disabled users who were previously fully registered
+         * should also remain visible in Admin Dashboard.
+         *
+         * Therefore we need a separate list for disabled users.
+         */
+
+        List<User> registeredUsers =
+                userRepository.findAll()
+                        .stream()
+                        .filter(User::isEmailVerified)
+                        .filter(user ->
+                                user.getPassword() != null
+                                        && !user.getPassword().isBlank()
+                        )
+                        .collect(Collectors.toList());
+
+
         long disabledUsers =
-                users.stream()
+                registeredUsers.stream()
                         .filter(user -> !user.isEnabled())
                         .count();
 
+
+        // =====================================================
+        // ADMIN USERS
+        // =====================================================
+
         long adminUsers =
-                users.stream()
+                registeredUsers.stream()
                         .filter(user ->
                                 user.getRoles()
                                         .stream()
@@ -62,8 +123,13 @@ public class AdminController {
                         )
                         .count();
 
+
+        // =====================================================
+        // EDITOR USERS
+        // =====================================================
+
         long editorUsers =
-                users.stream()
+                registeredUsers.stream()
                         .filter(user ->
                                 user.getRoles()
                                         .stream()
@@ -74,8 +140,13 @@ public class AdminController {
                         )
                         .count();
 
+
+        // =====================================================
+        // NORMAL USERS
+        // =====================================================
+
         long normalUsers =
-                users.stream()
+                registeredUsers.stream()
                         .filter(user ->
                                 user.getRoles()
                                         .stream()
@@ -87,7 +158,14 @@ public class AdminController {
                         .count();
 
 
-        model.addAttribute("users", users);
+        // =====================================================
+        // SEND DATA TO ADMIN DASHBOARD
+        // =====================================================
+
+        model.addAttribute(
+                "users",
+                registeredUsers
+        );
 
         model.addAttribute(
                 "activeUsers",
@@ -118,6 +196,7 @@ public class AdminController {
         return "admin/users";
     }
 
+
     // =========================================================
     // CHANGE USER ROLE
     // =========================================================
@@ -127,23 +206,27 @@ public class AdminController {
             @RequestParam Long userId,
             @RequestParam String roleName) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found"
-                        )
-                );
+        User user =
+                userRepository.findById(userId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "User not found"
+                                )
+                        );
 
 
         // -----------------------------------------------------
         // PROTECT ADMIN ACCOUNTS
         // -----------------------------------------------------
 
-        boolean isAdmin = user.getRoles()
-                .stream()
-                .anyMatch(role ->
-                        "ROLE_ADMIN".equals(role.getName())
-                );
+        boolean isAdmin =
+                user.getRoles()
+                        .stream()
+                        .anyMatch(role ->
+                                "ROLE_ADMIN"
+                                        .equals(role.getName())
+                        );
+
 
         if (isAdmin) {
 
@@ -166,13 +249,14 @@ public class AdminController {
         // FIND ROLE
         // -----------------------------------------------------
 
-        Role newRole = roleRepository
-                .findByName(roleName)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "Role not found: " + roleName
-                        )
-                );
+        Role newRole =
+                roleRepository
+                        .findByName(roleName)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Role not found: " + roleName
+                                )
+                        );
 
 
         // -----------------------------------------------------
@@ -203,23 +287,27 @@ public class AdminController {
     public String toggleUserStatus(
             @RequestParam Long userId) {
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() ->
-                        new RuntimeException(
-                                "User not found"
-                        )
-                );
+        User user =
+                userRepository.findById(userId)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "User not found"
+                                )
+                        );
 
 
         // -----------------------------------------------------
         // PROTECT ADMIN ACCOUNTS
         // -----------------------------------------------------
 
-        boolean isAdmin = user.getRoles()
-                .stream()
-                .anyMatch(role ->
-                        "ROLE_ADMIN".equals(role.getName())
-                );
+        boolean isAdmin =
+                user.getRoles()
+                        .stream()
+                        .anyMatch(role ->
+                                "ROLE_ADMIN"
+                                        .equals(role.getName())
+                        );
+
 
         if (isAdmin) {
 
@@ -228,15 +316,13 @@ public class AdminController {
 
 
         // -----------------------------------------------------
-        // TOGGLE ACCOUNT
+        // TOGGLE ACCOUNT STATUS
         // -----------------------------------------------------
 
-        user.setEnabled(!user.isEnabled());
+        user.setEnabled(
+                !user.isEnabled()
+        );
 
-
-        // -----------------------------------------------------
-        // SAVE
-        // -----------------------------------------------------
 
         userRepository.save(user);
 

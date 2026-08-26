@@ -7,7 +7,6 @@ import jakarta.validation.Valid;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-
 import org.springframework.validation.BindingResult;
 
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,13 +18,9 @@ public class AuthController {
 
     private final UserService userService;
 
-
-    public AuthController(
-            UserService userService) {
-
+    public AuthController(UserService userService) {
         this.userService = userService;
     }
-
 
     // =====================================================
     // LOGIN
@@ -33,18 +28,15 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
-
         return "login";
     }
-
 
     // =====================================================
     // REGISTER PAGE
     // =====================================================
 
     @GetMapping("/register")
-    public String registerPage(
-            Model model) {
+    public String registerPage(Model model) {
 
         model.addAttribute(
                 "registerRequest",
@@ -54,14 +46,12 @@ public class AuthController {
         return "register";
     }
 
-
     // =====================================================
     // REGISTER
     // =====================================================
 
     @PostMapping("/register")
     public String register(
-
             @Valid
             @ModelAttribute("registerRequest")
             RegisterRequestDTO request,
@@ -70,30 +60,38 @@ public class AuthController {
 
             Model model) {
 
-
         // =================================================
-        // VALIDATION
+        // FORM VALIDATION
         // =================================================
 
         if (bindingResult.hasErrors()) {
-
             return "register";
         }
 
-
         // =================================================
-        // REGISTER
+        // REGISTER USER
         // =================================================
 
         try {
 
-            userService.registerUser(
-                    request
+            userService.registerUser(request);
+
+            /*
+             * IMPORTANT:
+             *
+             * registerUser() only returns successfully
+             * when the verification email was accepted
+             * by the mail server.
+             *
+             * Do NOT send the user directly to login.
+             */
+
+            model.addAttribute(
+                    "email",
+                    request.getEmail()
             );
 
-
-            return "redirect:/login?verificationSent=true";
-
+            return "verification-sent";
 
         } catch (RuntimeException e) {
 
@@ -106,14 +104,12 @@ public class AuthController {
         }
     }
 
-
     // =====================================================
     // ACCESS DENIED
     // =====================================================
 
     @GetMapping("/access-denied")
     public String accessDenied() {
-
         return "access-denied";
     }
 }

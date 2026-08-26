@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Live News | News Portal</title>
+
+    <link rel="stylesheet"
+          th:href="@{/newsportal.css}">
+
+    <style>
+
+        /* =====================================================
+           LIVE NEWS PAGE
+           ===================================================== */
+
+        .live-page {
+            padding: 38px 0 90px;
+        }
+
+        .live-header {
+            padding: 28px 0 30px;
+            border-bottom: 1px solid #d8d3c8;
+            margin-bottom: 25px;
+        }
+
+        .live-kicker {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            margin-bottom: 14px;
+            color: #c51f27;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 3px;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            background: #d71920;
+            animation: livePulse 1.5s infinite;
+        }
+
+        @keyframes livePulse {
+
+            0% {
+                box-shadow: 0 0 0 0 rgba(215, 25, 32, .45);
+            }
+
+            70% {
+                box-shadow: 0 0 0 7px rgba(215, 25, 32, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(215, 25, 32, 0);
+            }
+
+        }
+
+        .live-title {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: clamp(52px, 6vw, 82px);
+            line-height: .92;
+            font-weight: 400;
+            letter-spacing: -2px;
+            color: #111;
+        }
+
+        .live-description {
+            max-width: 680px;
+            margin: 16px 0 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 17px;
+            line-height: 1.55;
+            color: #6b6b6b;
+        }
+
+        /* =====================================================
+           ON AIR BAR
+           ===================================================== */
+
+        .on-air-strip {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            min-height: 48px;
+            margin-bottom: 24px;
+            padding: 8px 13px;
+            border-top: 1px solid #111;
+            border-bottom: 1px solid #d8d3c8;
+            background: #f1eee7;
+        }
+
+        .on-air-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .on-air-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            flex-shrink: 0;
+            padding: 6px 9px;
+            background: #d71920;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+        }
+
+        .on-air-badge .live-dot {
+            width: 5px;
+            height: 5px;
+            background: #fff;
+            animation: none;
+        }
+
+        .on-air-text {
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            color: #444;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: .4px;
+        }
+
+        .on-air-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .live-status-count {
+            color: #d71920;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+        }
+
+        .refresh-indicator {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #999;
+        }
+
+        .refresh-indicator.active {
+            background: #d71920;
+            animation: refreshPulse .8s infinite;
+        }
+
+        @keyframes refreshPulse {
+
+            0% {
+                opacity: .3;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: .3;
+            }
+
+        }
+
+        .last-updated {
+            color: #777;
+            font-size: 9px;
+            letter-spacing: 1px;
+        }
+
+        /* =====================================================
+           MAIN GRID
+           ===================================================== */
+
+        .live-main {
+            display: grid;
+            grid-template-columns: minmax(0, 2.2fr) minmax(300px, .8fr);
+            gap: 34px;
+            align-items: start;
+        }
+
+        /* =====================================================
+           PLAYER
+           ===================================================== */
+
+        .live-player-card {
+            min-width: 0;
+            background: #111;
+        }
+
+        .live-player {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            overflow: hidden;
+            background: #050505;
+        }
+
+        .live-player iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+            background: #050505;
+        }
+
+        .player-loading {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: #050505;
+            color: #fff;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity .2s ease;
+        }
+
+        .live-player.loading .player-loading {
+            opacity: 1;
+        }
+
+        .loading-ring {
+            width: 42px;
+            height: 42px;
+            margin-bottom: 18px;
+            border: 1px solid rgba(255,255,255,.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .9s linear infinite;
+        }
+
+        @keyframes spin {
+
+            to {
+                transform: rotate(360deg);
+            }
+
+        }
+
+        .player-loading h3 {
+            margin: 0 0 8px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 22px;
+            font-weight: 400;
+        }
+
+        .player-loading p {
+            max-width: 420px;
+            margin: 0;
+            color: #999;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .player-error {
+            position: absolute;
+            inset: 0;
+            z-index: 6;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            background: #050505;
+            color: #fff;
+            padding: 30px;
+        }
+
+        .live-player.error .player-error {
+            display: flex;
+        }
+
+        .player-error h3 {
+            margin: 0 0 10px;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 25px;
+            font-weight: 400;
+        }
+
+        .player-error p {
+            max-width: 470px;
+            margin: 0 0 18px;
+            color: #999;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .retry-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 34px;
+            padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,.35);
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .retry-button:hover {
+            background: #fff;
+            color: #111;
+        }
+
+        /* =====================================================
+           PLAYER INFO
+           ===================================================== */
+
+        .player-info {
+            padding: 26px 28px 28px;
+            background: #111;
+            color: #fff;
+        }
+
+        .player-live-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 13px;
+            color: #ef3038;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+
+        .player-live-label .live-dot {
+            width: 7px;
+            height: 7px;
+        }
+
+        .player-channel-name {
+            margin: 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 32px;
+            font-weight: 400;
+        }
+
+        .player-channel-description {
+            margin: 10px 0 17px;
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .official-badge {
+            display: inline-flex;
+            padding: 6px 9px;
+            border: 1px solid #444;
+            color: #aaa;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+        }
+
+        /* =====================================================
+           CHANNEL LIST
+           ===================================================== */
+
+        .channels-panel {
+            min-width: 0;
+        }
+
+        .channels-heading {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 15px;
+            padding-bottom: 17px;
+            border-top: 2px solid #111;
+            border-bottom: 1px solid #d8d3c8;
+        }
+
+        .channels-heading h2 {
+            margin: 14px 0 0;
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 29px;
+            font-weight: 400;
+        }
+
+        .channels-count {
+            color: #777;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .channels-count strong {
+            color: #d71920;
+        }
+
+        .channel-list {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .channel-button {
+            width: 100%;
+            padding: 20px 0;
+            border: 0;
+            border-bottom: 1px solid #d8d3c8;
+            background: transparent;
+            color: #111;
+            text-align: left;
+            cursor: pointer;
+            transition: padding .2s ease,
+                        background .2s ease;
+        }
+
+        .channel-button:hover,
+        .channel-button.active {
+            padding-left: 12px;
+            padding-right: 12px;
+            background: #ebe7de;
+        }
+
+        .channel-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .channel-name {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 19px;
+        }
+
+        .channel-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            flex-shrink: 0;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.3px;
+        }
+
+        .channel-status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+        }
+
+        .channel-status.live {
+            color: #d71920;
+        }
+
+        .channel-status.live .channel-status-dot {
+            background: #d71920;
+        }
+
+        .channel-status.offline {
+            color: #aaa;
+        }
+
+        .channel-status.offline .channel-status-dot {
+            background: #bbb;
+        }
+
+        .channel-description {
+            margin: 9px 0 0;
+            color: #777;
+            font-size: 11px;
+            line-height: 1.5;
+        }
+
+        .channels-error {
+            padding: 20px 0;
+            color: #999;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        /* =====================================================
+           TICKER
+           ===================================================== */
+
+        .live-ticker {
+            display: flex;
+            width: 100%;
+            height: 42px;
+            margin-top: 34px;
+            overflow: hidden;
+            background: #111;
+        }
+
+        .ticker-label {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            padding: 0 16px;
+            background: #d71920;
+            color: #fff;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+        }
+
+        .ticker-window {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .ticker-track {
+            display: flex;
+            width: max-content;
+            height: 100%;
+            align-items: center;
+            animation: tickerMove 45s linear infinite;
+        }
+
+        .ticker-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 28px;
+            white-space: nowrap;
+            color: #eee;
+            font-size: 10px;
+        }
+
+        .ticker-item::after {
+            content: "•";
+            margin-left: 18px;
+            color: #d71920;
+        }
+
+        .ticker-category {
+            color: #d71920;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        @keyframes tickerMove {
+
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+
+        }
+
+        /* =====================================================
+           STATS
+           ===================================================== */
+
+        .live-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            margin-top: 18px;
+            border: 1px solid #d8d3c8;
+        }
+
+        .live-stat {
+            min-height: 90px;
+            padding: 18px;
+            border-right: 1px solid #d8d3c8;
+        }
+
+        .live-stat:last-child {
+            border-right: 0;
+        }
+
+        .stat-label {
+            margin-bottom: 12px;
+            color: #777;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+        }
+
+        .stat-value {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 19px;
+            color: #111;
+        }
+
+        /* =====================================================
+           ABOUT
+           ===================================================== */
+
+        .live-about {
+            margin-top: 34px;
+            padding: 20px 22px;
+            border-left: 2px solid #d71920;
+            background: rgba(255,255,255,.2);
+            color: #666;
+            font-size: 11px;
+            line-height: 1.7;
+        }
+
+        .live-about strong {
+            color: #222;
+        }
+
+        /* =====================================================
+           RESPONSIVE
+           ===================================================== */
+
+        @media (max-width: 950px) {
+
+            .live-main {
+                grid-template-columns: 1fr;
+            }
+
+            .channels-panel {
+                order: 2;
+            }
+
+        }
+
+        @media (max-width: 650px) {
+
+            .live-page {
+                padding-top: 20px;
+            }
+
+            .live-title {
+                font-size: 48px;
+            }
+
+            .on-air-strip {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .on-air-right {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .player-info {
+                padding: 20px;
+            }
+
+            .player-channel-name {
+                font-size: 27px;
+            }
+
+            .live-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .live-stat {
+                border-right: 0;
+                border-bottom: 1px solid #d8d3c8;
+            }
+
+            .live-stat:last-child {
+                border-bottom: 0;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     NAVBAR
+     ========================================================= -->
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+
+<main class="live-page">
+
+    <div class="container">
+
+
+        <!-- =====================================================
+             HEADER
+             ===================================================== -->
+
+        <header class="live-header">
+
+            <div class="live-kicker">
+
+                <span class="live-dot"></span>
+
+                LIVE NEWS
+
+            </div>
+
+            <h1 class="live-title">
+                News, live.
+            </h1>
+
+            <p class="live-description">
+                Watch live news coverage from official broadcasters
+                directly inside News Portal.
+            </p>
+
+        </header>
+
+
+        <!-- =====================================================
+             ON AIR STATUS
+             ===================================================== -->
+
+        <div class="on-air-strip">
+
+            <div class="on-air-left">
+
+                <div class="on-air-badge">
+
+                    <span class="live-dot"></span>
+
+                    ON AIR
+
+                </div>
+
+                <div class="on-air-text"
+                     id="onAirText">
+
+                    Checking official broadcasters...
+
+                </div>
+
+            </div>
+
+
+            <div class="on-air-right">
+
+                <span class="live-status-count">
+
+                    <span id="onAirCount">2</span>
+                    LIVE
+
+                </span>
+
+                <span class="refresh-indicator"
+                      id="refreshIndicator">
+                </span>
+
+                <span class="last-updated"
+                      id="lastUpdated">
+
+                    Updating...
+
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             MAIN CONTENT
+             ===================================================== -->
+
+        <section class="live-main">
+
+
+            <!-- =================================================
+                 PLAYER
+                 ================================================= -->
+
+            <div class="live-player-card">
+
+                <div class="live-player"
+                     id="livePlayerContainer">
+
+
+                    <!-- DEFAULT NDTV OFFICIAL PLAYER -->
+
+                    <iframe
+                        id="livePlayer"
+                        src="https://www.ndtv.com/videos/embed-player/?id=LIVE_BG24x7&mute=1&autostart=1&mutestart=true&pWidth=100&pHeight=100"
+                        title="NDTV 24x7 Live"
+                        allow="autoplay; fullscreen"
+                        frameborder="0"
+                        scrolling="no"
+                        allowfullscreen="true"
+                        webkitallowfullscreen="true"
+                        mozallowfullscreen="true">
+                    </iframe>
+
+
+                    <!-- LOADING -->
+
+                    <div class="player-loading"
+                         id="playerLoading">
+
+                        <div class="loading-ring"></div>
+
+                        <h3>
+                            Loading live channel...
+                        </h3>
+
+                        <p>
+                            Connecting to the official broadcaster.
+                        </p>
+
+                    </div>
+
+
+                    <!-- ERROR -->
+
+                    <div class="player-error"
+                         id="playerError">
+
+                        <h3>
+                            Unable to load stream
+                        </h3>
+
+                        <p id="playerErrorMessage">
+                            The live stream could not be loaded.
+                        </p>
+
+                        <button class="retry-button"
+                                id="retryButton">
+
+                            TRY AGAIN
+
+                        </button>
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- PLAYER INFO -->
+
+                <div class="player-info">
+
+                    <div class="player-live-label"
+                         id="playerLiveLabel">
+
+                        <span class="live-dot"></span>
+
+                        LIVE PLAYER
+
+                    </div>
+
+
+                    <h2 class="player-channel-name"
+                        id="playerChannelName">
+
+                        NDTV 24x7
+
+                    </h2>
+
+
+                    <p class="player-channel-description"
+                       id="playerChannelDescription">
+
+                        Official 24x7 live news coverage from NDTV.
+
+                    </p>
+
+
+                    <span class="official-badge">
+
+                        ✓ OFFICIAL BROADCASTER
+
+                    </span>
+
+                </div>
+
+            </div>
+
+
+            <!-- =================================================
+                 CHANNELS
+                 ================================================= -->
+
+            <aside class="channels-panel">
+
+
+                <div class="channels-heading">
+
+                    <h2>
+                        Live Channels
+                    </h2>
+
+                    <span class="channels-count">
+
+                        <strong id="liveChannelCount">
+                            2
+                        </strong>
+
+                        LIVE /
+
+                        <span id="totalChannelCount">
+                            2
+                        </span>
+
+                    </span>
+
+                </div>
+
+
+                <div class="channel-list"
+                     id="channelList">
+
+
+                    <!-- NDTV -->
+
+                    <button type="button"
+                            class="channel-button active"
+                            data-channel="ndtv">
+
+                        <div class="channel-top">
+
+                            <span class="channel-name">
+                                NDTV 24x7
+                            </span>
+
+                            <span class="channel-status live">
+
+                                <span class="channel-status-dot"></span>
+
+                                LIVE
+
+                            </span>
+
+                        </div>
+
+                        <p class="channel-description">
+
+                            Official 24x7 live news coverage from NDTV.
+
+                        </p>
+
+                    </button>
+
+
+                    <!-- DD NEWS -->
+
+                    <button type="button"
+                            class="channel-button"
+                            data-channel="ddnews">
+
+                        <div class="channel-top">
+
+                            <span class="channel-name">
+                                DD News 24x7
+                            </span>
+
+                            <span class="channel-status live">
+
+                                <span class="channel-status-dot"></span>
+
+                                LIVE
+
+                            </span>
+
+                        </div>
+
+                        <p class="channel-description">
+
+                            Official DD News live broadcast.
+
+                        </p>
+
+                    </button>
+
+
+                </div>
+
+            </aside>
+
+        </section>
+
+
+        <!-- =====================================================
+             TICKER
+             ===================================================== -->
+
+        <div class="live-ticker">
+
+            <div class="ticker-label">
+                • LATEST
+            </div>
+
+            <div class="ticker-window">
+
+                <div class="ticker-track"
+                     id="tickerTrack">
+
+                    <div class="ticker-item">
+                        Loading latest news...
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             STATS
+             ===================================================== -->
+
+        <div class="live-stats">
+
+            <div class="live-stat">
+
+                <div class="stat-label">
+                    LIVE CHANNELS
+                </div>
+
+                <div class="stat-value"
+                     id="infoLiveChannels">
+
+                    2 / 2
+
+                </div>
+
+            </div>
+
+
+            <div class="live-stat">
+
+                <div class="stat-label">
+                    CURRENTLY WATCHING
+                </div>
+
+                <div class="stat-value"
+                     id="infoCurrentChannel">
+
+                    NDTV 24x7
+
+                </div>
+
+            </div>
+
+
+            <div class="live-stat">
+
+                <div class="stat-label">
+                    LAST CHECK
+                </div>
+
+                <div class="stat-value"
+                     id="infoLastCheck">
+
+                    --:--
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- =====================================================
+             ABOUT
+             ===================================================== -->
+
+        <div class="live-about">
+
+            <strong>
+                About live streams:
+            </strong>
+
+            News Portal displays live content through official
+            broadcaster players or official YouTube streams.
+            The video remains hosted by the original broadcaster
+            and is not re-hosted by News Portal.
+
+        </div>
+
+    </div>
+
+</main>
+
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+    /* =========================================================
+       CONSTANTS
+       ========================================================= */
+
+    const NEWS_API_URL =
+        "/api/news";
+
+    const REFRESH_INTERVAL =
+        5 * 60 * 1000;
+
+
+    /* =========================================================
+       DOM
+       ========================================================= */
+
+    const player =
+        document.getElementById("livePlayer");
+
+    const playerContainer =
+        document.getElementById("livePlayerContainer");
+
+    const playerLoading =
+        document.getElementById("playerLoading");
+
+    const playerError =
+        document.getElementById("playerError");
+
+    const playerErrorMessage =
+        document.getElementById("playerErrorMessage");
+
+    const retryButton =
+        document.getElementById("retryButton");
+
+    const playerChannelName =
+        document.getElementById("playerChannelName");
+
+    const playerChannelDescription =
+        document.getElementById("playerChannelDescription");
+
+    const playerLiveLabel =
+        document.getElementById("playerLiveLabel");
+
+    const channelList =
+        document.getElementById("channelList");
+
+    const tickerTrack =
+        document.getElementById("tickerTrack");
+
+    const infoCurrentChannel =
+        document.getElementById("infoCurrentChannel");
+
+    const infoLastCheck =
+        document.getElementById("infoLastCheck");
+
+    const lastUpdated =
+        document.getElementById("lastUpdated");
+
+
+    /* =========================================================
+       OFFICIAL PLAYER URLS
+       ========================================================= */
+
+    const NDTV_URL =
+        "https://www.ndtv.com/videos/embed-player/?id=LIVE_BG24x7&mute=1&autostart=1&mutestart=true&pWidth=100&pHeight=100";
+
+
+    const DD_NEWS_URL =
+        "https://www.youtube.com/embed/qD6GkaU2lD0?autoplay=1&rel=0";
+
+
+    /* =========================================================
+       CHANNEL SWITCHING
+       ========================================================= */
+
+    function loadNDTV() {
+
+        playerContainer.classList.remove("error");
+
+        playerContainer.classList.add("loading");
+
+        player.src =
+            NDTV_URL;
+
+        player.title =
+            "NDTV 24x7 Live";
+
+        playerChannelName.textContent =
+            "NDTV 24x7";
+
+        playerChannelDescription.textContent =
+            "Official 24x7 live news coverage from NDTV.";
+
+        playerLiveLabel.innerHTML =
+            '<span class="live-dot"></span> LIVE PLAYER';
+
+        infoCurrentChannel.textContent =
+            "NDTV 24x7";
+
+        setActiveChannel("ndtv");
+
+    }
+
+
+    function loadDDNews() {
+
+        playerContainer.classList.remove("error");
+
+        playerContainer.classList.add("loading");
+
+        player.src =
+            DD_NEWS_URL;
+
+        player.title =
+            "DD News 24x7 Live";
+
+        playerChannelName.textContent =
+            "DD News 24x7";
+
+        playerChannelDescription.textContent =
+            "Official DD News live broadcast.";
+
+        playerLiveLabel.innerHTML =
+            '<span class="live-dot"></span> LIVE NOW';
+
+        infoCurrentChannel.textContent =
+            "DD News 24x7";
+
+        setActiveChannel("ddnews");
+
+    }
+
+
+    /* =========================================================
+       ACTIVE BUTTON
+       ========================================================= */
+
+    function setActiveChannel(channelName) {
+
+        const buttons =
+            channelList.querySelectorAll(
+                ".channel-button"
+            );
+
+        buttons.forEach(function (button) {
+
+            button.classList.toggle(
+                "active",
+                button.dataset.channel === channelName
+            );
+
+        });
+
+    }
+
+
+    /* =========================================================
+       BUTTON EVENTS
+       ========================================================= */
+
+    channelList.addEventListener(
+        "click",
+        function (event) {
+
+            const button =
+                event.target.closest(
+                    ".channel-button"
+                );
+
+
+            if (!button) {
+                return;
+            }
+
+
+            const channel =
+                button.dataset.channel;
+
+
+            if (channel === "ndtv") {
+
+                loadNDTV();
+
+            }
+
+            else if (channel === "ddnews") {
+
+                loadDDNews();
+
+            }
+
+        }
+    );
+
+
+    /* =========================================================
+       PLAYER LOADED
+       ========================================================= */
+
+    player.addEventListener(
+        "load",
+        function () {
+
+            playerContainer.classList.remove(
+                "loading"
+            );
+
+            playerContainer.classList.remove(
+                "error"
+            );
+
+        }
+    );
+
+
+    /* =========================================================
+       RETRY
+       ========================================================= */
+
+    retryButton.addEventListener(
+        "click",
+        function () {
+
+            playerContainer.classList.remove(
+                "error"
+            );
+
+            loadNDTV();
+
+        }
+    );
+
+
+    /* =========================================================
+       LATEST NEWS
+       ========================================================= */
+
+    async function fetchLatestHeadlines() {
+
+        try {
+
+            const response =
+                await fetch(
+                    NEWS_API_URL,
+                    {
+                        headers: {
+                            "Accept":
+                                "application/json"
+                        },
+                        cache:
+                            "no-store"
+                    }
+                );
+
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "News API error: " +
+                    response.status
+                );
+
+            }
+
+
+            const data =
+                await response.json();
+
+
+            const articles =
+                Array.isArray(data.content)
+                    ? data.content
+                    : [];
+
+
+            if (!articles.length) {
+
+                tickerTrack.innerHTML = `
+
+                    <div class="ticker-item">
+
+                        Latest news unavailable.
+
+                    </div>
+
+                `;
+
+                return;
+
+            }
+
+
+            const latest =
+                articles
+                    .sort(function (a, b) {
+
+                        return new Date(
+                            b.publishedDate || 0
+                        ) -
+                        new Date(
+                            a.publishedDate || 0
+                        );
+
+                    })
+                    .slice(0, 10);
+
+
+            let html = "";
+
+
+            latest.forEach(function (article) {
+
+                html += `
+
+                    <div class="ticker-item">
+
+                        <span class="ticker-category">
+
+                            ${escapeHtml(
+                                article.category ||
+                                "NEWS"
+                            )}
+
+                        </span>
+
+                        ${escapeHtml(
+                            article.title ||
+                            "Latest news"
+                        )}
+
+                    </div>
+
+                `;
+
+            });
+
+
+            tickerTrack.innerHTML =
+                html + html;
+
+        }
+
+        catch (error) {
+
+            console.error(
+                "Latest news error:",
+                error
+            );
+
+        }
+
+    }
+
+
+    /* =========================================================
+       TIMESTAMP
+       ========================================================= */
+
+    function updateTimestamp() {
+
+        const now =
+            new Date();
+
+
+        const time =
+            now.toLocaleTimeString(
+                [],
+                {
+                    hour: "2-digit",
+                    minute: "2-digit"
+                }
+            );
+
+
+        lastUpdated.textContent =
+            "Updated " + time;
+
+
+        infoLastCheck.textContent =
+            time;
+
+    }
+
+
+    /* =========================================================
+       HTML ESCAPE
+       ========================================================= */
+
+    function escapeHtml(value) {
+
+        if (
+            value === null ||
+            value === undefined
+        ) {
+
+            return "";
+
+        }
+
+
+        return String(value)
+
+            .replace(
+                /&/g,
+                "&amp;"
+            )
+
+            .replace(
+                /</g,
+                "&lt;"
+            )
+
+            .replace(
+                />/g,
+                "&gt;"
+            )
+
+            .replace(
+                /"/g,
+                "&quot;"
+            )
+
+            .replace(
+                /'/g,
+                "&#039;"
+            );
+
+    }
+
+
+    /* =========================================================
+       INITIALIZE
+       ========================================================= */
+
+    loadNDTV();
+
+    fetchLatestHeadlines();
+
+    updateTimestamp();
+
+
+    /* =========================================================
+       REFRESH NEWS ONLY
+       ========================================================= */
+
+    setInterval(
+        function () {
+
+            fetchLatestHeadlines();
+
+            updateTimestamp();
+
+        },
+        REFRESH_INTERVAL
+    );
+
+
+});
+
+</script>
+
+
+</body>
+
+</html>

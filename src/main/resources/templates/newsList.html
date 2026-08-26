@@ -668,61 +668,11 @@
 
 <body>
 
-
 <!-- =====================================================
-     HEADER
+     SHARED AGNIPRESS NAVBAR
      ===================================================== -->
 
-<header class="top-header">
-
-    <div class="header-inner">
-
-        <a href="/" class="brand">
-
-            <div class="brand-logo">
-                NP
-            </div>
-
-            <div class="brand-name">
-                NEWS PORTAL
-            </div>
-
-        </a>
-
-
-        <nav class="nav">
-
-            <a href="/">Home</a>
-
-            <a href="/newsList">News</a>
-
-            <a href="/newsList?category=India">
-                India
-            </a>
-
-            <a href="/newsList?category=World">
-                World
-            </a>
-
-            <a href="/newsList?category=Technology">
-                Technology
-            </a>
-
-            <a href="/newsList?category=Business">
-                Business
-            </a>
-
-            <a href="/newsList?category=Sports">
-                Sports
-            </a>
-
-        </nav>
-
-    </div>
-
-</header>
-
-
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <!-- =====================================================
      PAGE

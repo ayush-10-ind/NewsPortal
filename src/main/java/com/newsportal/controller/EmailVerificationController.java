@@ -12,6 +12,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
+import org.springframework.transaction.annotation.Transactional;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,7 +25,6 @@ public class EmailVerificationController {
     private final EmailVerificationTokenRepository tokenRepository;
     private final UserService userService;
 
-
     public EmailVerificationController(
             EmailVerificationTokenRepository tokenRepository,
             UserService userService) {
@@ -32,11 +33,11 @@ public class EmailVerificationController {
         this.userService = userService;
     }
 
-
     // =====================================================
     // OPEN VERIFICATION LINK
     // =====================================================
 
+    @Transactional
     @GetMapping("/verify-email")
     public String verifyEmail(
             @RequestParam("token") String token,
@@ -46,7 +47,6 @@ public class EmailVerificationController {
                 tokenRepository
                         .findByToken(token)
                         .orElse(null);
-
 
         // =================================================
         // INVALID TOKEN
@@ -62,7 +62,6 @@ public class EmailVerificationController {
             return "emailVerification";
         }
 
-
         // =================================================
         // EXPIRED TOKEN
         // =================================================
@@ -77,6 +76,13 @@ public class EmailVerificationController {
             return "emailVerification";
         }
 
+        // =================================================
+        // GET USER WHILE DATABASE SESSION IS ACTIVE
+        // =================================================
+
+        User user = verificationToken.getUser();
+
+        String userName = user.getName();
 
         // =================================================
         // SHOW PASSWORD PAGE
@@ -94,17 +100,17 @@ public class EmailVerificationController {
 
         model.addAttribute(
                 "userName",
-                verificationToken.getUser().getName()
+                userName
         );
 
         return "emailVerification";
     }
 
-
     // =====================================================
     // CREATE PASSWORD
     // =====================================================
 
+    @Transactional
     @PostMapping("/verify-email")
     public String completeVerification(
             @RequestParam("token") String token,
@@ -114,9 +120,7 @@ public class EmailVerificationController {
             SetPasswordRequestDTO request,
 
             BindingResult bindingResult,
-
             Model model) {
-
 
         // =================================================
         // VALIDATE TOKEN
@@ -127,6 +131,9 @@ public class EmailVerificationController {
                         .findByToken(token)
                         .orElse(null);
 
+        // =================================================
+        // INVALID TOKEN
+        // =================================================
 
         if (verificationToken == null) {
 
@@ -138,9 +145,8 @@ public class EmailVerificationController {
             return "emailVerification";
         }
 
-
         // =================================================
-        // EXPIRED
+        // EXPIRED TOKEN
         // =================================================
 
         if (verificationToken.isExpired()) {
@@ -153,12 +159,13 @@ public class EmailVerificationController {
             return "emailVerification";
         }
 
-
         // =================================================
         // FORM VALIDATION
         // =================================================
 
         if (bindingResult.hasErrors()) {
+
+            User user = verificationToken.getUser();
 
             model.addAttribute(
                     "token",
@@ -167,20 +174,21 @@ public class EmailVerificationController {
 
             model.addAttribute(
                     "userName",
-                    verificationToken.getUser().getName()
+                    user.getName()
             );
 
             return "emailVerification";
         }
 
+        // =================================================
+        // GET USER
+        // =================================================
+
+        User user = verificationToken.getUser();
 
         // =================================================
         // SET PASSWORD
         // =================================================
-
-        User user =
-                verificationToken.getUser();
-
 
         try {
 
@@ -209,7 +217,6 @@ public class EmailVerificationController {
             return "emailVerification";
         }
 
-
         // =================================================
         // DELETE USED TOKEN
         // =================================================
@@ -217,7 +224,6 @@ public class EmailVerificationController {
         tokenRepository.delete(
                 verificationToken
         );
-
 
         // =================================================
         // SUCCESS

@@ -6805,3 +6805,690 @@ select {
     }
 
 }
+
+/* =========================================================
+   AGNIPRESS BRAND NAVBAR
+   ========================================================= */
+
+:root {
+    --agni-bg: #f7f5ef;
+    --agni-surface: #ffffff;
+    --agni-text: #111111;
+    --agni-muted: #707070;
+    --agni-border: #dedbd2;
+    --agni-hover: #eeeeea;
+
+    --agni-red: #e21b23;
+
+    --agni-saffron: #ff8a00;
+    --agni-green: #138a42;
+}
+
+
+/* =========================================================
+   DARK MODE VARIABLES
+   ========================================================= */
+
+html.agni-dark {
+    --agni-bg: #08090a;
+    --agni-surface: #111315;
+    --agni-text: #f5f5f5;
+    --agni-muted: #9b9da1;
+    --agni-border: #292c30;
+    --agni-hover: #191c1f;
+}
+
+
+/* =========================================================
+   GLOBAL THEME TRANSITION
+   ========================================================= */
+
+html,
+body {
+    transition:
+        background-color 0.3s ease,
+        color 0.3s ease;
+}
+
+
+/* =========================================================
+   NAVBAR
+   ========================================================= */
+
+.agni-navbar {
+    width: 100%;
+    min-height: 82px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 32px;
+
+    padding: 14px 4vw;
+
+    background: var(--agni-bg);
+
+    border-bottom: 1px solid var(--agni-border);
+
+    position: relative;
+    z-index: 1000;
+
+    box-sizing: border-box;
+
+    transition:
+        background-color 0.3s ease,
+        border-color 0.3s ease;
+}
+
+
+/* =========================================================
+   AGNIPRESS BRAND
+   ========================================================= */
+
+.agni-brand {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    text-decoration: none;
+
+    color: var(--agni-text);
+
+    flex-shrink: 0;
+}
+
+
+/* =========================================================
+   MINIMAL TRICOLOR MARK
+   ========================================================= */
+
+.agni-mark {
+    width: 42px;
+    height: 38px;
+
+    position: relative;
+
+    display: block;
+
+    flex-shrink: 0;
+}
+
+
+/*
+   Three minimal curved strokes.
+   Only the logo uses the Indian tricolor.
+*/
+
+.agni-flame {
+    position: absolute;
+
+    height: 5px;
+
+    border-radius: 100%;
+
+    transform: rotate(-25deg);
+
+    transform-origin: left center;
+
+    left: 3px;
+
+    transition:
+        transform 0.35s ease,
+        width 0.35s ease;
+}
+
+
+.agni-saffron {
+    width: 34px;
+
+    top: 8px;
+
+    background: var(--agni-saffron);
+
+    animation: agniFloatTop 4s ease-in-out infinite;
+}
+
+
+.agni-white {
+    width: 38px;
+
+    top: 17px;
+
+    background: #ffffff;
+
+    border: 1px solid rgba(120, 120, 120, 0.2);
+
+    animation: agniFloatMiddle 4s ease-in-out infinite;
+}
+
+
+.agni-green {
+    width: 31px;
+
+    top: 26px;
+
+    background: var(--agni-green);
+
+    animation: agniFloatBottom 4s ease-in-out infinite;
+}
+
+
+/* =========================================================
+   SUBTLE LOGO ANIMATION
+   ========================================================= */
+
+@keyframes agniFloatTop {
+
+    0%,
+    100% {
+        transform: rotate(-25deg) translateX(0);
+    }
+
+    50% {
+        transform: rotate(-21deg) translateX(2px);
+    }
+}
+
+
+@keyframes agniFloatMiddle {
+
+    0%,
+    100% {
+        transform: rotate(-25deg) translateX(0);
+    }
+
+    50% {
+        transform: rotate(-28deg) translateX(2px);
+    }
+}
+
+
+@keyframes agniFloatBottom {
+
+    0%,
+    100% {
+        transform: rotate(-25deg) translateX(0);
+    }
+
+    50% {
+        transform: rotate(-22deg) translateX(2px);
+    }
+}
+
+
+/* =========================================================
+   BRAND TEXT
+   ========================================================= */
+
+.agni-brand-text {
+    display: flex;
+
+    flex-direction: column;
+
+    line-height: 1;
+}
+
+
+.agni-name {
+    font-family: Georgia, "Times New Roman", serif;
+
+    font-size: 28px;
+
+    font-weight: 700;
+
+    letter-spacing: -1.2px;
+
+    color: var(--agni-text);
+}
+
+
+.agni-name span {
+    font-weight: 400;
+}
+
+
+.agni-tagline {
+    margin-top: 6px;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 7px;
+
+    letter-spacing: 2px;
+
+    color: var(--agni-muted);
+
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   NAVIGATION LINKS
+   ========================================================= */
+
+.agni-nav-links {
+    display: flex;
+
+    align-items: center;
+
+    gap: 24px;
+
+    margin-left: auto;
+}
+
+
+.agni-nav-link {
+    position: relative;
+
+    color: var(--agni-text);
+
+    text-decoration: none;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.4px;
+
+    padding: 30px 0 26px;
+
+    white-space: nowrap;
+
+    transition:
+        color 0.2s ease;
+}
+
+
+.agni-nav-link::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: 18px;
+
+    width: 0;
+    height: 2px;
+
+    background: var(--agni-red);
+
+    transition: width 0.25s ease;
+}
+
+
+.agni-nav-link:hover {
+    color: var(--agni-red);
+}
+
+
+.agni-nav-link:hover::after {
+    width: 100%;
+}
+
+
+/* =========================================================
+   LIVE LINK
+   ========================================================= */
+
+.agni-live-link {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    color: var(--agni-red);
+
+    text-decoration: none;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 13px;
+
+    font-weight: 700;
+
+    text-transform: uppercase;
+
+    letter-spacing: 0.5px;
+
+    white-space: nowrap;
+}
+
+
+.agni-live-dot {
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: var(--agni-red);
+
+    box-shadow:
+        0 0 0 4px rgba(226, 27, 35, 0.12);
+
+    animation: agniLivePulse 1.6s infinite;
+}
+
+
+@keyframes agniLivePulse {
+
+    0% {
+        box-shadow:
+            0 0 0 0 rgba(226, 27, 35, 0.35);
+    }
+
+    70% {
+        box-shadow:
+            0 0 0 6px rgba(226, 27, 35, 0);
+    }
+
+    100% {
+        box-shadow:
+            0 0 0 0 rgba(226, 27, 35, 0);
+    }
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+   ========================================================= */
+
+.agni-nav-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    flex-shrink: 0;
+}
+
+
+.agni-action-button,
+.agni-theme-toggle,
+.agni-mobile-toggle {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid transparent;
+
+    background: transparent;
+
+    color: var(--agni-text);
+
+    cursor: pointer;
+
+    border-radius: 50%;
+
+    transition:
+        background-color 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+}
+
+
+.agni-action-button:hover,
+.agni-theme-toggle:hover,
+.agni-mobile-toggle:hover {
+    background: var(--agni-hover);
+
+    border-color: var(--agni-border);
+
+    transform: translateY(-1px);
+}
+
+
+/* Search SVG */
+
+.agni-action-button svg {
+    width: 21px;
+    height: 21px;
+
+    fill: none;
+
+    stroke: currentColor;
+
+    stroke-width: 1.7;
+
+    stroke-linecap: round;
+}
+
+
+/* =========================================================
+   THEME BUTTON
+   ========================================================= */
+
+.agni-theme-toggle {
+    font-size: 21px;
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+
+.agni-sun,
+.agni-moon {
+    position: absolute;
+
+    transition:
+        opacity 0.25s ease,
+        transform 0.3s ease;
+}
+
+
+.agni-sun {
+    opacity: 1;
+
+    transform: rotate(0deg) scale(1);
+}
+
+
+.agni-moon {
+    opacity: 0;
+
+    transform: rotate(-60deg) scale(0.5);
+}
+
+
+html.agni-dark .agni-sun {
+    opacity: 0;
+
+    transform: rotate(60deg) scale(0.5);
+}
+
+
+html.agni-dark .agni-moon {
+    opacity: 1;
+
+    transform: rotate(0deg) scale(1);
+}
+
+
+/* =========================================================
+   MOBILE MENU BUTTON
+   ========================================================= */
+
+.agni-mobile-toggle {
+    display: none;
+
+    flex-direction: column;
+
+    gap: 4px;
+}
+
+
+.agni-mobile-toggle span {
+    display: block;
+
+    width: 19px;
+    height: 2px;
+
+    background: currentColor;
+
+    border-radius: 2px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 1100px) {
+
+    .agni-nav-links {
+        gap: 16px;
+    }
+
+    .agni-nav-link {
+        font-size: 12px;
+    }
+
+    .agni-navbar {
+        gap: 18px;
+    }
+}
+
+
+@media (max-width: 850px) {
+
+    .agni-navbar {
+        min-height: 70px;
+
+        padding: 12px 20px;
+    }
+
+
+    .agni-nav-links {
+        display: none;
+
+        position: absolute;
+
+        top: 100%;
+
+        left: 0;
+        right: 0;
+
+        padding: 18px 20px;
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 0;
+
+        background: var(--agni-surface);
+
+        border-bottom: 1px solid var(--agni-border);
+
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+
+
+    .agni-nav-links.agni-mobile-open {
+        display: flex;
+    }
+
+
+    .agni-nav-link {
+        width: 100%;
+
+        padding: 14px 0;
+
+        border-bottom: 1px solid var(--agni-border);
+    }
+
+
+    .agni-nav-link::after {
+        display: none;
+    }
+
+
+    .agni-live-link {
+        padding: 15px 0;
+    }
+
+
+    .agni-mobile-toggle {
+        display: flex;
+    }
+
+
+    .agni-brand {
+        margin-right: auto;
+    }
+
+
+    .agni-name {
+        font-size: 24px;
+    }
+
+
+    .agni-tagline {
+        font-size: 6px;
+
+        letter-spacing: 1.6px;
+    }
+}
+
+
+@media (max-width: 480px) {
+
+    .agni-navbar {
+        padding: 10px 15px;
+    }
+
+
+    .agni-mark {
+        width: 35px;
+        height: 34px;
+    }
+
+
+    .agni-saffron {
+        width: 29px;
+        top: 8px;
+    }
+
+
+    .agni-white {
+        width: 32px;
+        top: 16px;
+    }
+
+
+    .agni-green {
+        width: 27px;
+        top: 24px;
+    }
+
+
+    .agni-name {
+        font-size: 21px;
+        letter-spacing: -0.8px;
+    }
+
+
+    .agni-tagline {
+        font-size: 5px;
+        letter-spacing: 1.2px;
+    }
+
+
+    .agni-action-button,
+    .agni-theme-toggle,
+    .agni-mobile-toggle {
+        width: 36px;
+        height: 36px;
+    }
+}

@@ -10,13 +10,38 @@ import java.util.Optional;
 public interface EmailVerificationTokenRepository
         extends JpaRepository<EmailVerificationToken, Long> {
 
+    // =====================================================
+    // FIND TOKEN
+    // =====================================================
+
     Optional<EmailVerificationToken> findByToken(
             String token
     );
+
+
+    // =====================================================
+    // FIND USER'S TOKEN
+    // =====================================================
 
     Optional<EmailVerificationToken> findByUser(
             User user
     );
 
-    void deleteByUser(User user);
+
+    // =====================================================
+    // DELETE USER'S OLD TOKEN
+    // =====================================================
+
+    void deleteByUser(
+            User user
+    );
+
+
+    // =====================================================
+    // DELETE ALL USER TOKENS
+    // =====================================================
+
+    void deleteAllByUser(
+            User user
+    );
 }

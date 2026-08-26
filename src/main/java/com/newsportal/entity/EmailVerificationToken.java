@@ -18,16 +18,42 @@ import java.util.UUID;
 )
 public class EmailVerificationToken {
 
+    // =====================================================
+    // ID
+    // =====================================================
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
 
-    @Column(nullable = false, unique = true, length = 100)
+    // =====================================================
+    // TOKEN
+    // =====================================================
+
+    @Column(
+        nullable = false,
+        unique = true,
+        length = 100
+    )
     private String token;
 
 
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    // =====================================================
+    // USER
+    // =====================================================
+
+    /*
+     * Each user can have only ONE active verification token.
+     *
+     * When a new verification email is requested,
+     * the old token is deleted and replaced.
+     */
+
+    @OneToOne(
+        fetch = FetchType.LAZY,
+        optional = false
+    )
     @JoinColumn(
         name = "user_id",
         nullable = false,
@@ -36,13 +62,31 @@ public class EmailVerificationToken {
     private User user;
 
 
-    @Column(name = "expires_at", nullable = false)
+    // =====================================================
+    // EXPIRATION
+    // =====================================================
+
+    @Column(
+        name = "expires_at",
+        nullable = false
+    )
     private LocalDateTime expiresAt;
 
 
-    @Column(name = "created_at", nullable = false)
+    // =====================================================
+    // CREATED AT
+    // =====================================================
+
+    @Column(
+        name = "created_at",
+        nullable = false
+    )
     private LocalDateTime createdAt;
 
+
+    // =====================================================
+    // CONSTRUCTORS
+    // =====================================================
 
     public EmailVerificationToken() {
     }
@@ -64,40 +108,52 @@ public class EmailVerificationToken {
     }
 
 
+    // =====================================================
+    // ID
+    // =====================================================
+
     public Long getId() {
         return id;
     }
-
 
     public void setId(Long id) {
         this.id = id;
     }
 
 
+    // =====================================================
+    // TOKEN
+    // =====================================================
+
     public String getToken() {
         return token;
     }
-
 
     public void setToken(String token) {
         this.token = token;
     }
 
 
+    // =====================================================
+    // USER
+    // =====================================================
+
     public User getUser() {
         return user;
     }
-
 
     public void setUser(User user) {
         this.user = user;
     }
 
 
+    // =====================================================
+    // EXPIRATION
+    // =====================================================
+
     public LocalDateTime getExpiresAt() {
         return expiresAt;
     }
-
 
     public void setExpiresAt(
             LocalDateTime expiresAt) {
@@ -106,10 +162,13 @@ public class EmailVerificationToken {
     }
 
 
+    // =====================================================
+    // CREATED AT
+    // =====================================================
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-
 
     public void setCreatedAt(
             LocalDateTime createdAt) {
@@ -117,6 +176,10 @@ public class EmailVerificationToken {
         this.createdAt = createdAt;
     }
 
+
+    // =====================================================
+    // EXPIRATION CHECK
+    // =====================================================
 
     public boolean isExpired() {
 

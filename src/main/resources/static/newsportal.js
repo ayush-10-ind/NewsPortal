@@ -19,6 +19,10 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
+        /*
+         * The weather link already exists in navbar.html.
+         * Do not create a duplicate.
+         */
         if (
             desktopNavigation.querySelector(
                 ".weather-nav-link"
@@ -80,6 +84,7 @@ document.addEventListener("DOMContentLoaded", function () {
             desktopNavigation.appendChild(
                 weatherLink
             );
+
         }
 
 
@@ -90,17 +95,23 @@ document.addEventListener("DOMContentLoaded", function () {
                 ".mobile-navigation"
             );
 
+        /*
+         * navbar.html already contains WEATHER.
+         * Therefore we don't append another one.
+         */
+
         if (
             mobileNavigation &&
             !mobileNavigation.querySelector(
-                ".weather-mobile-link"
+                'a[href="/weather"]'
             )
         ) {
 
             const mobileWeather =
                 document.createElement("a");
 
-            mobileWeather.href = "/weather";
+            mobileWeather.href =
+                "/weather";
 
             mobileWeather.className =
                 "weather-mobile-link";
@@ -115,7 +126,9 @@ document.addEventListener("DOMContentLoaded", function () {
             mobileNavigation.appendChild(
                 mobileWeather
             );
+
         }
+
     }
 
 
@@ -133,7 +146,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (currentDate) {
 
-        const now = new Date();
+        const now =
+            new Date();
 
         const options = {
             day: "2-digit",
@@ -142,12 +156,11 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         currentDate.textContent =
-            now
-                .toLocaleDateString(
-                    "en-IN",
-                    options
-                )
-                .toUpperCase();
+            now.toLocaleDateString(
+                "en-IN",
+                options
+            ).toUpperCase();
+
     }
 
 
@@ -166,7 +179,8 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        const now = new Date();
+        const now =
+            new Date();
 
         const time =
             now.toLocaleTimeString(
@@ -182,6 +196,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         istClock.textContent =
             time + " IST";
+
     }
 
     updateISTClock();
@@ -229,6 +244,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 requestAnimationFrame(
                     animateBreakingNews
                 );
+
         }
 
         animateBreakingNews();
@@ -254,145 +270,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
             }
         );
-    }
-
-
-    /* =========================================================
-       USER DROPDOWN
-       ========================================================= */
-
-    const userMenu =
-        document.querySelector(
-            ".user-menu"
-        );
-
-    const userTrigger =
-        document.querySelector(
-            ".user-trigger"
-        );
-
-    const userDropdown =
-        document.querySelector(
-            ".user-dropdown"
-        );
-
-
-    if (
-        userMenu &&
-        userTrigger &&
-        userDropdown
-    ) {
-
-
-        /* -----------------------------------------
-           OPEN / CLOSE
-           ----------------------------------------- */
-
-        userTrigger.addEventListener(
-            "click",
-            function (event) {
-
-                event.preventDefault();
-                event.stopPropagation();
-
-                userMenu.classList.toggle(
-                    "open"
-                );
-
-            }
-        );
-
-
-        /* -----------------------------------------
-           CLOSE WHEN CLICKING OUTSIDE
-           ----------------------------------------- */
-
-        document.addEventListener(
-            "click",
-            function (event) {
-
-                if (
-                    !userMenu.contains(event.target)
-                ) {
-
-                    userMenu.classList.remove(
-                        "open"
-                    );
-
-                }
-
-            }
-        );
-
-
-        /* -----------------------------------------
-           KEEP OPEN WHEN CLICKING INSIDE
-           ----------------------------------------- */
-
-        userDropdown.addEventListener(
-            "click",
-            function (event) {
-
-                event.stopPropagation();
-
-            }
-        );
-
-
-        /* -----------------------------------------
-           ESCAPE KEY
-           ----------------------------------------- */
-
-        document.addEventListener(
-            "keydown",
-            function (event) {
-
-                if (
-                    event.key === "Escape"
-                ) {
-
-                    userMenu.classList.remove(
-                        "open"
-                    );
-
-                }
-
-            }
-        );
 
     }
 
+
+    
 
     /* =========================================================
        MOBILE MENU
+       
+       IMPORTANT:
+       The mobile menu is handled ONLY inside navbar.html.
+       Do NOT add another click listener here.
        ========================================================= */
-
-    const mobileMenuButton =
-        document.querySelector(
-            ".mobile-menu-button"
-        );
-
-    const mobileNavigation =
-        document.querySelector(
-            ".mobile-navigation"
-        );
-
-    if (
-        mobileMenuButton &&
-        mobileNavigation
-    ) {
-
-        mobileMenuButton.addEventListener(
-            "click",
-            function () {
-
-                mobileNavigation.classList.toggle(
-                    "open"
-                );
-
-            }
-        );
-    }
 
 
     /* =========================================================
@@ -404,53 +294,55 @@ document.addEventListener("DOMContentLoaded", function () {
             "img"
         );
 
-    images.forEach(function (image) {
+    images.forEach(
+        function (image) {
 
-        image.addEventListener(
-            "error",
-            function () {
+            image.addEventListener(
+                "error",
+                function () {
 
-                if (
-                    image.dataset.fallbackHandled
-                ) {
-                    return;
-                }
+                    if (
+                        image.dataset.fallbackHandled
+                    ) {
+                        return;
+                    }
 
-                image.dataset.fallbackHandled =
-                    "true";
+                    image.dataset.fallbackHandled =
+                        "true";
 
-                image.style.display =
-                    "none";
+                    image.style.display =
+                        "none";
 
-                const parent =
-                    image.parentElement;
+                    const parent =
+                        image.parentElement;
 
-                if (!parent) {
-                    return;
-                }
+                    if (!parent) {
+                        return;
+                    }
 
-                parent.classList.add(
-                    "image-error"
-                );
-
-                const fallback =
-                    parent.querySelector(
-                        ".home-image-fallback, " +
-                        ".home-featured-fallback, " +
-                        ".image-fallback"
+                    parent.classList.add(
+                        "image-error"
                     );
 
-                if (fallback) {
+                    const fallback =
+                        parent.querySelector(
+                            ".home-image-fallback, " +
+                            ".home-featured-fallback, " +
+                            ".image-fallback"
+                        );
 
-                    fallback.style.display =
-                        "flex";
+                    if (fallback) {
+
+                        fallback.style.display =
+                            "flex";
+
+                    }
 
                 }
+            );
 
-            }
-        );
-
-    });
+        }
+    );
 
 
     /* =========================================================
@@ -461,19 +353,21 @@ document.addEventListener("DOMContentLoaded", function () {
         .querySelectorAll(
             'a[href="/weather"]'
         )
-        .forEach(function (link) {
+        .forEach(
+            function (link) {
 
-            link.addEventListener(
-                "click",
-                function () {
+                link.addEventListener(
+                    "click",
+                    function () {
 
-                    document.body.classList.add(
-                        "page-leaving"
-                    );
+                        document.body.classList.add(
+                            "page-leaving"
+                        );
 
-                }
-            );
+                    }
+                );
 
-        });
+            }
+        );
 
 });

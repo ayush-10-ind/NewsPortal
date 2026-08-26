@@ -2,7 +2,6 @@ package com.newsportal.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -21,8 +20,11 @@ public class SecurityConfig {
     // =====================================================
 
     public SecurityConfig(
+
             CustomAccessDeniedHandler accessDeniedHandler,
+
             CustomAuthenticationFailureHandler authenticationFailureHandler,
+
             CustomOAuth2UserService customOAuth2UserService) {
 
         this.accessDeniedHandler =
@@ -37,10 +39,6 @@ public class SecurityConfig {
 
 
     // =====================================================
-    // PASSWORD ENCODER
-    // =====================================================
-
-    // =====================================================
     // SECURITY FILTER CHAIN
     // =====================================================
 
@@ -49,7 +47,6 @@ public class SecurityConfig {
             HttpSecurity http) throws Exception {
 
         http
-
 
             // =================================================
             // AUTHORIZATION
@@ -69,10 +66,19 @@ public class SecurityConfig {
                     "/login",
 
                     "/register",
-                    
+
                     "/verify-email",
 
                     "/access-denied",
+
+
+                    // =========================================
+                    // LIVE NEWS
+                    // =========================================
+
+                    "/live-news",
+
+                    "/api/live-channels",
 
 
                     // =========================================
@@ -203,6 +209,7 @@ public class SecurityConfig {
                 // =============================================
 
                 .anyRequest().authenticated()
+
             )
 
 
@@ -224,6 +231,7 @@ public class SecurityConfig {
                 )
 
                 .permitAll()
+
             )
 
 
@@ -233,58 +241,23 @@ public class SecurityConfig {
 
             .oauth2Login(oauth -> oauth
 
-
-                // ---------------------------------------------
-                // LOGIN PAGE
-                // ---------------------------------------------
-
                 .loginPage("/login")
 
-
-                // ---------------------------------------------
-                // CUSTOM OAUTH USER SERVICE
-                // ---------------------------------------------
-
-                /*
-                 * IMPORTANT:
-                 *
-                 * This connects Spring Security to our
-                 * CustomOAuth2UserService.
-                 *
-                 * The service:
-                 *
-                 * 1. Finds existing users by email.
-                 * 2. Prevents duplicate accounts.
-                 * 3. Preserves ROLE_ADMIN / ROLE_EDITOR.
-                 * 4. Gives new OAuth accounts ROLE_USER.
-                 * 5. Rejects disabled accounts.
-                 */
-
                 .userInfoEndpoint(userInfo ->
-
                     userInfo.userService(
                         customOAuth2UserService
                     )
                 )
-
-
-                // ---------------------------------------------
-                // SUCCESS
-                // ---------------------------------------------
 
                 .defaultSuccessUrl(
                     "/",
                     true
                 )
 
-
-                // ---------------------------------------------
-                // FAILURE
-                // ---------------------------------------------
-
                 .failureUrl(
                     "/login?oauth2Error=true"
                 )
+
             )
 
 
@@ -297,6 +270,7 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/")
 
                 .permitAll()
+
             )
 
 
@@ -309,9 +283,11 @@ public class SecurityConfig {
                 .accessDeniedHandler(
                     accessDeniedHandler
                 )
+
             );
 
 
         return http.build();
     }
+
 }

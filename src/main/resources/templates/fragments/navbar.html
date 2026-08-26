@@ -1,76 +1,1052 @@
 <!DOCTYPE html>
-
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
+<head>
+    <meta charset="UTF-8">
+</head>
+
 <body>
 
-<nav th:fragment="navbar"
-     class="editorial-nav">
+<nav th:fragment="navbar" class="editorial-nav">
 
-    <!-- =========================================================
+    <style>
+
+        /* =====================================================
+           NAVBAR
+           ===================================================== */
+
+        .editorial-nav {
+            position: relative;
+            width: 100%;
+            background: #f5f2eb;
+            border-bottom: 1px solid #d8d4cb;
+            z-index: 5000;
+            color: #11110f;
+        }
+
+        .editorial-nav *,
+        .editorial-nav *::before,
+        .editorial-nav *::after {
+            box-sizing: border-box;
+        }
+
+        .editorial-nav .nav-inner {
+            width: min(1380px, calc(100% - 64px));
+            min-height: 76px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 30px;
+        }
+
+
+        /* =====================================================
+           BRAND
+           ===================================================== */
+
+        .editorial-nav .brand {
+            display: flex;
+            align-items: center;
+            gap: 11px;
+            flex-shrink: 0;
+            text-decoration: none;
+            color: #11110f;
+        }
+
+        .agni-logo {
+            position: relative;
+            width: 38px;
+            height: 36px;
+            flex-shrink: 0;
+            display: block;
+        }
+
+        .agni-logo-line {
+            position: absolute;
+            left: 2px;
+            height: 4px;
+            border-radius: 999px;
+            transform: rotate(-25deg);
+            transform-origin: left center;
+            transition: transform .3s ease;
+        }
+
+        .agni-logo-saffron {
+            width: 31px;
+            top: 7px;
+            background: #ff8a00;
+        }
+
+        .agni-logo-white {
+            width: 35px;
+            top: 16px;
+            background: #ffffff;
+            border: 1px solid #bdbdbd;
+        }
+
+        .agni-logo-green {
+            width: 29px;
+            top: 25px;
+            background: #138a42;
+        }
+
+        .editorial-nav .brand:hover .agni-logo-saffron {
+            transform: rotate(-21deg) translateX(2px);
+        }
+
+        .editorial-nav .brand:hover .agni-logo-white {
+            transform: rotate(-28deg) translateX(2px);
+        }
+
+        .editorial-nav .brand:hover .agni-logo-green {
+            transform: rotate(-22deg) translateX(2px);
+        }
+
+        .editorial-nav .brand-name {
+            font-family: Georgia, "Times New Roman", serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.7px;
+            white-space: nowrap;
+            color: #11110f;
+        }
+
+
+        /* =====================================================
+           DESKTOP NAVIGATION
+           ===================================================== */
+
+        .editorial-nav .desktop-navigation {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .editorial-nav .desktop-navigation > a {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            height: 76px;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            color: #44433f;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .editorial-nav
+        .desktop-navigation
+        > a:not(.weather-nav-link):not(.live-nav-link)::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 20px;
+            height: 1px;
+            background: #11110f;
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform .25s ease;
+        }
+
+        .editorial-nav
+        .desktop-navigation
+        > a:not(.weather-nav-link):not(.live-nav-link):hover::after {
+            transform: scaleX(1);
+        }
+
+
+        /* =====================================================
+           WEATHER
+           ===================================================== */
+
+        .editorial-nav .weather-nav-link {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+            width: auto !important;
+            height: 76px !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            color: #11110f !important;
+            background: transparent !important;
+            text-decoration: none !important;
+            border: none !important;
+            white-space: nowrap;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .editorial-nav .weather-nav-icon-wrap {
+            width: 23px !important;
+            height: 23px !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .editorial-nav .weather-nav-icon {
+            width: 21px !important;
+            height: 21px !important;
+            max-width: 21px !important;
+            max-height: 21px !important;
+            min-width: 21px !important;
+            min-height: 21px !important;
+            display: block !important;
+            object-fit: contain;
+            flex-shrink: 0;
+            transition: transform .2s ease;
+        }
+
+        .editorial-nav .weather-nav-link::after {
+            display: none !important;
+            content: none !important;
+        }
+
+        .editorial-nav .weather-nav-text {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .8px;
+            color: #44433f;
+            white-space: nowrap;
+        }
+
+        .editorial-nav .weather-nav-link:hover .weather-nav-icon {
+            transform: rotate(8deg) scale(1.08);
+        }
+
+
+        /* =====================================================
+           LIVE NEWS
+           ===================================================== */
+
+        .editorial-nav .live-nav-link {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px;
+            height: 76px;
+            color: #d71920 !important;
+            text-decoration: none !important;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .8px;
+            white-space: nowrap;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .editorial-nav .live-nav-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: transform .2s ease;
+        }
+
+        .editorial-nav .live-nav-icon svg {
+            width: 19px;
+            height: 19px;
+            display: block;
+            fill: none;
+            stroke: #d71920;
+            stroke-width: 1.7;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .editorial-nav .live-nav-icon svg rect {
+            fill: none;
+            stroke: #d71920;
+        }
+
+        .editorial-nav .live-nav-icon svg path {
+            fill: #d71920;
+            stroke: none;
+        }
+
+        .editorial-nav .live-nav-link:hover .live-nav-icon {
+            transform: scale(1.08);
+        }
+
+        .editorial-nav .live-nav-text {
+            color: #d71920;
+        }
+
+
+        /* =====================================================
+           RIGHT SIDE
+           ===================================================== */
+
+        .editorial-nav .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 17px;
+            flex-shrink: 0;
+        }
+
+
+        /* =====================================================
+           SEARCH
+           ===================================================== */
+
+        .editorial-nav .nav-search {
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            position: relative;
+            color: #11110f;
+            text-decoration: none;
+        }
+
+        .editorial-nav .nav-search svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: #11110f;
+            stroke-width: 1.6;
+        }
+
+
+        /* =====================================================
+           ADD NEWS / ADMIN
+           ===================================================== */
+
+        .editorial-nav .nav-editor-link {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            color: #11110f;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+
+        /* =====================================================
+           NOTIFICATIONS
+           ===================================================== */
+
+        .editorial-nav .nav-notification {
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            position: relative;
+            color: #11110f;
+            text-decoration: none;
+        }
+
+        .editorial-nav .nav-notification svg {
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: #11110f;
+            stroke-width: 1.6;
+        }
+
+        .editorial-nav .notification-count {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            min-width: 16px;
+            height: 16px;
+            display: grid;
+            place-items: center;
+            border-radius: 50%;
+            background: #b4482f;
+            color: #ffffff;
+            font-size: 9px;
+            font-weight: 700;
+        }
+
+
+        /* =====================================================
+           USER MENU
+           ===================================================== */
+
+        .editorial-nav .user-menu {
+            position: relative;
+            z-index: 6000;
+        }
+
+        .editorial-nav .user-trigger {
+            border: 0;
+            outline: none;
+            background: transparent;
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            color: #11110f;
+            cursor: pointer;
+            font-family: Arial, Helvetica, sans-serif;
+            appearance: none;
+            -webkit-appearance: none;
+        }
+
+        .editorial-nav .user-trigger:focus {
+            outline: none;
+        }
+
+        .editorial-nav .user-initial {
+            width: 27px;
+            height: 27px;
+            display: grid;
+            place-items: center;
+            background: #11110f;
+            color: #f5f2eb;
+            border-radius: 50%;
+            font-size: 10px;
+            font-weight: 700;
+            overflow: hidden;
+        }
+
+        .editorial-nav .user-name {
+            max-width: 130px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+
+        /* =====================================================
+           USER CHEVRON
+           ===================================================== */
+
+        .editorial-nav .user-chevron {
+            width: 18px;
+            height: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #11110f;
+            pointer-events: none;
+            transition: transform .25s ease;
+        }
+
+        .editorial-nav .user-chevron svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .editorial-nav .user-menu.open .user-chevron {
+            transform: rotate(180deg);
+        }
+
+
+        /* =====================================================
+           PREMIUM USER DROPDOWN
+           ===================================================== */
+
+        .editorial-nav .user-dropdown {
+            position: absolute;
+            top: calc(100% + 12px);
+            right: 0;
+            width: 270px;
+            padding: 0;
+            background: #f9f7f2;
+            border: 1px solid #d6d1c7;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, .13);
+            display: none;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 99999;
+            transform: translateY(-5px);
+            transition:
+                opacity .18s ease,
+                transform .18s ease;
+        }
+
+        .editorial-nav .user-dropdown.open {
+            display: block !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            pointer-events: auto !important;
+            z-index: 99999 !important;
+            transform: translateY(0);
+        }
+
+        .editorial-nav .dropdown-user {
+            padding: 18px 20px 17px;
+            border-bottom: 1px solid #d8d4cb;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .editorial-nav .dropdown-label {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: #77736b;
+            text-transform: uppercase;
+        }
+
+        .editorial-nav .dropdown-user strong {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            color: #181715;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .editorial-nav .user-dropdown > a,
+        .editorial-nav .user-dropdown form button {
+            width: 100%;
+            min-height: 46px;
+            padding: 0 20px;
+            border: 0;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: 13px;
+            text-align: left;
+            cursor: pointer;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            font-weight: 500;
+            letter-spacing: .15px;
+            color: #252421;
+            text-decoration: none;
+            transition:
+                background .18s ease,
+                color .18s ease;
+        }
+
+        .editorial-nav .user-dropdown > a:hover,
+        .editorial-nav .user-dropdown form button:hover {
+            background: #ece8df;
+            color: #11110f;
+        }
+
+        .editorial-nav .dropdown-icon {
+            width: 17px;
+            height: 17px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #5e5a52;
+        }
+
+        .editorial-nav .dropdown-icon svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .editorial-nav .dropdown-count {
+            margin-left: auto;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #b4482f;
+            color: #ffffff;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .editorial-nav .dropdown-divider {
+            height: 1px;
+            margin: 6px 0;
+            background: #d8d4cb;
+        }
+
+        .editorial-nav .admin-dropdown-link {
+            font-weight: 600 !important;
+            color: #34312c !important;
+        }
+
+        .editorial-nav .user-dropdown form {
+            margin: 0;
+            border-top: 1px solid #d8d4cb;
+            padding-top: 6px;
+            padding-bottom: 6px;
+        }
+
+        .editorial-nav .user-dropdown form button {
+            color: #5d3028;
+            font-weight: 600;
+        }
+
+
+        /* =====================================================
+           LOGIN
+           ===================================================== */
+
+        .editorial-nav .nav-login {
+            padding: 10px 15px;
+            border: 1px solid #11110f;
+            color: #11110f;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            text-decoration: none;
+        }
+
+        .editorial-nav .nav-login:hover {
+            background: #11110f;
+            color: #f5f2eb;
+        }
+
+
+        /* =====================================================
+           THEME
+           ===================================================== */
+
+        .agni-theme-button {
+            width: 27px;
+            height: 27px;
+            display: grid;
+            place-items: center;
+            border: 0;
+            padding: 0;
+            background: transparent;
+            color: #11110f;
+            cursor: pointer;
+            position: relative;
+            font-size: 17px;
+            line-height: 1;
+        }
+
+        .agni-theme-sun,
+        .agni-theme-moon {
+            position: absolute;
+            transition:
+                opacity .25s ease,
+                transform .3s ease;
+        }
+
+        .agni-theme-sun {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .agni-theme-moon {
+            opacity: 0;
+            transform: scale(.5) rotate(-45deg);
+        }
+
+
+        /* =====================================================
+           MOBILE BUTTON
+           ===================================================== */
+
+        .editorial-nav .mobile-menu-button {
+            display: none;
+            width: 36px;
+            height: 36px;
+            border: 1px solid #d8d4cb;
+            background: transparent;
+            cursor: pointer;
+            padding: 8px;
+            outline: none;
+        }
+
+        .editorial-nav .mobile-menu-button span {
+            display: block;
+            height: 1px;
+            background: #11110f;
+            margin: 4px 0;
+            transition:
+                transform .2s ease,
+                opacity .2s ease;
+        }
+
+
+        /* =====================================================
+           MOBILE NAVIGATION
+           ===================================================== */
+
+        .editorial-nav .mobile-navigation {
+            display: none;
+            width: 100%;
+            border-top: 1px solid #d8d4cb;
+            padding: 12px 32px 22px;
+            background: #f5f2eb;
+        }
+
+        .editorial-nav .mobile-navigation.open {
+            display: grid !important;
+            width: 100%;
+        }
+
+        .editorial-nav .mobile-navigation > a {
+            padding: 13px 0;
+            border-bottom: 1px solid #d8d4cb;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .7px;
+            color: #11110f;
+            text-decoration: none;
+        }
+
+        .editorial-nav .mobile-navigation > a:hover {
+            color: #b4482f;
+        }
+
+
+        /* =====================================================
+           TABLET
+           ===================================================== */
+
+        @media (max-width: 1100px) {
+
+            .editorial-nav .desktop-navigation {
+                gap: 13px;
+            }
+
+            .editorial-nav
+            .desktop-navigation
+            > a:nth-child(n+6) {
+                display: none;
+            }
+        }
+
+
+        /* =====================================================
+           MOBILE
+           ===================================================== */
+
+        @media (max-width: 900px) {
+
+            .editorial-nav .nav-inner {
+                width: calc(100% - 40px);
+                min-height: 64px;
+            }
+
+            .editorial-nav .desktop-navigation {
+                display: none;
+            }
+
+            .editorial-nav .mobile-menu-button {
+                display: block;
+            }
+
+            .editorial-nav .nav-editor-link {
+                display: none;
+            }
+
+            .editorial-nav .mobile-navigation {
+                display: none;
+            }
+
+            .editorial-nav .mobile-navigation.open {
+                display: grid !important;
+            }
+
+            .editorial-nav.mobile-open
+            .mobile-menu-button
+            span:nth-child(1) {
+                transform: translateY(5px) rotate(45deg);
+            }
+
+            .editorial-nav.mobile-open
+            .mobile-menu-button
+            span:nth-child(2) {
+                opacity: 0;
+            }
+
+            .editorial-nav.mobile-open
+            .mobile-menu-button
+            span:nth-child(3) {
+                transform: translateY(-5px) rotate(-45deg);
+            }
+        }
+
+
+        @media (max-width: 600px) {
+
+            .editorial-nav .nav-inner {
+                width: calc(100% - 28px);
+            }
+
+            .editorial-nav .brand-name {
+                font-size: 19px;
+            }
+
+            .editorial-nav .user-name {
+                display: none;
+            }
+
+            .editorial-nav .nav-login {
+                display: none;
+            }
+
+            .editorial-nav .user-dropdown {
+                position: fixed;
+                top: 64px;
+                left: 14px;
+                right: 14px;
+                width: auto;
+            }
+
+            .editorial-nav .mobile-navigation {
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+        }
+
+
+        /* =====================================================
+           DARK MODE
+           ===================================================== */
+
+        html.agni-dark .editorial-nav {
+            background: #101112;
+            border-color: #303236;
+            color: #f2f0eb;
+        }
+
+        html.agni-dark .editorial-nav .brand-name {
+            color: #f2f0eb;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .desktop-navigation > a {
+            color: #d8d6d0;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .weather-nav-text {
+            color: #d8d6d0;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .nav-search svg,
+        html.agni-dark
+        .editorial-nav
+        .nav-notification svg {
+            stroke: #f2f0eb;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .nav-editor-link {
+            color: #f2f0eb;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .user-trigger {
+            color: #f2f0eb;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .user-initial {
+            background: #f2f0eb;
+            color: #101112;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .user-chevron {
+            color: #f2f0eb;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .user-dropdown {
+            background: #17191b;
+            border-color: #303236;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, .35);
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .dropdown-user {
+            border-color: #303236;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .dropdown-label {
+            color: #99958d;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .dropdown-user strong {
+            color: #f2f0eb;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .user-dropdown > a,
+        html.agni-dark
+        .editorial-nav
+        .user-dropdown form button {
+            color: #dedbd4;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .user-dropdown > a:hover,
+        html.agni-dark
+        .editorial-nav
+        .user-dropdown form button:hover {
+            background: #24272a;
+            color: #ffffff;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .dropdown-icon {
+            color: #aaa69e;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .dropdown-divider,
+        html.agni-dark
+        .editorial-nav
+        .user-dropdown form {
+            border-color: #303236;
+        }
+
+        html.agni-dark
+        .agni-theme-button {
+            color: #f2f0eb;
+        }
+
+        html.agni-dark
+        .agni-theme-sun {
+            opacity: 0;
+            transform: scale(.5) rotate(45deg);
+        }
+
+        html.agni-dark
+        .agni-theme-moon {
+            opacity: 1;
+            transform: scale(1) rotate(0);
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .mobile-navigation {
+            background: #101112;
+            border-color: #303236;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .mobile-navigation > a {
+            color: #f2f0eb;
+            border-color: #303236;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .mobile-menu-button {
+            border-color: #303236;
+        }
+
+        html.agni-dark
+        .editorial-nav
+        .mobile-menu-button span {
+            background: #f2f0eb;
+        }
+
+    </style>
+
+
+    <!-- =====================================================
          NAV INNER
-         ========================================================= -->
+         ===================================================== -->
 
     <div class="editorial-container nav-inner">
 
-        <!-- =====================================================
-             BRAND
-             ===================================================== -->
+        <!-- BRAND -->
 
         <a href="/"
-           class="brand">
+           class="brand"
+           aria-label="AgniPress Home">
 
-            <span class="brand-mark">
-                NP
+            <span class="agni-logo"
+                  aria-hidden="true">
+
+                <span class="agni-logo-line agni-logo-saffron"></span>
+                <span class="agni-logo-line agni-logo-white"></span>
+                <span class="agni-logo-line agni-logo-green"></span>
+
             </span>
 
             <span class="brand-name">
-                NEWS PORTAL
+                AgniPress
             </span>
 
         </a>
 
 
-        <!-- =====================================================
-             DESKTOP NAVIGATION
-             ===================================================== -->
+        <!-- DESKTOP NAVIGATION -->
 
         <div class="desktop-navigation">
 
-            <a href="/">
-                HOME
-            </a>
+            <a href="/">HOME</a>
 
-            <a href="/newsList">
-                NEWS
-            </a>
+            <a href="/newsList">NEWS</a>
 
-            <a href="/newsList?category=India">
-                INDIA
-            </a>
+            <a href="/newsList?category=India">INDIA</a>
 
-            <a href="/newsList?category=World">
-                WORLD
-            </a>
+            <a href="/newsList?category=World">WORLD</a>
 
-            <a href="/newsList?category=Technology">
-                TECHNOLOGY
-            </a>
+            <a href="/newsList?category=Technology">TECHNOLOGY</a>
 
-            <a href="/newsList?category=Business">
-                BUSINESS
-            </a>
+            <a href="/newsList?category=Business">BUSINESS</a>
 
-            <a href="/newsList?category=Sports">
-                SPORTS
-            </a>
+            <a href="/newsList?category=Sports">SPORTS</a>
 
 
-            <!-- =================================================
-                 WEATHER
-                 ================================================= -->
+            <!-- WEATHER -->
 
             <a href="/weather"
                class="weather-nav-link">
@@ -97,29 +1073,27 @@
                             stroke-width="3.5"
                             stroke-linecap="round">
 
-                            <path d="M60 8V16"/>
-                            <path d="M60 56V63"/>
-                            <path d="M32 36H40"/>
-                            <path d="M80 36H88"/>
-                            <path d="M40 16L46 22"/>
-                            <path d="M74 50L80 56"/>
-                            <path d="M80 16L74 22"/>
+                            <path d="M60 8V16"></path>
+                            <path d="M60 56V63"></path>
+                            <path d="M32 36H40"></path>
+                            <path d="M80 36H88"></path>
+                            <path d="M40 16L46 22"></path>
+                            <path d="M74 50L80 56"></path>
+                            <path d="M80 16L74 22"></path>
 
                         </g>
 
                         <path
-                            d="
-                                M18 68
-                                C18 59 25 52 34 52
-                                C36 52 38 52.4 40 53.1
-                                C43 45 50 39 59 39
-                                C70 39 79 47 80 58
-                                C88 58 94 64 94 72
-                                C94 80 88 86 80 86
-                                H34
-                                C25 86 18 80 18 72
-                                Z
-                            "
+                            d="M18 68
+                               C18 59 25 52 34 52
+                               C36 52 38 52.4 40 53.1
+                               C43 45 50 39 59 39
+                               C70 39 79 47 80 58
+                               C88 58 94 64 94 72
+                               C94 80 88 86 80 86
+                               H34
+                               C25 86 18 80 18 72
+                               Z"
                             fill="#FFFFFF"
                             stroke="#172B3F"
                             stroke-width="3"
@@ -136,19 +1110,50 @@
 
             </a>
 
+
+            <!-- LIVE NEWS -->
+
+            <a href="/live-news"
+               class="live-nav-link"
+               aria-label="Live News">
+
+                <span class="live-nav-icon"
+                      aria-hidden="true">
+
+                    <svg
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+
+                        <rect
+                            x="3"
+                            y="5"
+                            width="18"
+                            height="14"
+                            rx="2">
+                        </rect>
+
+                        <path
+                            d="M9 9L16 12L9 15Z">
+                        </path>
+
+                    </svg>
+
+                </span>
+
+                <span class="live-nav-text">
+                    LIVE NEWS
+                </span>
+
+            </a>
+
         </div>
 
 
-        <!-- =====================================================
-             RIGHT SIDE NAV ACTIONS
-             ===================================================== -->
+        <!-- RIGHT SIDE -->
 
         <div class="nav-actions">
 
-
-            <!-- =================================================
-                 SEARCH
-                 ================================================= -->
+            <!-- SEARCH -->
 
             <a href="/newsList"
                class="nav-search"
@@ -164,18 +1169,14 @@
                         r="6.5">
                     </circle>
 
-                    <path
-                        d="M16 16L21 21">
-                    </path>
+                    <path d="M16 16L21 21"></path>
 
                 </svg>
 
             </a>
 
 
-            <!-- =================================================
-                 ADD NEWS
-                 ================================================= -->
+            <!-- ADD NEWS -->
 
             <a href="/addNews"
                class="nav-editor-link"
@@ -186,9 +1187,7 @@
             </a>
 
 
-            <!-- =================================================
-                 ADMIN
-                 ================================================= -->
+            <!-- ADMIN -->
 
             <a href="/admin/users"
                class="nav-editor-link"
@@ -199,9 +1198,7 @@
             </a>
 
 
-            <!-- =================================================
-                 NOTIFICATIONS
-                 ================================================= -->
+            <!-- NOTIFICATIONS -->
 
             <a href="/notifications"
                class="nav-notification"
@@ -212,13 +1209,14 @@
                     viewBox="0 0 24 24"
                     aria-hidden="true">
 
-                    <path
-                        d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9">
+                    <path d="M18 9
+                             a6 6 0 0 0-12 0
+                             c0 7-3 7-3 9
+                             h18
+                             c0-2-3-2-3-9">
                     </path>
 
-                    <path
-                        d="M10 21h4">
-                    </path>
+                    <path d="M10 21h4"></path>
 
                 </svg>
 
@@ -234,17 +1232,31 @@
             </a>
 
 
-            <!-- =================================================
-                 USER MENU
-                 ================================================= -->
+            <!-- THEME -->
 
-            <div class="user-menu"
-                 sec:authorize="isAuthenticated()">
+            <button
+                type="button"
+                id="agniThemeButton"
+                class="agni-theme-button"
+                aria-label="Switch theme"
+                title="Switch theme">
+
+                <span class="agni-theme-sun">
+                    ☀
+                </span>
+
+                <span class="agni-theme-moon">
+                    ☾
+                </span>
+
+            </button>
 
 
-                <!-- =================================================
-                     USER TRIGGER
-                     ================================================= -->
+            <!-- USER MENU -->
+
+            <div
+                class="user-menu"
+                sec:authorize="isAuthenticated()">
 
                 <button
                     type="button"
@@ -252,9 +1264,6 @@
                     id="userMenuButton"
                     aria-label="Open account menu"
                     aria-expanded="false">
-
-
-                    <!-- USER INITIAL -->
 
                     <span
                         class="user-initial"
@@ -264,9 +1273,6 @@
 
                     </span>
 
-
-                    <!-- USER NAME -->
-
                     <span
                         class="user-name"
                         sec:authentication="name">
@@ -275,25 +1281,15 @@
 
                     </span>
 
-
-                    <!-- CHEVRON -->
-
                     <span
                         class="user-chevron"
                         aria-hidden="true">
 
                         <svg
                             viewBox="0 0 24 24"
-                            width="15"
-                            height="15"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round">
+                            xmlns="http://www.w3.org/2000/svg">
 
-                            <polyline points="6 9 12 15 18 9">
-                            </polyline>
+                            <path d="M6 9L12 15L18 9"></path>
 
                         </svg>
 
@@ -302,19 +1298,11 @@
                 </button>
 
 
-                <!-- =================================================
-                     ACCOUNT DROPDOWN
-                     ================================================= -->
+                <!-- USER DROPDOWN -->
 
                 <div
                     class="user-dropdown"
-                    id="userDropdown"
-                    role="menu">
-
-
-                    <!-- =================================================
-                         ACCOUNT HEADER
-                         ================================================= -->
+                    id="userDropdown">
 
                     <div class="dropdown-user">
 
@@ -323,290 +1311,215 @@
                         </span>
 
                         <strong sec:authentication="name">
-                            user@example.com
+                            User
                         </strong>
 
                     </div>
 
 
-                    <!-- =================================================
-                         MAIN ACCOUNT LINKS
-                         ================================================= -->
+                    <a href="/dashboard">
 
-                    <div class="dropdown-links">
+                        <span class="dropdown-icon">
 
+                            <svg viewBox="0 0 24 24">
 
-                        <!-- DASHBOARD -->
+                                <rect
+                                    x="4"
+                                    y="4"
+                                    width="16"
+                                    height="16"
+                                    rx="2">
+                                </rect>
 
-                        <a
-                            href="/dashboard"
-                            class="dropdown-item"
-                            role="menuitem">
+                                <path d="M8 8h8"></path>
+                                <path d="M8 12h8"></path>
+                                <path d="M8 16h5"></path>
 
-                            <span class="dropdown-icon">
+                            </svg>
 
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round">
+                        </span>
 
-                                    <rect
-                                        x="3"
-                                        y="3"
-                                        width="7"
-                                        height="7">
-                                    </rect>
+                        <span>
+                            Dashboard
+                        </span>
 
-                                    <rect
-                                        x="14"
-                                        y="3"
-                                        width="7"
-                                        height="7">
-                                    </rect>
-
-                                    <rect
-                                        x="3"
-                                        y="14"
-                                        width="7"
-                                        height="7">
-                                    </rect>
-
-                                    <rect
-                                        x="14"
-                                        y="14"
-                                        width="7"
-                                        height="7">
-                                    </rect>
-
-                                </svg>
-
-                            </span>
-
-                            <span>
-                                Dashboard
-                            </span>
-
-                        </a>
+                    </a>
 
 
-                        <!-- SAVED NEWS -->
+                    <a href="/bookmarks">
 
-                        <a
-                            href="/bookmarks"
-                            class="dropdown-item"
-                            role="menuitem">
+                        <span class="dropdown-icon">
 
-                            <span class="dropdown-icon">
+                            <svg viewBox="0 0 24 24">
 
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round">
+                                <path d="M6 4h12v16l-6-3l-6 3z"></path>
 
-                                    <path
-                                        d="M6 3h12v18l-6-4-6 4z">
-                                    </path>
+                            </svg>
 
-                                </svg>
+                        </span>
 
-                            </span>
+                        <span>
+                            Saved News
+                        </span>
 
-                            <span>
-                                Saved News
-                            </span>
+                        <span
+                            class="dropdown-count"
+                            th:if="${savedNewsCount != null}"
+                            th:text="${savedNewsCount}">
 
-                        </a>
+                            0
+
+                        </span>
+
+                    </a>
 
 
-                        <!-- NOTIFICATIONS -->
+                    <a href="/notifications">
 
-                        <a
-                            href="/notifications"
-                            class="dropdown-item"
-                            role="menuitem">
+                        <span class="dropdown-icon">
 
-                            <span class="dropdown-icon">
+                            <svg viewBox="0 0 24 24">
 
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round">
+                                <path d="M18 9
+                                         a6 6 0 0 0-12 0
+                                         c0 7-3 7-3 9
+                                         h18
+                                         c0-2-3-2-3-9">
+                                </path>
 
-                                    <path
-                                        d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9">
-                                    </path>
+                                <path d="M10 21h4"></path>
 
-                                    <path
-                                        d="M10 21h4">
-                                    </path>
+                            </svg>
 
-                                </svg>
+                        </span>
 
-                            </span>
+                        <span>
+                            Notifications
+                        </span>
 
-                            <span>
-                                Notifications
-                            </span>
+                        <span
+                            class="dropdown-count"
+                            th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}"
+                            th:text="${unreadNotificationCount}">
 
-                            <span
-                                class="dropdown-count"
-                                th:if="${unreadNotificationCount != null and unreadNotificationCount > 0}"
-                                th:text="${unreadNotificationCount}">
+                            0
 
-                                0
+                        </span>
 
-                            </span>
-
-                        </a>
+                    </a>
 
 
-                        <!-- MY PROFILE -->
+                    <a href="/profile">
 
-                        <a
-                            href="/profile"
-                            class="dropdown-item"
-                            role="menuitem">
+                        <span class="dropdown-icon">
 
-                            <span class="dropdown-icon">
+                            <svg viewBox="0 0 24 24">
 
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round">
+                                <circle
+                                    cx="12"
+                                    cy="8"
+                                    r="3">
+                                </circle>
 
-                                    <circle
-                                        cx="12"
-                                        cy="8"
-                                        r="4">
-                                    </circle>
+                                <path d="M5 20
+                                         c0-4
+                                         3-6
+                                         7-6
+                                         s7 2
+                                         7 6">
+                                </path>
 
-                                    <path
-                                        d="M4 21c0-4.2 3.6-7 8-7s8 2.8 8 7">
-                                    </path>
+                            </svg>
 
-                                </svg>
+                        </span>
 
-                            </span>
+                        <span>
+                            My Profile
+                        </span>
 
-                            <span>
-                                My Profile
-                            </span>
-
-                        </a>
-
-                    </div>
+                    </a>
 
 
-                    <!-- =================================================
-                         ADMIN SECTION
-                         ================================================= -->
+                    <div class="dropdown-divider"></div>
 
-                    <div
-                        class="dropdown-section"
+
+                    <a
+                        href="/admin/users"
+                        class="admin-dropdown-link"
                         sec:authorize="hasRole('ADMIN')">
 
-                        <a
-                            href="/admin/users"
-                            class="dropdown-item"
-                            role="menuitem">
+                        <span class="dropdown-icon">
+
+                            <svg viewBox="0 0 24 24">
+
+                                <path d="M12 3
+                                         l2.5 2
+                                         3.2.3
+                                         .8 3.1
+                                         2 2.5
+                                         -2 2.5
+                                         -.8 3.1
+                                         -3.2.3
+                                         -2.5 2
+                                         -2.5-2
+                                         -3.2-.3
+                                         -.8-3.1
+                                         -2-2.5
+                                         2-2.5
+                                         .8-3.1
+                                         3.2-.3
+                                         z">
+                                </path>
+
+                                <circle
+                                    cx="12"
+                                    cy="12"
+                                    r="2.5">
+                                </circle>
+
+                            </svg>
+
+                        </span>
+
+                        <span>
+                            Admin Dashboard
+                        </span>
+
+                    </a>
+
+
+                    <form
+                        th:action="@{/logout}"
+                        method="post">
+
+                        <button type="submit">
 
                             <span class="dropdown-icon">
 
-                                <svg
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="1.8"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round">
+                                <svg viewBox="0 0 24 24">
 
-                                    <path
-                                        d="M12 2l2.7 6.1L21 9l-4.5 4.3L17.6 20 12 17l-5.6 3 1.1-6.7L3 9l6.3-.9z">
-                                    </path>
+                                    <path d="M10 5H5v14h5"></path>
+                                    <path d="M13 8l4 4-4 4"></path>
+                                    <path d="M8 12h9"></path>
 
                                 </svg>
 
                             </span>
 
                             <span>
-                                Admin Dashboard
+                                Logout
                             </span>
 
-                        </a>
+                        </button>
 
-                    </div>
-
-
-                    <!-- =================================================
-                         LOGOUT
-                         ================================================= -->
-
-                    <div class="dropdown-section logout-section">
-
-                        <form
-                            th:action="@{/logout}"
-                            method="post">
-
-                            <button
-                                type="submit"
-                                class="dropdown-item dropdown-logout">
-
-                                <span class="dropdown-icon">
-
-                                    <svg
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        stroke-width="1.8"
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round">
-
-                                        <path
-                                            d="M10 17l5-5-5-5">
-                                        </path>
-
-                                        <path
-                                            d="M15 12H3">
-                                        </path>
-
-                                        <path
-                                            d="M21 19V5">
-                                        </path>
-
-                                    </svg>
-
-                                </span>
-
-                                <span>
-                                    Logout
-                                </span>
-
-                            </button>
-
-                        </form>
-
-                    </div>
+                    </form>
 
                 </div>
 
             </div>
 
 
-            <!-- =================================================
-                 LOGIN
-                 ================================================= -->
+            <!-- LOGIN -->
 
             <a
                 href="/login"
@@ -618,15 +1531,15 @@
             </a>
 
 
-            <!-- =================================================
-                 MOBILE MENU BUTTON
-                 ================================================= -->
+            <!-- MOBILE MENU -->
 
             <button
                 type="button"
                 class="mobile-menu-button"
                 id="mobileMenuButton"
-                aria-label="Open navigation">
+                aria-label="Open navigation"
+                aria-expanded="false"
+                aria-controls="mobileNavigation">
 
                 <span></span>
                 <span></span>
@@ -639,112 +1552,37 @@
     </div>
 
 
-    <!-- =========================================================
+    <!-- =====================================================
          MOBILE NAVIGATION
-         ========================================================= -->
+         ===================================================== -->
 
     <div
         class="mobile-navigation"
         id="mobileNavigation">
 
-        <a href="/">
-            HOME
-        </a>
+        <a href="/">HOME</a>
 
-        <a href="/newsList">
-            NEWS
-        </a>
+        <a href="/newsList">NEWS</a>
 
-        <a href="/newsList?category=India">
-            INDIA
-        </a>
+        <a href="/newsList?category=India">INDIA</a>
 
-        <a href="/newsList?category=World">
-            WORLD
-        </a>
+        <a href="/newsList?category=World">WORLD</a>
 
-        <a href="/newsList?category=Technology">
-            TECHNOLOGY
-        </a>
+        <a href="/newsList?category=Technology">TECHNOLOGY</a>
 
-        <a href="/newsList?category=Business">
-            BUSINESS
-        </a>
+        <a href="/newsList?category=Business">BUSINESS</a>
 
-        <a href="/newsList?category=Sports">
-            SPORTS
-        </a>
+        <a href="/newsList?category=Sports">SPORTS</a>
 
-
-        <!-- MOBILE WEATHER -->
+        <a href="/weather">WEATHER</a>
 
         <a
-            href="/weather"
-            class="weather-nav-link">
+            href="/live-news"
+            style="color:#d71920 !important;">
 
-            <span class="weather-nav-icon-wrap">
-
-                <svg
-                    class="weather-nav-icon"
-                    viewBox="0 0 96 96"
-                    xmlns="http://www.w3.org/2000/svg"
-                    aria-hidden="true">
-
-                    <circle
-                        cx="60"
-                        cy="36"
-                        r="18"
-                        fill="#FFD83D"
-                        stroke="#172B3F"
-                        stroke-width="3">
-                    </circle>
-
-                    <g
-                        stroke="#172B3F"
-                        stroke-width="3.5"
-                        stroke-linecap="round">
-
-                        <path d="M60 8V16"/>
-                        <path d="M60 56V63"/>
-                        <path d="M32 36H40"/>
-                        <path d="M80 36H88"/>
-                        <path d="M40 16L46 22"/>
-                        <path d="M74 50L80 56"/>
-                        <path d="M80 16L74 22"/>
-
-                    </g>
-
-                    <path
-                        d="
-                            M18 68
-                            C18 59 25 52 34 52
-                            C36 52 38 52.4 40 53.1
-                            C43 45 50 39 59 39
-                            C70 39 79 47 80 58
-                            C88 58 94 64 94 72
-                            C94 80 88 86 80 86
-                            H34
-                            C25 86 18 80 18 72
-                            Z
-                        "
-                        fill="#FFFFFF"
-                        stroke="#172B3F"
-                        stroke-width="3"
-                        stroke-linejoin="round">
-                    </path>
-
-                </svg>
-
-            </span>
-
-            <span class="weather-nav-text">
-                WEATHER
-            </span>
+            LIVE NEWS
 
         </a>
-
-
-        <!-- MOBILE ADD NEWS -->
 
         <a
             href="/addNews"
@@ -753,9 +1591,6 @@
             ADD NEWS
 
         </a>
-
-
-        <!-- MOBILE ADMIN -->
 
         <a
             href="/admin/users"
@@ -767,122 +1602,366 @@
 
     </div>
 
-</nav>
+
+    <!-- =====================================================
+         JAVASCRIPT
+         ===================================================== -->
+
+    <script>
+
+        document.addEventListener(
+            "DOMContentLoaded",
+            function () {
 
 
-<script>
+                /* =================================================
+                   USER DROPDOWN
+                   ================================================= */
 
-document.addEventListener("DOMContentLoaded", function () {
+                const userButton =
+                    document.getElementById(
+                        "userMenuButton"
+                    );
 
-    const userMenu =
-        document.querySelector(".user-menu");
+                const userMenu =
+                    document.querySelector(
+                        ".editorial-nav .user-menu"
+                    );
 
-    const userMenuButton =
-        document.getElementById("userMenuButton");
-
-    const userDropdown =
-        document.getElementById("userDropdown");
-
-
-    if (!userMenu ||
-        !userMenuButton ||
-        !userDropdown) {
-
-        return;
-
-    }
+                const userDropdown =
+                    document.getElementById(
+                        "userDropdown"
+                    );
 
 
-    // Open / close user dropdown
+                if (
+                    userButton &&
+                    userMenu &&
+                    userDropdown
+                ) {
 
-    userMenuButton.addEventListener(
-        "click",
-        function (event) {
+                    userButton.addEventListener(
+                        "click",
+                        function (event) {
 
-            event.stopPropagation();
+                            event.preventDefault();
+                            event.stopPropagation();
 
-            const isOpen =
-                userMenu.classList.toggle("open");
-
-            userMenuButton.setAttribute(
-                "aria-expanded",
-                isOpen ? "true" : "false"
-            );
-
-            userDropdown.setAttribute(
-                "aria-hidden",
-                isOpen ? "false" : "true"
-            );
-
-        }
-    );
+                            const isOpen =
+                                userDropdown.classList.contains(
+                                    "open"
+                                );
 
 
-    // Prevent clicks inside dropdown from closing it
+                            if (isOpen) {
 
-    userDropdown.addEventListener(
-        "click",
-        function (event) {
+                                userDropdown.classList.remove(
+                                    "open"
+                                );
 
-            event.stopPropagation();
+                                userMenu.classList.remove(
+                                    "open"
+                                );
 
-        }
-    );
+                                userButton.setAttribute(
+                                    "aria-expanded",
+                                    "false"
+                                );
+
+                            } else {
+
+                                userDropdown.classList.add(
+                                    "open"
+                                );
+
+                                userMenu.classList.add(
+                                    "open"
+                                );
+
+                                userButton.setAttribute(
+                                    "aria-expanded",
+                                    "true"
+                                );
+
+                            }
+
+                        }
+                    );
 
 
-    // Close when clicking anywhere outside
+                    userDropdown.addEventListener(
+                        "click",
+                        function (event) {
 
-    document.addEventListener(
-        "click",
-        function () {
+                            event.stopPropagation();
 
-            userMenu.classList.remove("open");
-
-            userMenuButton.setAttribute(
-                "aria-expanded",
-                "false"
-            );
-
-            userDropdown.setAttribute(
-                "aria-hidden",
-                "true"
-            );
-
-        }
-    );
+                        }
+                    );
 
 
-    // Close with Escape
+                    document.addEventListener(
+                        "click",
+                        function (event) {
 
-    document.addEventListener(
-        "keydown",
-        function (event) {
+                            if (
+                                !userMenu.contains(
+                                    event.target
+                                )
+                            ) {
 
-            if (event.key === "Escape") {
+                                userDropdown.classList.remove(
+                                    "open"
+                                );
 
-                userMenu.classList.remove("open");
+                                userMenu.classList.remove(
+                                    "open"
+                                );
 
-                userMenuButton.setAttribute(
-                    "aria-expanded",
-                    "false"
-                );
+                                userButton.setAttribute(
+                                    "aria-expanded",
+                                    "false"
+                                );
 
-                userDropdown.setAttribute(
-                    "aria-hidden",
-                    "true"
-                );
+                            }
 
-                userMenuButton.focus();
+                        }
+                    );
+
+
+                    document.addEventListener(
+                        "keydown",
+                        function (event) {
+
+                            if (
+                                event.key === "Escape"
+                            ) {
+
+                                userDropdown.classList.remove(
+                                    "open"
+                                );
+
+                                userMenu.classList.remove(
+                                    "open"
+                                );
+
+                                userButton.setAttribute(
+                                    "aria-expanded",
+                                    "false"
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+
+
+                /* =================================================
+                   MOBILE MENU
+                   ================================================= */
+
+                const mobileButton =
+                    document.getElementById(
+                        "mobileMenuButton"
+                    );
+
+                const mobileNavigation =
+                    document.getElementById(
+                        "mobileNavigation"
+                    );
+
+
+                if (
+                    mobileButton &&
+                    mobileNavigation
+                ) {
+
+                    mobileButton.addEventListener(
+                        "click",
+                        function (event) {
+
+                            event.preventDefault();
+                            event.stopPropagation();
+
+                            const isOpen =
+                                mobileNavigation.classList.contains(
+                                    "open"
+                                );
+
+
+                            mobileNavigation.classList.toggle(
+                                "open",
+                                !isOpen
+                            );
+
+
+                            const nav =
+                                document.querySelector(
+                                    ".editorial-nav"
+                                );
+
+                            if (nav) {
+
+                                nav.classList.toggle(
+                                    "mobile-open",
+                                    !isOpen
+                                );
+
+                            }
+
+
+                            mobileButton.setAttribute(
+                                "aria-expanded",
+                                String(!isOpen)
+                            );
+
+                            mobileButton.setAttribute(
+                                "aria-label",
+                                isOpen
+                                    ? "Open navigation"
+                                    : "Close navigation"
+                            );
+
+                        }
+                    );
+
+
+                    mobileNavigation
+                        .querySelectorAll("a")
+                        .forEach(
+                            function (link) {
+
+                                link.addEventListener(
+                                    "click",
+                                    function () {
+
+                                        mobileNavigation.classList.remove(
+                                            "open"
+                                        );
+
+                                        const nav =
+                                            document.querySelector(
+                                                ".editorial-nav"
+                                            );
+
+                                        if (nav) {
+
+                                            nav.classList.remove(
+                                                "mobile-open"
+                                            );
+
+                                        }
+
+                                        mobileButton.setAttribute(
+                                            "aria-expanded",
+                                            "false"
+                                        );
+
+                                        mobileButton.setAttribute(
+                                            "aria-label",
+                                            "Open navigation"
+                                        );
+
+                                    }
+                                );
+
+                            }
+                        );
+
+                }
+
+
+                /* =================================================
+                   DARK / LIGHT MODE
+                   ================================================= */
+
+                const themeButton =
+                    document.getElementById(
+                        "agniThemeButton"
+                    );
+
+
+                function applyTheme(theme) {
+
+                    if (
+                        theme === "dark"
+                    ) {
+
+                        document.documentElement.classList.add(
+                            "agni-dark"
+                        );
+
+                    } else {
+
+                        document.documentElement.classList.remove(
+                            "agni-dark"
+                        );
+
+                    }
+
+                }
+
+
+                const savedTheme =
+                    localStorage.getItem(
+                        "agnipress-theme"
+                    );
+
+
+                if (
+                    savedTheme === "dark"
+                ) {
+
+                    applyTheme("dark");
+
+                } else if (
+                    savedTheme === "light"
+                ) {
+
+                    applyTheme("light");
+
+                }
+
+
+                if (themeButton) {
+
+                    themeButton.addEventListener(
+                        "click",
+                        function () {
+
+                            const isDark =
+                                document.documentElement.classList.contains(
+                                    "agni-dark"
+                                );
+
+                            const newTheme =
+                                isDark
+                                    ? "light"
+                                    : "dark";
+
+
+                            applyTheme(
+                                newTheme
+                            );
+
+
+                            localStorage.setItem(
+                                "agnipress-theme",
+                                newTheme
+                            );
+
+                        }
+                    );
+
+                }
 
             }
+        );
 
-        }
-    );
+    </script>
 
-});
-
-</script>
+</nav>
 
 </body>
-
 </html>
