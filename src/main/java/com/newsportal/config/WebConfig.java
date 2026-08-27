@@ -1,8 +1,5 @@
 package com.newsportal.config;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -15,53 +12,30 @@ public class WebConfig implements WebMvcConfigurer {
 
         /*
          * =====================================================
-         * FILESYSTEM UPLOADS
+         * NEWS IMAGE RESOURCES
          * =====================================================
          *
-         * Used for images stored in:
+         * Images are packaged by Maven into:
          *
-         * uploads/news/
+         * BOOT-INF/classes/uploads/news/
          *
-         * This works locally and also supports images created
-         * while the application is running.
-         */
-
-        Path uploadPath = Paths.get("uploads")
-                .toAbsolutePath()
-                .normalize();
-
-        String uploadLocation = uploadPath.toUri().toString();
-
-        if (!uploadLocation.endsWith("/")) {
-            uploadLocation += "/";
-        }
-
-        /*
-         * =====================================================
-         * RESOURCE MAPPING
-         * =====================================================
+         * which corresponds to:
          *
-         * First:
-         *   filesystem uploads/
+         * classpath:/uploads/news/
          *
-         * Second:
-         *   images packaged inside the application JAR
+         * URL:
          *
-         * This gives us a fallback for Railway deployments.
+         * /uploads/news/<filename>
          */
 
         registry
                 .addResourceHandler("/uploads/**")
-                .addResourceLocations(
-                        uploadLocation,
-                        "classpath:/uploads/"
-                );
+                .addResourceLocations("classpath:/uploads/");
 
         System.out.println("========================================");
         System.out.println("UPLOAD RESOURCE MAPPING ENABLED");
         System.out.println("URL: /uploads/**");
-        System.out.println("FILESYSTEM FOLDER: " + uploadPath);
-        System.out.println("CLASSPATH FALLBACK: classpath:/uploads/");
+        System.out.println("RESOURCE: classpath:/uploads/");
         System.out.println("========================================");
     }
 }
