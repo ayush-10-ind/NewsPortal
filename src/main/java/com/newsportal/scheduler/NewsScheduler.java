@@ -3,7 +3,6 @@ package com.newsportal.scheduler;
 import com.newsportal.service.NewsCleanupService;
 import com.newsportal.service.NewsImportService;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -33,11 +32,20 @@ public class NewsScheduler {
     // =====================================================
     // AUTOMATIC DAILY NEWS UPDATE
     // =====================================================
+    //
+    // TEMPORARILY DISABLED
+    //
+    // The automatic scheduler was repeatedly calling
+    // NewsAPI on Railway and receiving HTTP 429
+    // "Too Many Requests" responses.
+    //
+    // We are keeping this method so the import logic
+    // is not deleted. Automatic execution can be
+    // re-enabled after the NewsAPI rate-limit handling
+    // is fixed.
+    //
+    // =====================================================
 
-    @Scheduled(
-            initialDelay = 60000,
-            fixedRate = 86400000
-    )
     public void automaticallyUpdateNews() {
 
         System.out.println();
@@ -137,10 +145,6 @@ public class NewsScheduler {
 
         System.out.println(
                 "AUTOMATIC NEWS UPDATE COMPLETED"
-        );
-
-        System.out.println(
-                "Next update in approximately 24 hours."
         );
 
         System.out.println(
