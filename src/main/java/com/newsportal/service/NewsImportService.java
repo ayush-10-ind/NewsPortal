@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class NewsImportService {
@@ -21,12 +22,6 @@ public class NewsImportService {
     private final NewsArticleGenerationService
             articleGenerationService;
 
-    private final ImageStorageService
-            imageStorageService;
-
-    private final NotificationService
-            notificationService;
-
 
     // =====================================================
     // CONSTRUCTOR
@@ -35,9 +30,7 @@ public class NewsImportService {
     public NewsImportService(
             NewsApiService newsApiService,
             NewsRepository newsRepository,
-            NewsArticleGenerationService articleGenerationService,
-            ImageStorageService imageStorageService,
-            NotificationService notificationService) {
+            NewsArticleGenerationService articleGenerationService) {
 
         this.newsApiService =
                 newsApiService;
@@ -47,17 +40,15 @@ public class NewsImportService {
 
         this.articleGenerationService =
                 articleGenerationService;
-
-        this.imageStorageService =
-                imageStorageService;
-
-        this.notificationService =
-                notificationService;
     }
 
 
     // =====================================================
-    // FAST NEWS IMPORT
+    // IMPORT NEWS
+    //
+    // IMPORTANT:
+    // Images are now stored as external URLs.
+    // This avoids losing images when Railway redeploys.
     // =====================================================
 
     public int importNews() {
@@ -70,10 +61,6 @@ public class NewsImportService {
         List<NewsApiArticleDTO> articles =
                 newsApiService.getAllTopHeadlines();
 
-
-        // =================================================
-        // NO ARTICLES
-        // =================================================
 
         if (articles == null ||
                 articles.isEmpty()) {
@@ -88,9 +75,11 @@ public class NewsImportService {
 
         int importedCount = 0;
 
+        int repairedImages = 0;
+
 
         // =================================================
-        // IMPORT EACH ARTICLE
+        // PROCESS ARTICLES
         // =================================================
 
         for (NewsApiArticleDTO article : articles) {
@@ -98,7 +87,7 @@ public class NewsImportService {
             try {
 
                 // =============================================
-                // BASIC VALIDATION
+                // VALIDATION
                 // =============================================
 
                 if (article == null ||
@@ -116,14 +105,80 @@ public class NewsImportService {
 
 
                 // =============================================
-                // DUPLICATE CHECK
+                // IMAGE URL
                 // =============================================
 
-                if (newsRepository
-                        .findBySourceUrl(
+                String externalImageUrl =
+                        article.getUrlToImage();
+
+
+                // =============================================
+                // FIND EXISTING ARTICLE
+                // =============================================
+
+                Optional<News> existingArticle =
+                        newsRepository.findBySourceUrl(
                                 article.getUrl()
-                        )
-                        .isPresent()) {
+                        );
+
+
+                // =============================================
+                // REPAIR EXISTING ARTICLE IMAGE
+                //
+                // If imageUrl currently contains:
+                //
+                // /uploads/news/xxxx.jpg
+                //
+                // replace it with the original external
+                // News API image URL.
+                // =============================================
+
+                if (existingArticle.isPresent()) {
+
+                    News news =
+                            existingArticle.get();
+
+
+                    if (externalImageUrl != null &&
+                            !externalImageUrl.isBlank()) {
+
+                        String currentImage =
+                                news.getImageUrl();
+
+
+                        boolean needsRepair =
+                                currentImage == null ||
+                                currentImage.isBlank() ||
+                                !currentImage.startsWith(
+                                        "http://"
+                                ) &&
+                                !currentImage.startsWith(
+                                        "https://"
+                                );
+
+
+                        if (needsRepair) {
+
+                            news.setImageUrl(
+                                    externalImageUrl
+                            );
+
+                            newsRepository.save(news);
+
+                            repairedImages++;
+
+                            System.out.println(
+                                    "IMAGE REPAIRED: "
+                                            + news.getTitle()
+                            );
+
+                            System.out.println(
+                                    "External image: "
+                                            + externalImageUrl
+                            );
+                        }
+                    }
+
 
                     System.out.println(
                             "Skipping duplicate: "
@@ -135,42 +190,14 @@ public class NewsImportService {
 
 
                 // =============================================
-                // IMAGE URL
+                // NO IMAGE
                 // =============================================
-
-                String externalImageUrl =
-                        article.getUrlToImage();
-
 
                 if (externalImageUrl == null ||
                         externalImageUrl.isBlank()) {
 
                     System.out.println(
                             "Skipping article - no image: "
-                                    + article.getTitle()
-                    );
-
-                    continue;
-                }
-
-
-                // =============================================
-                // DOWNLOAD IMAGE LOCALLY
-                // =============================================
-
-                String localImageUrl =
-                        imageStorageService
-                                .downloadAndSaveImage(
-                                        externalImageUrl
-                                );
-
-
-                if (localImageUrl == null ||
-                        localImageUrl.isBlank()) {
-
-                    System.out.println(
-                            "Skipping article - "
-                                    + "image could not be downloaded: "
                                     + article.getTitle()
                     );
 
@@ -224,7 +251,7 @@ public class NewsImportService {
 
 
                 // =============================================
-                // TEMPORARY CONTENT
+                // INITIAL CONTENT
                 // =============================================
 
                 String initialContent =
@@ -253,11 +280,13 @@ public class NewsImportService {
 
 
                 // =============================================
-                // LOCAL IMAGE
+                // EXTERNAL IMAGE URL
+                //
+                // DO NOT DOWNLOAD LOCALLY.
                 // =============================================
 
                 news.setImageUrl(
-                        localImageUrl
+                        externalImageUrl
                 );
 
 
@@ -277,9 +306,7 @@ public class NewsImportService {
                 if (article.getSource() != null) {
 
                     news.setSourceName(
-                            article
-                                    .getSource()
-                                    .getName()
+                            article.getSource().getName()
                     );
                 }
 
@@ -305,7 +332,7 @@ public class NewsImportService {
 
 
                 // =============================================
-                // SAVE NEWS
+                // SAVE
                 // =============================================
 
                 News savedNews =
@@ -320,75 +347,70 @@ public class NewsImportService {
                                 + savedNews.getTitle()
                 );
 
-
                 System.out.println(
-                        "Local image: "
-                                + localImageUrl
+                        "External image: "
+                                + savedNews.getImageUrl()
                 );
 
 
                 // =============================================
-                // ASHNA BACKGROUND GENERATION
+                // ASHNA GENERATION
+                //
+                // Run only after article is saved.
+                // Failure must NOT stop the import.
                 // =============================================
 
-                articleGenerationService
-                        .generateArticleAsync(
-                                savedNews.getId()
-                        );
-
-
+                
             } catch (Exception e) {
 
                 System.out.println(
-                        "Failed to import article: "
+                        "Failed to import article."
+                );
+
+                System.out.println(
+                        "Title: "
                                 + (
                                 article != null
                                         ? article.getTitle()
-                                        : "Unknown article"
+                                        : "null"
                         )
                 );
-
 
                 System.out.println(
                         "Error: "
                                 + e.getMessage()
                 );
+
+                e.printStackTrace();
             }
         }
 
 
-        // =====================================================
-        // SMART NOTIFICATION
-        // =====================================================
+        // =================================================
+        // SUMMARY
+        // =================================================
 
-        if (importedCount > 0) {
-
-            System.out.println(
-                    "Creating notification for "
-                            + importedCount
-                            + " newly imported articles..."
-            );
-
-
-            notificationService
-                    .notifyUsersAboutImportedNews(
-                            importedCount
-                    );
-        }
-
-
-        // =====================================================
-        // IMPORT SUMMARY
-        // =====================================================
-
+        System.out.println();
         System.out.println(
-                "Fast import completed."
+                "========================================"
         );
 
+        System.out.println(
+                "NEWS IMPORT COMPLETED"
+        );
 
         System.out.println(
-                "Articles imported: "
+                "New articles imported: "
                         + importedCount
+        );
+
+        System.out.println(
+                "Existing images repaired: "
+                        + repairedImages
+        );
+
+        System.out.println(
+                "========================================"
         );
 
 
@@ -403,20 +425,25 @@ public class NewsImportService {
     private LocalDate convertPublishedDate(
             String publishedAt) {
 
-        if (publishedAt == null ||
-                publishedAt.isBlank()) {
-
-            return LocalDate.now();
-        }
-
-
         try {
+
+            if (publishedAt == null ||
+                    publishedAt.isBlank()) {
+
+                return LocalDate.now();
+            }
+
 
             return OffsetDateTime
                     .parse(publishedAt)
                     .toLocalDate();
 
         } catch (Exception e) {
+
+            System.out.println(
+                    "Could not parse published date: "
+                            + publishedAt
+            );
 
             return LocalDate.now();
         }

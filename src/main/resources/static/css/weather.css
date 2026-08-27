@@ -55,31 +55,79 @@ input {
     position: relative;
 }
 
+
+/* =========================================================
+   AGNIPRESS BRAND
+   ========================================================= */
+
 .brand {
-    width: 36px;
-    height: 36px;
-    background: #101010;
-    color: white;
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 12px;
+    color: #101828;
     text-decoration: none;
-    font-family: Georgia, serif;
-    font-size: 18px;
-    font-weight: bold;
     flex-shrink: 0;
 }
 
-.header-title {
-    margin-left: 12px;
+
+/* TRICOLOR LOGO */
+
+.brand-mark {
+    position: relative;
+    width: 42px;
+    height: 38px;
+    display: block;
+    flex-shrink: 0;
 }
 
-.eyebrow {
-    font-size: 8px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
+.brand-mark .stripe {
+    position: absolute;
+    left: 2px;
+    width: 36px;
+    height: 5px;
+    border-radius: 5px;
+    transform: rotate(-23deg);
+}
+
+.brand-mark .stripe-orange {
+    top: 5px;
+    background: #ff8a00;
+}
+
+.brand-mark .stripe-white {
+    top: 16px;
+    background: #ffffff;
+    border: 1px solid #b8c0c7;
+}
+
+.brand-mark .stripe-green {
+    top: 27px;
+    background: #159447;
+}
+
+
+/* AGNIPRESS TEXT */
+
+.brand-name {
+    font-family: "Playfair Display", Georgia, serif;
+    font-size: 30px;
+    line-height: 1;
     font-weight: 600;
-    color: #183f68;
+    color: #101828;
+    white-space: nowrap;
+}
+
+
+/* =========================================================
+   CENTER HEADER TITLE
+   ========================================================= */
+
+.header-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    margin: 0;
 }
 
 .header-title h1 {
@@ -87,7 +135,13 @@ input {
     font-size: 38px;
     font-weight: 500;
     line-height: 1;
+    white-space: nowrap;
 }
+
+
+/* =========================================================
+   BACK LINK
+   ========================================================= */
 
 .back-link {
     margin-left: auto;
@@ -159,14 +213,10 @@ input {
     width: 100% !important;
     height: 275px !important;
     min-height: 275px !important;
-
     margin-top: 12px !important;
     margin-bottom: 0 !important;
-
     overflow: hidden !important;
-
     border-radius: 16px;
-
     background:
         linear-gradient(
             135deg,
@@ -174,9 +224,7 @@ input {
             #54788b 52%,
             #8ca8b5 100%
         );
-
     isolation: isolate;
-
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -191,14 +239,12 @@ input {
     content: "";
     position: absolute;
     inset: 0;
-
     background:
         radial-gradient(
             circle at 82% 22%,
             rgba(255, 244, 185, .20),
             transparent 20%
         );
-
     pointer-events: none;
     z-index: 1;
 }
@@ -207,14 +253,12 @@ input {
     content: "";
     position: absolute;
     inset: 0;
-
     background:
         linear-gradient(
             180deg,
             rgba(255,255,255,.03),
             transparent 50%
         );
-
     pointer-events: none;
     z-index: 2;
 }
@@ -226,25 +270,17 @@ input {
 
 .sun {
     position: absolute;
-
     width: 76px;
     height: 76px;
-
     right: 13%;
     top: 38px;
-
     border-radius: 50%;
-
     background: #f3d779;
-
     box-shadow:
         0 0 35px rgba(244, 217, 121, .25);
-
     opacity: .85;
-
     animation:
         sunFloat 8s ease-in-out infinite;
-
     z-index: 3;
 }
 
@@ -266,22 +302,15 @@ input {
 
 .moon {
     position: absolute;
-
     width: 70px;
     height: 70px;
-
     right: 13%;
     top: 38px;
-
     border-radius: 50%;
-
     background: #f4f4e9;
-
     box-shadow:
         0 0 25px rgba(255,255,255,.18);
-
     display: none;
-
     z-index: 3;
 }
 
@@ -293,24 +322,17 @@ input {
 .stars {
     position: absolute;
     inset: 0;
-
     display: none;
-
     z-index: 3;
 }
 
 .stars span {
     position: absolute;
-
     width: 3px;
     height: 3px;
-
     border-radius: 50%;
-
     background: white;
-
     opacity: .6;
-
     animation:
         starPulse 4s ease-in-out infinite;
 }
@@ -380,22 +402,15 @@ input {
 
 .cloud {
     position: absolute;
-
     width: 180px;
     height: 52px;
-
     background: rgba(247, 249, 250, .92);
-
     border-radius: 60px;
-
     z-index: 5;
-
     filter:
         drop-shadow(
             0 6px 10px rgba(0, 0, 0, .08)
         );
-
-    /* Noticeably visible movement */
     animation:
         cloudDrift 7s ease-in-out infinite;
 }
@@ -406,16 +421,13 @@ input {
 .cloud i {
     position: absolute;
     display: block;
-
     background: inherit;
-
     border-radius: 50%;
 }
 
 .cloud i:nth-child(1) {
     width: 68px;
     height: 68px;
-
     left: 25px;
     bottom: 20px;
 }
@@ -423,7 +435,6 @@ input {
 .cloud i:nth-child(2) {
     width: 82px;
     height: 82px;
-
     left: 70px;
     bottom: 15px;
 }
@@ -431,7 +442,6 @@ input {
 .cloud i:nth-child(3) {
     width: 58px;
     height: 58px;
-
     right: 12px;
     bottom: 20px;
 }
@@ -444,9 +454,7 @@ input {
 .cloud-one {
     left: 45%;
     top: 48px;
-
     transform: scale(1);
-
     animation:
         cloudDrift 7s ease-in-out infinite;
 }
@@ -459,14 +467,10 @@ input {
 .cloud-two {
     left: 68%;
     top: 145px;
-
     transform: scale(.65);
-
     opacity: .9;
-
     animation:
         cloudDrift 9s ease-in-out infinite;
-
     animation-delay: -3s;
 }
 
@@ -476,7 +480,6 @@ input {
    ========================================================= */
 
 @keyframes cloudDrift {
-
     0% {
         margin-left: -18px;
         margin-top: 0;
@@ -503,6 +506,7 @@ input {
     }
 }
 
+
 /* =========================================================
    RAIN
    ========================================================= */
@@ -510,24 +514,17 @@ input {
 .rain {
     position: absolute;
     inset: 0;
-
     pointer-events: none;
-
     z-index: 6;
-
     opacity: 0;
 }
 
 .rain span {
     position: absolute;
-
     width: 2px;
     height: 13px;
-
     background: rgba(220, 239, 250, .55);
-
     border-radius: 5px;
-
     animation:
         rainFall 2.4s linear infinite;
 }
@@ -601,9 +598,7 @@ input {
     display: none;
 }
 
-
 @keyframes rainFall {
-
     0% {
         transform: translateY(-18px);
         opacity: 0;
@@ -627,21 +622,15 @@ input {
 .snow {
     position: absolute;
     inset: 0;
-
     pointer-events: none;
-
     z-index: 6;
-
     opacity: 0;
 }
 
 .snow span {
     position: absolute;
-
     color: white;
-
     font-size: 11px;
-
     animation:
         snowFall 6s linear infinite;
 }
@@ -697,7 +686,6 @@ input {
 }
 
 @keyframes snowFall {
-
     0% {
         transform: translateY(-15px);
         opacity: 0;
@@ -720,27 +708,19 @@ input {
 
 .lightning {
     position: absolute;
-
     width: 3px;
     height: 55px;
-
     background: #fff7ad;
-
     transform: skewX(-18deg);
-
     left: 58%;
     top: 125px;
-
     opacity: 0;
-
     z-index: 8;
-
     animation:
         lightningFlash 7s infinite;
 }
 
 @keyframes lightningFlash {
-
     0%,
     91%,
     100% {
@@ -771,37 +751,26 @@ input {
 
 .weather-scene .scene-content {
     position: absolute !important;
-
     inset: 0 !important;
-
     width: 100% !important;
     height: 100% !important;
-
     z-index: 20 !important;
-
     display: flex;
-
     align-items: flex-end;
-
     justify-content: space-between;
-
     padding: 28px 34px;
 }
 
 .scene-weather {
     position: relative;
-
     color: #ffffff !important;
-
     text-shadow:
         0 2px 8px rgba(0,0,0,.18);
-
     z-index: 30;
 }
 
 .scene-weather .eyebrow {
     color: rgba(255,255,255,.9) !important;
-
     margin-bottom: 7px;
 }
 
@@ -812,24 +781,16 @@ input {
 
 .scene-weather .temperature {
     display: flex;
-
     align-items: flex-start;
-
     font-family:
         "Playfair Display",
         Georgia,
         serif;
-
     font-size: 82px;
-
     line-height: .85;
-
     letter-spacing: -4px;
-
     color: #ffffff !important;
-
     opacity: 1 !important;
-
     text-shadow:
         0 3px 12px rgba(0,0,0,.16);
 }
@@ -850,15 +811,10 @@ input {
         "Inter",
         Arial,
         sans-serif;
-
     font-size: 20px;
-
     letter-spacing: 0;
-
     margin-left: 7px;
-
     margin-top: 4px;
-
     color: #ffffff !important;
 }
 
@@ -867,16 +823,12 @@ input {
 
 .scene-weather h3 {
     margin-top: 12px;
-
     font-family:
         "Playfair Display",
         Georgia,
         serif;
-
     font-size: 30px;
-
     font-weight: 500;
-
     color: #ffffff !important;
 }
 
@@ -885,9 +837,7 @@ input {
 
 .scene-weather p:last-child {
     margin-top: 3px;
-
     font-size: 12px;
-
     color: rgba(255,255,255,.88) !important;
 }
 
@@ -899,22 +849,17 @@ input {
 .weather-icon {
     width: 100px;
     height: 100px;
-
     object-fit: contain;
-
     margin-right: 24px;
-
     filter:
         drop-shadow(
             0 7px 12px rgba(0,0,0,.15)
         );
-
     animation:
         weatherIconFloat 6s ease-in-out infinite;
 }
 
 @keyframes weatherIconFloat {
-
     0%,
     100% {
         transform: translateY(0);
@@ -932,29 +877,20 @@ input {
 
 .weather-details {
     position: relative;
-
     z-index: 20;
-
     display: grid;
-
     grid-template-columns:
         repeat(4, 1fr);
-
     margin-top: 0;
-
     background: white;
-
     border-radius:
         0 0 16px 16px;
-
     overflow: hidden;
 }
 
 .detail {
     min-height: 88px;
-
     padding: 20px 24px;
-
     border-right:
         1px solid #d4dce4;
 }
@@ -965,23 +901,16 @@ input {
 
 .detail span {
     display: block;
-
     font-size: 8px;
-
     letter-spacing: 1.5px;
-
     text-transform: uppercase;
-
     color: #315779;
-
     margin-bottom: 10px;
 }
 
 .detail strong {
     font-size: 19px;
-
     font-weight: 500;
-
     color: #111d30;
 }
 
@@ -992,9 +921,7 @@ input {
 
 .forecast-section {
     position: relative;
-
     z-index: 20;
-
     margin-top: 68px;
 }
 
@@ -1004,29 +931,21 @@ input {
 
 .section-heading h2 {
     margin-top: 2px;
-
     font-family:
         "Playfair Display",
         Georgia,
         serif;
-
     font-size:
         clamp(52px, 5vw, 72px);
-
     line-height: .95;
-
     font-weight: 500;
-
     letter-spacing: -2px;
 }
 
 .forecast-list {
     display: flex;
-
     gap: 8px;
-
     flex-wrap: wrap;
-
     align-items: stretch;
 }
 
@@ -1037,29 +956,20 @@ input {
 
 .forecast-card {
     position: relative;
-
     width: 104px;
-
     min-height: 185px;
-
     overflow: hidden;
-
     border-radius: 12px;
-
     background:
         linear-gradient(
             160deg,
             #41677c,
             #7598a8
         );
-
     color: white;
-
     padding: 14px 12px;
-
     box-shadow:
         0 8px 20px rgba(28,52,72,.12);
-
     transition:
         transform .25s ease,
         box-shadow .25s ease;
@@ -1067,18 +977,14 @@ input {
 
 .forecast-card:hover {
     transform: translateY(-5px);
-
     box-shadow:
         0 14px 28px rgba(28,52,72,.18);
 }
 
 .forecast-card .time {
     font-size: 8px;
-
     font-weight: 600;
-
     letter-spacing: .5px;
-
     text-transform: uppercase;
 }
 
@@ -1087,43 +993,28 @@ input {
 
 .forecast-card .temperature {
     position: absolute;
-
     left: 12px;
-
     bottom: 32px;
-
     font-family:
         "Inter",
         Arial,
         sans-serif;
-
     font-size: 18px;
-
     letter-spacing: 0;
-
     line-height: 1;
-
     color: white;
-
     opacity: 1;
 }
 
 .forecast-card .condition {
     position: absolute;
-
     left: 12px;
     right: 8px;
-
     bottom: 12px;
-
     font-size: 7px;
-
     color: rgba(255,255,255,.85);
-
     white-space: nowrap;
-
     overflow: hidden;
-
     text-overflow: ellipsis;
 }
 
@@ -1132,16 +1023,12 @@ input {
 
 .forecast-card .weather-icon {
     position: absolute;
-
     width: 58px;
     height: 58px;
-
     left: 50%;
     top: 50%;
-
     transform:
         translate(-50%, -55%);
-
     margin: 0;
 }
 
@@ -1152,40 +1039,29 @@ input {
 
 .summary-section {
     margin-top: 68px;
-
     padding-top: 28px;
-
     border-top:
         1px solid #9da7b3;
 }
 
 .summary-section h2 {
     margin-top: 5px;
-
     font-family:
         "Playfair Display",
         Georgia,
         serif;
-
     font-size:
         clamp(48px, 5vw, 68px);
-
     line-height: 1;
-
     font-weight: 500;
-
     letter-spacing: -2px;
 }
 
 .summary-section > p:last-child {
     margin-top: 18px;
-
     max-width: 800px;
-
     font-size: 12px;
-
     line-height: 1.7;
-
     color: #536274;
 }
 
@@ -1196,52 +1072,37 @@ input {
 
 .location-section {
     padding: 70px 0;
-
     border-bottom:
         1px solid #a7b0ba;
 }
 
 .location-section h2 {
     margin-top: 8px;
-
     font-family:
         "Playfair Display",
         Georgia,
         serif;
-
     font-size:
         clamp(52px, 6vw, 80px);
-
     font-weight: 500;
 }
 
 .location-description {
     max-width: 500px;
-
     margin-top: 15px;
-
     color: #596777;
-
     line-height: 1.6;
 }
 
 .primary-button {
     margin-top: 25px;
-
     padding: 12px 18px;
-
     background: #152b42;
-
     color: white;
-
     border: none;
-
     cursor: pointer;
-
     font-size: 10px;
-
     letter-spacing: 1px;
-
     text-transform: uppercase;
 }
 
@@ -1256,19 +1117,14 @@ input {
 
 .manual-location {
     margin-top: 35px;
-
     display: flex;
-
     flex-direction: column;
-
     gap: 10px;
-
     max-width: 400px;
 }
 
 .manual-location > span {
     font-size: 10px;
-
     color: #687687;
 }
 
@@ -1278,27 +1134,19 @@ input {
 
 .city-search input {
     flex: 1;
-
     padding: 12px;
-
     border:
         1px solid #aab4c0;
-
     background: white;
-
     outline: none;
 }
 
 .city-search button {
     padding: 12px 16px;
-
     border:
         1px solid #152b42;
-
     background: #152b42;
-
     color: white;
-
     cursor: pointer;
 }
 
@@ -1309,26 +1157,19 @@ input {
 
 .loading-section {
     padding: 80px 0;
-
     text-align: center;
-
     color: #506174;
 }
 
 .loader {
     width: 25px;
     height: 25px;
-
     margin: 0 auto 15px;
-
     border:
         2px solid #c8d0d8;
-
     border-top-color:
         #152b42;
-
     border-radius: 50%;
-
     animation:
         spin .8s linear infinite;
 }
@@ -1567,6 +1408,14 @@ input {
         border-bottom:
             1px solid #d4dce4;
     }
+
+    .brand-name {
+        font-size: 26px;
+    }
+
+    .header-title h1 {
+        font-size: 32px;
+    }
 }
 
 
@@ -1577,8 +1426,45 @@ input {
         padding-top: 14px;
     }
 
+    .brand {
+        gap: 7px;
+    }
+
+    .brand-mark {
+        width: 34px;
+        height: 34px;
+    }
+
+    .brand-mark .stripe {
+        width: 30px;
+        height: 4px;
+    }
+
+    .brand-mark .stripe-orange {
+        top: 5px;
+    }
+
+    .brand-mark .stripe-white {
+        top: 14px;
+    }
+
+    .brand-mark .stripe-green {
+        top: 23px;
+    }
+
+    .brand-name {
+        font-size: 21px;
+    }
+
+    .header-title {
+        position: static;
+        transform: none;
+        margin-left: auto;
+        margin-right: 12px;
+    }
+
     .header-title h1 {
-        font-size: 27px;
+        font-size: 25px;
     }
 
     .back-link {

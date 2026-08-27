@@ -10,7 +10,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Weather Center | News Portal</title>
+    <title>Weather Center | AgniPress</title>
 
     <link rel="stylesheet"
           th:href="@{/css/weather.css}">
@@ -28,9 +28,32 @@
 
     <header class="weather-header">
 
+        <!-- =================================================
+             AGNIPRESS BRAND
+             ================================================= -->
+
         <a href="/" class="brand">
-            NP
+
+            <span class="brand-mark">
+
+                <span class="stripe stripe-orange"></span>
+
+                <span class="stripe stripe-white"></span>
+
+                <span class="stripe stripe-green"></span>
+
+            </span>
+
+            <span class="brand-name">
+                AgniPress
+            </span>
+
         </a>
+
+
+        <!-- =================================================
+             CENTER TITLE
+             ================================================= -->
 
         <div class="header-title">
 
@@ -44,11 +67,17 @@
 
         </div>
 
+
+        <!-- =================================================
+             BACK LINK
+             ================================================= -->
+
         <a href="/" class="back-link">
             ← Back to News
         </a>
 
     </header>
+
 
 
     <!-- ================================================= -->
@@ -116,6 +145,7 @@
     </section>
 
 
+
     <!-- ================================================= -->
     <!-- LOADING -->
     <!-- ================================================= -->
@@ -131,6 +161,7 @@
         </p>
 
     </section>
+
 
 
     <!-- ================================================= -->
@@ -164,6 +195,7 @@
 
             </div>
 
+
             <button
                     id="refresh-weather"
                     class="refresh-button">
@@ -173,6 +205,7 @@
             </button>
 
         </section>
+
 
 
         <!-- ================================================= -->
@@ -326,6 +359,7 @@
         </section>
 
 
+
         <!-- ================================================= -->
         <!-- WEATHER DETAILS -->
         <!-- ================================================= -->
@@ -386,6 +420,7 @@
         </section>
 
 
+
         <!-- ================================================= -->
         <!-- FORECAST -->
         <!-- ================================================= -->
@@ -408,9 +443,11 @@
             <div
                     id="forecast-list"
                     class="forecast-list">
+
             </div>
 
         </section>
+
 
 
         <!-- ================================================= -->
@@ -436,6 +473,7 @@
     </main>
 
 </div>
+
 
 
 <script
