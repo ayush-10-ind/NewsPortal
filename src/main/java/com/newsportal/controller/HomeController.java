@@ -24,101 +24,57 @@ public class HomeController {
         this.newsRepository = newsRepository;
     }
 
-
-    // =====================================================
-    // HOME PAGE
-    // =====================================================
-
     @GetMapping("/")
     public String home(Model model) {
 
-        // =================================================
-        // LATEST NEWS
-        // =================================================
-
-        Page<News> latestPage =
-                newsRepository.findAll(
-                        PageRequest.of(
-                                0,
-                                8,
-                                Sort.by("publishedDate").descending()
-                        )
-                );
-
-        List<News> latestNews =
-                latestPage.getContent();
-
-
-        model.addAttribute(
-                "latestNews",
-                latestNews
+        Page<News> latestPage = newsRepository.findAll(
+                PageRequest.of(
+                        0,
+                        8,
+                        Sort.by("publishedDate").descending()
+                )
         );
 
+        List<News> latestNews = latestPage.getContent();
 
-        // =================================================
-        // FEATURED NEWS
-        // =================================================
+        model.addAttribute("latestNews", latestNews);
 
-        News featuredNews =
-                latestNews.isEmpty()
-                        ? null
-                        : latestNews.get(0);
+        News featuredNews = latestNews.stream()
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
 
+        model.addAttribute("featuredNews", featuredNews);
 
-        model.addAttribute(
-                "featuredNews",
-                featuredNews
-        );
-
-
-        // =================================================
-        // TRENDING NEWS
-        // =================================================
-
-        List<News> trendingNews =
-                newsRepository.findAll()
-                        .stream()
-                        .sorted(
-                                Comparator.comparing(
-                                        News::getViewCount,
-                                        Comparator.nullsLast(
-                                                Comparator.reverseOrder()
-                                        )
+        List<News> trendingNews = newsRepository.findAll()
+                .stream()
+                .filter(Objects::nonNull)
+                .sorted(
+                        Comparator.comparing(
+                                News::getViewCount,
+                                Comparator.nullsLast(
+                                        Comparator.reverseOrder()
                                 )
                         )
-                        .limit(5)
-                        .collect(Collectors.toList());
+                )
+                .limit(5)
+                .collect(Collectors.toList());
 
+        model.addAttribute("trendingNews", trendingNews);
 
-        model.addAttribute(
-                "trendingNews",
-                trendingNews
-        );
+        List<String> categories = newsRepository.findAll()
+                .stream()
+                .filter(Objects::nonNull)
+                .map(News::getCategory)
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(category -> !category.isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
 
-
-        // =================================================
-        // CATEGORIES
-        // =================================================
-
-        List<String> categories =
-                newsRepository.findAll()
-                        .stream()
-                        .map(News::getCategory)
-                        .filter(Objects::nonNull)
-                        .map(String::trim)
-                        .filter(category -> !category.isEmpty())
-                        .distinct()
-                        .sorted()
-                        .collect(Collectors.toList());
-
-
-        model.addAttribute(
-                "categories",
-                categories
-        );
-
+        model.addAttribute("categories", categories);
 
         return "index";
     }
-
 }

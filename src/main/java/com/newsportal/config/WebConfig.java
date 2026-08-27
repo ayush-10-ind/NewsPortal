@@ -15,27 +15,39 @@ public class WebConfig implements WebMvcConfigurer {
          * NEWS IMAGE RESOURCES
          * =====================================================
          *
-         * Images are packaged by Maven into:
+         * Railway:
+         *   /app/uploads/
          *
-         * BOOT-INF/classes/uploads/news/
+         * Local development:
+         *   ./uploads/
          *
-         * which corresponds to:
-         *
-         * classpath:/uploads/news/
+         * Fallback:
+         *   classpath:/uploads/
          *
          * URL:
+         *   /uploads/news/<filename>
          *
-         * /uploads/news/<filename>
+         * The order is intentional:
+         *
+         * 1. Railway persistent volume
+         * 2. Local uploads folder
+         * 3. Classpath fallback
          */
 
         registry
                 .addResourceHandler("/uploads/**")
-                .addResourceLocations("classpath:/uploads/");
+                .addResourceLocations(
+                        "file:/app/uploads/",
+                        "file:./uploads/",
+                        "classpath:/uploads/"
+                );
 
         System.out.println("========================================");
         System.out.println("UPLOAD RESOURCE MAPPING ENABLED");
         System.out.println("URL: /uploads/**");
-        System.out.println("RESOURCE: classpath:/uploads/");
+        System.out.println("RAILWAY: file:/app/uploads/");
+        System.out.println("LOCAL: file:./uploads/");
+        System.out.println("FALLBACK: classpath:/uploads/");
         System.out.println("========================================");
     }
 }
