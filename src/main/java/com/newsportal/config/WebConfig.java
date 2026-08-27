@@ -14,52 +14,54 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
 
         /*
-         * Serve files stored in:
+         * =====================================================
+         * FILESYSTEM UPLOADS
+         * =====================================================
          *
-         * project-folder/uploads/
+         * Used for images stored in:
          *
-         * Example:
-         * uploads/news/abc.jpg
+         * uploads/news/
          *
-         * will be available in browser as:
-         *
-         * http://localhost:8082/uploads/news/abc.jpg
+         * This works locally and also supports images created
+         * while the application is running.
          */
 
-        Path uploadPath =
-                Paths.get("uploads")
-                        .toAbsolutePath()
-                        .normalize();
+        Path uploadPath = Paths.get("uploads")
+                .toAbsolutePath()
+                .normalize();
 
-        String uploadLocation =
-                uploadPath.toUri().toString();
+        String uploadLocation = uploadPath.toUri().toString();
 
         if (!uploadLocation.endsWith("/")) {
             uploadLocation += "/";
         }
 
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "UPLOAD RESOURCE MAPPING ENABLED"
-        );
-
-        System.out.println(
-                "URL: /uploads/**"
-        );
-
-        System.out.println(
-                "FOLDER: " + uploadPath
-        );
-
-        System.out.println(
-                "========================================"
-        );
+        /*
+         * =====================================================
+         * RESOURCE MAPPING
+         * =====================================================
+         *
+         * First:
+         *   filesystem uploads/
+         *
+         * Second:
+         *   images packaged inside the application JAR
+         *
+         * This gives us a fallback for Railway deployments.
+         */
 
         registry
                 .addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadLocation);
+                .addResourceLocations(
+                        uploadLocation,
+                        "classpath:/uploads/"
+                );
+
+        System.out.println("========================================");
+        System.out.println("UPLOAD RESOURCE MAPPING ENABLED");
+        System.out.println("URL: /uploads/**");
+        System.out.println("FILESYSTEM FOLDER: " + uploadPath);
+        System.out.println("CLASSPATH FALLBACK: classpath:/uploads/");
+        System.out.println("========================================");
     }
 }

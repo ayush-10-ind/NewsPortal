@@ -46,7 +46,6 @@
 
     <dependencies>
 
-
         <!-- =================================================
              SPRING WEB / MVC
              ================================================= -->
@@ -202,6 +201,37 @@
          ===================================================== -->
 
     <build>
+
+        <!-- =================================================
+             RESOURCE PACKAGING
+             =================================================
+             
+             Normal Spring resources:
+                 src/main/resources/
+
+             PLUS:
+                 uploads/
+
+             The uploads directory will be copied into:
+                 target/classes/uploads/
+
+             and therefore packaged into the JAR as:
+                 uploads/...
+             ================================================= -->
+
+        <resources>
+
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+
+            <resource>
+                <directory>uploads</directory>
+                <targetPath>uploads</targetPath>
+            </resource>
+
+        </resources>
+
 
         <plugins>
 
