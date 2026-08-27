@@ -28,7 +28,6 @@ public class ImageStorageService {
 
         this.webClient =
                 WebClient.builder()
-
                         .codecs(configurer ->
                                 configurer
                                         .defaultCodecs()
@@ -36,15 +35,63 @@ public class ImageStorageService {
                                                 15 * 1024 * 1024
                                         )
                         )
-
                         .build();
+
+
+        // =================================================
+        // UPLOAD DIRECTORY
+        // =================================================
+        //
+        // Railway:
+        //   UPLOAD_DIR=/app/uploads
+        //
+        // Local development:
+        //   uploads/
+        //
+        // News images:
+        //   <UPLOAD_DIR>/news/
+        //
+        // =================================================
+
+        String uploadRoot =
+                System.getenv("UPLOAD_DIR");
+
+        if (uploadRoot == null ||
+                uploadRoot.isBlank()) {
+
+            uploadRoot = "uploads";
+        }
 
 
         this.uploadDirectory =
                 Paths.get(
-                        "uploads",
+                        uploadRoot,
                         "news"
                 );
+
+
+        System.out.println(
+                "========================================"
+        );
+
+        System.out.println(
+                "IMAGE STORAGE INITIALIZED"
+        );
+
+        System.out.println(
+                "UPLOAD ROOT: "
+                        + uploadRoot
+        );
+
+        System.out.println(
+                "NEWS IMAGE DIRECTORY: "
+                        + uploadDirectory
+                                .toAbsolutePath()
+        );
+
+        System.out.println(
+                "========================================"
+        );
     }
 
 
@@ -92,11 +139,20 @@ public class ImageStorageService {
             System.out.println(
                     "----------------------------------------"
             );
+
             System.out.println(
                     "DOWNLOADING IMAGE"
             );
+
             System.out.println(
-                    "URL: " + imageUrl
+                    "URL: "
+                            + imageUrl
+            );
+
+            System.out.println(
+                    "DESTINATION: "
+                            + uploadDirectory
+                                    .toAbsolutePath()
             );
 
 
@@ -108,12 +164,7 @@ public class ImageStorageService {
 
                     webClient
                             .get()
-
                             .uri(imageUri)
-
-                            // ---------------------------------
-                            // USER AGENT
-                            // ---------------------------------
 
                             .header(
                                     HttpHeaders.USER_AGENT,
@@ -124,10 +175,6 @@ public class ImageStorageService {
                                     "Chrome/151.0.0.0 " +
                                     "Safari/537.36"
                             )
-
-                            // ---------------------------------
-                            // ACCEPT
-                            // ---------------------------------
 
                             .header(
                                     HttpHeaders.ACCEPT,
@@ -141,10 +188,6 @@ public class ImageStorageService {
                                     "image/*,*/*;q=0.8"
                             )
 
-                            // ---------------------------------
-                            // REQUEST
-                            // ---------------------------------
-
                             .exchangeToMono(
                                     response -> {
 
@@ -154,10 +197,6 @@ public class ImageStorageService {
                                                         .statusCode()
                                         );
 
-
-                                        // -----------------------------
-                                        // HTTP ERROR
-                                        // -----------------------------
 
                                         if (!response
                                                 .statusCode()
@@ -174,10 +213,6 @@ public class ImageStorageService {
                                                     .thenReturn(null);
                                         }
 
-
-                                        // -----------------------------
-                                        // CONTENT TYPE
-                                        // -----------------------------
 
                                         MediaType contentType =
                                                 response
@@ -211,10 +246,6 @@ public class ImageStorageService {
                                         }
 
 
-                                        // -----------------------------
-                                        // DOWNLOAD BYTES
-                                        // -----------------------------
-
                                         return response
                                                 .bodyToMono(byte[].class)
 
@@ -226,10 +257,6 @@ public class ImageStorageService {
                                                 );
                                     }
                             )
-
-                            // ---------------------------------
-                            // TIMEOUT
-                            // ---------------------------------
 
                             .timeout(
                                     Duration.ofSeconds(10)
@@ -275,7 +302,7 @@ public class ImageStorageService {
 
 
             // =============================================
-            // GET FILE EXTENSION
+            // FILE EXTENSION
             // =============================================
 
             String extension =
@@ -311,6 +338,21 @@ public class ImageStorageService {
 
 
             // =============================================
+            // VERIFY FILE REALLY EXISTS
+            // =============================================
+
+            if (!Files.exists(destination)) {
+
+                System.out.println(
+                        "ERROR: Image was not found "
+                                + "after saving."
+                );
+
+                return null;
+            }
+
+
+            // =============================================
             // SUCCESS
             // =============================================
 
@@ -320,7 +362,13 @@ public class ImageStorageService {
 
             System.out.println(
                     "File: "
-                            + destination.toAbsolutePath()
+                            + destination
+                                    .toAbsolutePath()
+            );
+
+            System.out.println(
+                    "Exists: "
+                            + Files.exists(destination)
             );
 
             System.out.println(
@@ -345,20 +393,34 @@ public class ImageStorageService {
 
             System.out.println();
             System.out.println(
+                    "========================================"
+            );
+
+            System.out.println(
                     "IMAGE STORAGE FAILED"
             );
 
             System.out.println(
-                    "URL: " + imageUrl
+                    "URL: "
+                            + imageUrl
             );
 
             System.out.println(
-                    "Error: " + e.getMessage()
+                    "UPLOAD DIRECTORY: "
+                            + uploadDirectory
+                                    .toAbsolutePath()
             );
 
             System.out.println(
-                    "----------------------------------------"
+                    "Error: "
+                            + e.getMessage()
             );
+
+            System.out.println(
+                    "========================================"
+            );
+
+            e.printStackTrace();
 
             return null;
         }
@@ -379,9 +441,6 @@ public class ImageStorageService {
         }
 
 
-        // Only delete images belonging to
-        // our local news directory.
-
         if (!imageUrl.startsWith(
                 "/uploads/news/"
         )) {
@@ -397,10 +456,6 @@ public class ImageStorageService {
 
 
         try {
-
-            // =============================================
-            // GET FILE NAME
-            // =============================================
 
             String filename =
                     imageUrl.substring(
@@ -425,19 +480,11 @@ public class ImageStorageService {
             }
 
 
-            // =============================================
-            // CREATE FILE PATH
-            // =============================================
-
             Path imagePath =
                     uploadDirectory.resolve(
                             filename
                     );
 
-
-            // =============================================
-            // DELETE IMAGE
-            // =============================================
 
             boolean deleted =
                     Files.deleteIfExists(
@@ -450,6 +497,7 @@ public class ImageStorageService {
                 System.out.println(
                         "Deleted old image: "
                                 + imagePath
+                                        .toAbsolutePath()
                 );
 
             } else {
@@ -457,6 +505,7 @@ public class ImageStorageService {
                 System.out.println(
                         "Image already missing: "
                                 + imagePath
+                                        .toAbsolutePath()
                 );
             }
 
