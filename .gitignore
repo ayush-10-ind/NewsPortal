@@ -41,4 +41,4 @@ application.yml
 application-*.properties
 
 # Uploaded files
-uploads/
+# uploads/
