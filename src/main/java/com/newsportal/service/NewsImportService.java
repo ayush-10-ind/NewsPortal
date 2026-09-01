@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -22,6 +23,9 @@ public class NewsImportService {
     private final NewsArticleGenerationService
             articleGenerationService;
 
+    private final ArticleImageService
+            articleImageService;
+
 
     // =====================================================
     // CONSTRUCTOR
@@ -30,7 +34,8 @@ public class NewsImportService {
     public NewsImportService(
             NewsApiService newsApiService,
             NewsRepository newsRepository,
-            NewsArticleGenerationService articleGenerationService) {
+            NewsArticleGenerationService articleGenerationService,
+            ArticleImageService articleImageService) {
 
         this.newsApiService =
                 newsApiService;
@@ -40,18 +45,29 @@ public class NewsImportService {
 
         this.articleGenerationService =
                 articleGenerationService;
+
+        this.articleImageService =
+                articleImageService;
     }
 
 
     // =====================================================
     // IMPORT NEWS
-    //
-    // IMPORTANT:
-    // Images are now stored as external URLs.
-    // This avoids losing images when Railway redeploys.
     // =====================================================
 
     public int importNews() {
+
+        System.out.println();
+        System.out.println(
+                "========================================"
+        );
+        System.out.println(
+                "NEWS IMPORT STARTED"
+        );
+        System.out.println(
+                "========================================"
+        );
+
 
         System.out.println(
                 "Fetching latest news from News API..."
@@ -69,26 +85,39 @@ public class NewsImportService {
                     "No articles received."
             );
 
+            System.out.println(
+                    "NEWS IMPORT COMPLETED"
+            );
+
             return 0;
         }
 
 
         int importedCount = 0;
 
-        int repairedImages = 0;
+        int existingCount = 0;
+
+        int rejectedCount = 0;
+
+        int imageLevel1Count = 0;
+
+        int imageLevel2Count = 0;
+
+        int imageLevel3Count = 0;
 
 
         // =================================================
         // PROCESS ARTICLES
         // =================================================
 
-        for (NewsApiArticleDTO article : articles) {
+        for (NewsApiArticleDTO article :
+                articles) {
 
             try {
 
-                // =============================================
-                // VALIDATION
-                // =============================================
+                // =========================================
+                // BASIC VALIDATION
+                // =========================================
 
                 if (article == null ||
                         article.getTitle() == null ||
@@ -100,139 +129,62 @@ public class NewsImportService {
                             "Skipping invalid article."
                     );
 
+                    rejectedCount++;
+
                     continue;
                 }
 
 
-                // =============================================
-                // IMAGE URL
-                // =============================================
+                String title =
+                        article.getTitle().trim();
 
-                String externalImageUrl =
-                        article.getUrlToImage();
+                String sourceUrl =
+                        article.getUrl().trim();
 
 
-                // =============================================
-                // FIND EXISTING ARTICLE
-                // =============================================
+                // =========================================
+                // QUALITY FILTER
+                // =========================================
+
+                if (isLowQualityArticle(article)) {
+
+                    rejectedCount++;
+
+                    System.out.println(
+                            "REJECTED LOW-QUALITY ARTICLE: "
+                                    + title
+                    );
+
+                    continue;
+                }
+
+
+                // =========================================
+                // DUPLICATE CHECK
+                // =========================================
 
                 Optional<News> existingArticle =
                         newsRepository.findBySourceUrl(
-                                article.getUrl()
+                                sourceUrl
                         );
 
 
-                // =============================================
-                // REPAIR EXISTING ARTICLE IMAGE
-                //
-                // If imageUrl currently contains:
-                //
-                // /uploads/news/xxxx.jpg
-                //
-                // replace it with the original external
-                // News API image URL.
-                // =============================================
-
                 if (existingArticle.isPresent()) {
 
-                    News news =
-                            existingArticle.get();
-
-
-                    if (externalImageUrl != null &&
-                            !externalImageUrl.isBlank()) {
-
-                        String currentImage =
-                                news.getImageUrl();
-
-
-                        boolean needsRepair =
-                                currentImage == null ||
-                                currentImage.isBlank() ||
-                                !currentImage.startsWith(
-                                        "http://"
-                                ) &&
-                                !currentImage.startsWith(
-                                        "https://"
-                                );
-
-
-                        if (needsRepair) {
-
-                            news.setImageUrl(
-                                    externalImageUrl
-                            );
-
-                            newsRepository.save(news);
-
-                            repairedImages++;
-
-                            System.out.println(
-                                    "IMAGE REPAIRED: "
-                                            + news.getTitle()
-                            );
-
-                            System.out.println(
-                                    "External image: "
-                                            + externalImageUrl
-                            );
-                        }
-                    }
-
+                    existingCount++;
 
                     System.out.println(
                             "Skipping duplicate: "
-                                    + article.getTitle()
+                                    + title
                     );
 
                     continue;
                 }
 
 
-                // =============================================
-                // NO IMAGE
-                // =============================================
-
-                if (externalImageUrl == null ||
-                        externalImageUrl.isBlank()) {
-
-                    System.out.println(
-                            "Skipping article - no image: "
-                                    + article.getTitle()
-                    );
-
-                    continue;
-                }
-
-
-                // =============================================
-                // CREATE NEWS ENTITY
-                // =============================================
-
-                News news = new News();
-
-
-                // =============================================
-                // TITLE
-                // =============================================
-
-                news.setTitle(
-                        article.getTitle()
-                );
-
-
-                // =============================================
-                // AUTHOR
-                // =============================================
-
-                news.setAuthor(
-                        article.getAuthor()
-                );
-
-
-                // =============================================
+                // =========================================
                 // CATEGORY
-                // =============================================
+                // =========================================
 
                 String category =
                         article.getCategory();
@@ -245,14 +197,13 @@ public class NewsImportService {
                 }
 
 
-                news.setCategory(
-                        category
-                );
+                category =
+                        category.trim();
 
 
-                // =============================================
-                // INITIAL CONTENT
-                // =============================================
+                // =========================================
+                // CONTENT
+                // =========================================
 
                 String initialContent =
                         article.getDescription();
@@ -274,55 +225,115 @@ public class NewsImportService {
                 }
 
 
+                // =========================================
+                // THREE-LEVEL IMAGE SYSTEM
+                // =========================================
+
+                String newsApiImage =
+                        article.getUrlToImage();
+
+
+                String resolvedImage =
+                        articleImageService
+                                .resolveImage(
+                                        newsApiImage,
+                                        sourceUrl,
+                                        category
+                                );
+
+
+                if (resolvedImage == null ||
+                        resolvedImage.isBlank()) {
+
+                    resolvedImage =
+                            "/images/fallback?category="
+                                    + category;
+                }
+
+
+                // =========================================
+                // IMAGE STATISTICS
+                // =========================================
+
+                if (resolvedImage.startsWith(
+                        "/images/fallback")) {
+
+                    imageLevel3Count++;
+
+                } else if (
+                        newsApiImage != null &&
+                        !newsApiImage.isBlank() &&
+                        resolvedImage.equals(
+                                newsApiImage.trim()
+                        )) {
+
+                    imageLevel1Count++;
+
+                } else {
+
+                    imageLevel2Count++;
+                }
+
+
+                // =========================================
+                // CREATE NEWS ENTITY
+                // =========================================
+
+                News news =
+                        new News();
+
+
+                news.setTitle(
+                        title
+                );
+
+
+                news.setAuthor(
+                        article.getAuthor()
+                );
+
+
+                news.setCategory(
+                        category
+                );
+
+
                 news.setContent(
                         initialContent
                 );
 
 
-                // =============================================
-                // EXTERNAL IMAGE URL
-                //
-                // DO NOT DOWNLOAD LOCALLY.
-                // =============================================
-
                 news.setImageUrl(
-                        externalImageUrl
+                        resolvedImage
                 );
 
-
-                // =============================================
-                // SOURCE URL
-                // =============================================
 
                 news.setSourceUrl(
-                        article.getUrl()
+                        sourceUrl
                 );
 
 
-                // =============================================
-                // SOURCE NAME
-                // =============================================
+                // =========================================
+                // SOURCE
+                // =========================================
 
                 if (article.getSource() != null) {
 
                     news.setSourceName(
-                            article.getSource().getName()
+                            article.getSource()
+                                    .getName()
                     );
                 }
 
-
-                // =============================================
-                // SOURCE TYPE
-                // =============================================
 
                 news.setSourceType(
                         NewsSourceType.EXTERNAL_API
                 );
 
 
-                // =============================================
+                // =========================================
                 // PUBLISHED DATE
-                // =============================================
+                // =========================================
 
                 news.setPublishedDate(
                         convertPublishedDate(
@@ -331,48 +342,58 @@ public class NewsImportService {
                 );
 
 
-                // =============================================
+                // =========================================
                 // SAVE
-                // =============================================
+                // =========================================
 
                 News savedNews =
-                        newsRepository.save(news);
+                        newsRepository.save(
+                                news
+                        );
 
 
                 importedCount++;
 
 
+                System.out.println();
                 System.out.println(
-                        "Imported immediately: "
-                                + savedNews.getTitle()
-                );
-
-                System.out.println(
-                        "External image: "
-                                + savedNews.getImageUrl()
-                );
-
-
-                // =============================================
-                // ASHNA GENERATION
-                //
-                // Run only after article is saved.
-                // Failure must NOT stop the import.
-                // =============================================
-
-                
-            } catch (Exception e) {
-
-                System.out.println(
-                        "Failed to import article."
+                        "IMPORTED ARTICLE"
                 );
 
                 System.out.println(
                         "Title: "
+                                + savedNews.getTitle()
+                );
+
+                System.out.println(
+                        "Category: "
+                                + category
+                );
+
+                System.out.println(
+                        "Image: "
+                                + resolvedImage
+                );
+
+
+                // =========================================
+                // ASHNA BACKGROUND GENERATION
+                // =========================================
+
+                articleGenerationService
+                        .generateArticleAsync(
+                                savedNews.getId()
+                        );
+
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Failed to import article: "
                                 + (
                                 article != null
                                         ? article.getTitle()
-                                        : "null"
+                                        : "Unknown article"
                         )
                 );
 
@@ -380,14 +401,12 @@ public class NewsImportService {
                         "Error: "
                                 + e.getMessage()
                 );
-
-                e.printStackTrace();
             }
         }
 
 
         // =================================================
-        // SUMMARY
+        // IMPORT SUMMARY
         // =================================================
 
         System.out.println();
@@ -400,13 +419,42 @@ public class NewsImportService {
         );
 
         System.out.println(
+                "========================================"
+        );
+
+        System.out.println(
+                "Articles received: "
+                        + articles.size()
+        );
+
+        System.out.println(
                 "New articles imported: "
                         + importedCount
         );
 
         System.out.println(
-                "Existing images repaired: "
-                        + repairedImages
+                "Existing articles skipped: "
+                        + existingCount
+        );
+
+        System.out.println(
+                "Low-quality articles rejected: "
+                        + rejectedCount
+        );
+
+        System.out.println(
+                "Image Level 1 - NewsAPI: "
+                        + imageLevel1Count
+        );
+
+        System.out.println(
+                "Image Level 2 - Article metadata: "
+                        + imageLevel2Count
+        );
+
+        System.out.println(
+                "Image Level 3 - AgniPress fallback: "
+                        + imageLevel3Count
         );
 
         System.out.println(
@@ -419,23 +467,215 @@ public class NewsImportService {
 
 
     // =====================================================
-    // DATE CONVERSION
+    // LOW-QUALITY / PROMOTIONAL FILTER
+    // =====================================================
+
+    private boolean isLowQualityArticle(
+            NewsApiArticleDTO article) {
+
+        String title =
+                article.getTitle() == null
+                        ? ""
+                        : article.getTitle();
+
+
+        String description =
+                article.getDescription() == null
+                        ? ""
+                        : article.getDescription();
+
+
+        String source =
+                article.getSource() == null ||
+                        article.getSource().getName() == null
+                        ? ""
+                        : article.getSource().getName();
+
+
+        String text =
+                (
+                        title
+                                + " "
+                                + description
+                                + " "
+                                + source
+                )
+                        .toLowerCase(Locale.ENGLISH);
+
+
+        // =================================================
+        // VERY SHORT / EMPTY ARTICLES
+        // =================================================
+
+        if (title.trim().length() < 20) {
+
+            return true;
+        }
+
+
+        // =================================================
+        // PRESS RELEASE / ADVERTISING SIGNALS
+        // =================================================
+
+        String[] blockedPhrases = {
+
+                "press release",
+
+                "sponsored",
+
+                "advertorial",
+
+                "paid content",
+
+                "promotional content",
+
+                "promotion",
+
+                "coupon",
+
+                "promo code",
+
+                "discount code",
+
+                "buy now",
+
+                "limited time offer",
+
+                "special offer",
+
+                "giveaway",
+
+                "sweepstakes",
+
+                "shopping deal",
+
+                "deal alert",
+
+                "best deals",
+
+                "product deals",
+
+                "affiliate",
+
+                "partner content",
+
+                "brand partnership",
+
+                "sponsored content",
+
+                "advertisement"
+        };
+
+
+        for (String phrase :
+                blockedPhrases) {
+
+            if (text.contains(phrase)) {
+
+                return true;
+            }
+        }
+
+
+        // =================================================
+        // CORPORATE PR / APPOINTMENT SIGNALS
+        // =================================================
+
+        /*
+         * These are intentionally phrase based rather than
+         * blocking the word "announces" by itself.
+         *
+         * Genuine news often contains "announces".
+         */
+
+        String[] corporatePressReleasePhrases = {
+
+                "announces retirement of",
+                "announces appointment of",
+                "announces the appointment of",
+                "appoints as senior",
+                "appoints as chief",
+                "appointed as chief",
+                "new managing director",
+                "new senior managing director",
+                "joins as chief",
+                "named as chief",
+                "corporate announcement"
+        };
+
+
+        for (String phrase :
+                corporatePressReleasePhrases) {
+
+            if (title
+                    .toLowerCase(Locale.ENGLISH)
+                    .contains(phrase)) {
+
+                return true;
+            }
+        }
+
+
+        // =================================================
+        // VERY OBVIOUS COMMERCIAL TITLES
+        // =================================================
+
+        String lowerTitle =
+                title.toLowerCase(
+                        Locale.ENGLISH
+                );
+
+
+        String[] commercialTitleSignals = {
+
+                "best ",
+                "top deals",
+                "where to buy",
+                "how to buy",
+                "buying guide",
+                "gift guide",
+                "shopping guide",
+                "review:",
+                "deal:",
+                "sale:",
+                "discount:"
+        };
+
+
+        for (String signal :
+                commercialTitleSignals) {
+
+            if (lowerTitle.startsWith(signal)) {
+
+                return true;
+            }
+        }
+
+
+        return false;
+    }
+
+
+    // =====================================================
+    // PUBLISHED DATE
     // =====================================================
 
     private LocalDate convertPublishedDate(
             String publishedAt) {
 
+        if (publishedAt == null ||
+                publishedAt.isBlank()) {
+
+            return LocalDate.now();
+        }
+
+
         try {
 
-            if (publishedAt == null ||
-                    publishedAt.isBlank()) {
-
-                return LocalDate.now();
-            }
-
-
             return OffsetDateTime
-                    .parse(publishedAt)
+                    .parse(
+                            publishedAt
+                    )
                     .toLocalDate();
 
         } catch (Exception e) {
