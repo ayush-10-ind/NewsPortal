@@ -3,8 +3,8 @@ package com.newsportal.service;
 import com.newsportal.entity.News;
 import com.newsportal.repository.NewsRepository;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -30,42 +30,40 @@ public class NewsImageMigrationService {
     // BATCH IMAGE MIGRATION
     // =====================================================
     //
-    // Migrates ONLY a limited number of old local images
-    // per request.
+    // IMPORTANT:
     //
-    // Old:
+    // There is NO @Transactional on this method.
     //
-    // /uploads/news/xxxxx.webp
+    // Every newsRepository.saveAndFlush(news) below runs
+    // in its own Spring Data transaction.
     //
-    // New:
+    // Therefore:
     //
-    // external image URL
+    // Article 1 -> SAVE -> COMMIT
+    // Article 2 -> SAVE -> COMMIT
+    // Article 3 -> SAVE -> COMMIT
     //
-    // OR:
-    //
-    // /images/fallback?category=...
-    //
-    // No image files are downloaded or stored.
+    // If Railway stops the application after Article 3,
+    // Articles 1-3 remain safely migrated.
     //
     // =====================================================
 
-    @Transactional
     public int migrateOldImages(int requestedBatchSize) {
 
         // =================================================
         // SAFETY LIMIT
         // =================================================
         //
-        // Never allow a huge batch from the URL.
+        // We deliberately keep this small.
         //
-        // Minimum: 1
-        // Maximum: 25
+        // Minimum = 1
+        // Maximum = 5
         //
         int batchSize = Math.max(
                 1,
                 Math.min(
                         requestedBatchSize,
-                        25
+                        5
                 )
         );
 
@@ -75,7 +73,7 @@ public class NewsImageMigrationService {
         );
 
         System.out.println(
-                "BATCH NEWS IMAGE MIGRATION STARTED"
+                "SAFE BATCH NEWS IMAGE MIGRATION STARTED"
         );
 
         System.out.println(
@@ -89,21 +87,24 @@ public class NewsImageMigrationService {
         );
 
         System.out.println(
+                "Each article will be committed separately."
+        );
+
+        System.out.println(
                 "========================================"
         );
 
         // =================================================
-        // FIND ALL NEWS
+        // LOAD NEWS
         // =================================================
-        //
-        // We deliberately keep findAll() here because the
-        // existing repository already supports it through
-        // JpaRepository.
-        //
-        // We only process the first N OLD image records.
-        //
+
         List<News> allNews =
-                newsRepository.findAll();
+                newsRepository.findAll(
+                        Sort.by(
+                                Sort.Direction.ASC,
+                                "id"
+                        )
+                );
 
         if (allNews == null ||
                 allNews.isEmpty()) {
@@ -121,7 +122,7 @@ public class NewsImageMigrationService {
         int failedCount = 0;
 
         // =================================================
-        // PROCESS ONLY ONE BATCH
+        // PROCESS BATCH
         // =================================================
 
         for (News news : allNews) {
@@ -140,7 +141,7 @@ public class NewsImageMigrationService {
                         news.getImageUrl();
 
                 // =================================================
-                // ONLY MIGRATE OLD LOCAL IMAGE PATHS
+                // ONLY PROCESS OLD LOCAL IMAGE PATHS
                 // =================================================
 
                 if (!isOldLocalImage(imageUrl)) {
@@ -158,7 +159,7 @@ public class NewsImageMigrationService {
                 );
 
                 System.out.println(
-                        "MIGRATING "
+                        "PROCESSING "
                                 + oldImageCount
                                 + " / "
                                 + batchSize
@@ -204,6 +205,8 @@ public class NewsImageMigrationService {
                 String sourceUrl =
                         news.getSourceUrl();
 
+                String resolvedImage;
+
                 // =================================================
                 // NO SOURCE URL
                 // =================================================
@@ -211,70 +214,77 @@ public class NewsImageMigrationService {
                 if (sourceUrl == null ||
                         sourceUrl.isBlank()) {
 
-                    String fallback =
+                    resolvedImage =
                             buildFallbackImageUrl(
                                     category
                             );
-
-                    news.setImageUrl(
-                            fallback
-                    );
-
-                    newsRepository.save(
-                            news
-                    );
-
-                    migratedCount++;
 
                     System.out.println(
                             "No source URL."
                     );
 
                     System.out.println(
-                            "Using fallback: "
-                                    + fallback
+                            "Using fallback."
                     );
 
-                    System.out.println(
-                            "Migration successful."
-                    );
+                } else {
 
-                    continue;
-                }
-
-                // =================================================
-                // RESOLVE NEW IMAGE
-                // =================================================
-
-                String resolvedImage =
-                        articleImageService.resolveImage(
-                                null,
-                                sourceUrl,
-                                category
-                        );
-
-                // =================================================
-                // SAFETY FALLBACK
-                // =================================================
-
-                if (resolvedImage == null ||
-                        resolvedImage.isBlank()) {
+                    // =================================================
+                    // RESOLVE IMAGE
+                    // =================================================
 
                     resolvedImage =
-                            buildFallbackImageUrl(
+                            articleImageService.resolveImage(
+                                    null,
+                                    sourceUrl,
                                     category
                             );
+
+                    // =================================================
+                    // SAFETY FALLBACK
+                    // =================================================
+
+                    if (resolvedImage == null ||
+                            resolvedImage.isBlank()) {
+
+                        resolvedImage =
+                                buildFallbackImageUrl(
+                                        category
+                                );
+
+                        System.out.println(
+                                "Image resolution returned empty."
+                        );
+
+                        System.out.println(
+                                "Using fallback."
+                        );
+                    }
                 }
 
                 // =================================================
-                // UPDATE DATABASE ONLY
+                // UPDATE IMAGE URL
                 // =================================================
 
                 news.setImageUrl(
                         resolvedImage
                 );
 
-                newsRepository.save(
+                // =================================================
+                // IMPORTANT
+                // =================================================
+                //
+                // saveAndFlush() is intentionally used.
+                //
+                // Because there is NO surrounding
+                // @Transactional method, Spring Data creates
+                // a separate transaction for this save.
+                //
+                // This article is committed independently.
+                //
+                // =================================================
+
+                newsRepository.saveAndFlush(
                         news
                 );
 
@@ -283,6 +293,10 @@ public class NewsImageMigrationService {
                 System.out.println(
                         "NEW IMAGE: "
                                 + resolvedImage
+                );
+
+                System.out.println(
+                        "DATABASE COMMIT SUCCESSFUL."
                 );
 
                 System.out.println(
@@ -322,12 +336,12 @@ public class NewsImageMigrationService {
                 // IMPORTANT
                 // =================================================
                 //
-                // We DO NOT replace the failed image with
-                // anything here.
+                // We DO NOT modify the failed record.
                 //
-                // Therefore the old /uploads/news/... URL
-                // remains and this article can be retried
-                // during a later batch.
+                // Its old /uploads/news/... URL remains.
+                //
+                // Therefore a future migration request can
+                // retry it.
                 //
             }
         }
@@ -342,7 +356,7 @@ public class NewsImageMigrationService {
         );
 
         System.out.println(
-                "BATCH NEWS IMAGE MIGRATION COMPLETED"
+                "SAFE BATCH MIGRATION COMPLETED"
         );
 
         System.out.println(

@@ -133,7 +133,7 @@ public class APIIntegrationController {
     public String migrateOldImages(
             @RequestParam(
                     name = "batchSize",
-                    defaultValue = "10"
+                    defaultValue = "1"
             )
             int batchSize) {
 
