@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -22,7 +23,6 @@ public class APIIntegrationController {
     private final NewsImportService newsImportService;
     private final NewsArticleGenerationService articleGenerationService;
     private final NewsImageMigrationService newsImageMigrationService;
-
 
     @Autowired
     public APIIntegrationController(
@@ -39,7 +39,6 @@ public class APIIntegrationController {
         this.newsImageMigrationService = newsImageMigrationService;
     }
 
-
     // =====================================================
     // WEBCLIENT TEST
     // =====================================================
@@ -50,7 +49,6 @@ public class APIIntegrationController {
         return webClientService
                 .getDataFromAPI("/posts/1");
     }
-
 
     // =====================================================
     // ASHNA TEST
@@ -64,7 +62,6 @@ public class APIIntegrationController {
         );
     }
 
-
     // =====================================================
     // ASHNA MODELS
     // =====================================================
@@ -75,7 +72,6 @@ public class APIIntegrationController {
         return webClientService.getAshnaModels();
     }
 
-
     // =====================================================
     // NEWS API TEST
     // =====================================================
@@ -85,7 +81,6 @@ public class APIIntegrationController {
 
         return newsApiService.getTopHeadlines();
     }
-
 
     // =====================================================
     // FAST NEWS IMPORT
@@ -102,7 +97,6 @@ public class APIIntegrationController {
                 + " new articles.";
     }
 
-
     // =====================================================
     // MANUAL ASHNA ARTICLE GENERATION
     // =====================================================
@@ -115,29 +109,44 @@ public class APIIntegrationController {
                 .generateArticle(id);
     }
 
-
     // =====================================================
-    // ONE-TIME IMAGE MIGRATION
+    // BATCH IMAGE MIGRATION
     // =====================================================
     //
+    // Migrates only a small number of old local image
+    // records per HTTP request.
     //
-    // 1. External publisher image URL
-    // OR
-    // 2. AgniPress dynamic fallback
+    // Example:
     //
-    // This endpoint is temporary and should be removed
-    // after the migration has been successfully completed.
+    // /api-integration/images/migrate?batchSize=10
     //
+    // Maximum batch size is enforced inside the service.
+    //
+    // This endpoint is TEMPORARY.
+    //
+    // Remove it after the production migration is
+    // completely finished and verified.
+    //
+    // =====================================================
 
     @GetMapping("/images/migrate")
-    public String migrateOldImages() {
+    public String migrateOldImages(
+            @RequestParam(
+                    name = "batchSize",
+                    defaultValue = "10"
+            )
+            int batchSize) {
 
         int migratedCount =
-                newsImageMigrationService.migrateOldImages();
+                newsImageMigrationService
+                        .migrateOldImages(batchSize);
 
-        return "Image migration completed. "
+        return "Image migration batch completed. "
                 + "Migrated "
                 + migratedCount
-                + " articles.";
+                + " articles. "
+                + "Requested batch size: "
+                + batchSize
+                + ".";
     }
 }

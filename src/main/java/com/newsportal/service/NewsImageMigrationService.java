@@ -12,9 +12,7 @@ import java.util.List;
 public class NewsImageMigrationService {
 
     private final NewsRepository newsRepository;
-
     private final ArticleImageService articleImageService;
-
 
     // =====================================================
     // CONSTRUCTOR
@@ -24,23 +22,22 @@ public class NewsImageMigrationService {
             NewsRepository newsRepository,
             ArticleImageService articleImageService) {
 
-        this.newsRepository =
-                newsRepository;
-
-        this.articleImageService =
-                articleImageService;
+        this.newsRepository = newsRepository;
+        this.articleImageService = articleImageService;
     }
 
-
     // =====================================================
-    // MIGRATE OLD LOCAL IMAGES
+    // BATCH IMAGE MIGRATION
     // =====================================================
     //
-    // Converts old:
+    // Migrates ONLY a limited number of old local images
+    // per request.
+    //
+    // Old:
     //
     // /uploads/news/xxxxx.webp
     //
-    // into:
+    // New:
     //
     // external image URL
     //
@@ -53,7 +50,24 @@ public class NewsImageMigrationService {
     // =====================================================
 
     @Transactional
-    public int migrateOldImages() {
+    public int migrateOldImages(int requestedBatchSize) {
+
+        // =================================================
+        // SAFETY LIMIT
+        // =================================================
+        //
+        // Never allow a huge batch from the URL.
+        //
+        // Minimum: 1
+        // Maximum: 25
+        //
+        int batchSize = Math.max(
+                1,
+                Math.min(
+                        requestedBatchSize,
+                        25
+                )
+        );
 
         System.out.println();
         System.out.println(
@@ -61,21 +75,35 @@ public class NewsImageMigrationService {
         );
 
         System.out.println(
-                "OLD NEWS IMAGE MIGRATION STARTED"
+                "BATCH NEWS IMAGE MIGRATION STARTED"
+        );
+
+        System.out.println(
+                "Requested batch size: "
+                        + requestedBatchSize
+        );
+
+        System.out.println(
+                "Actual batch size: "
+                        + batchSize
         );
 
         System.out.println(
                 "========================================"
         );
 
-
         // =================================================
         // FIND ALL NEWS
         // =================================================
-
+        //
+        // We deliberately keep findAll() here because the
+        // existing repository already supports it through
+        // JpaRepository.
+        //
+        // We only process the first N OLD image records.
+        //
         List<News> allNews =
                 newsRepository.findAll();
-
 
         if (allNews == null ||
                 allNews.isEmpty()) {
@@ -87,30 +115,29 @@ public class NewsImageMigrationService {
             return 0;
         }
 
-
         int oldImageCount = 0;
         int migratedCount = 0;
         int skippedCount = 0;
         int failedCount = 0;
 
-
         // =================================================
-        // PROCESS ARTICLES
+        // PROCESS ONLY ONE BATCH
         // =================================================
 
         for (News news : allNews) {
 
+            if (oldImageCount >= batchSize) {
+                break;
+            }
+
             try {
 
                 if (news == null) {
-
                     continue;
                 }
 
-
                 String imageUrl =
                         news.getImageUrl();
-
 
                 // =================================================
                 // ONLY MIGRATE OLD LOCAL IMAGE PATHS
@@ -123,9 +150,7 @@ public class NewsImageMigrationService {
                     continue;
                 }
 
-
                 oldImageCount++;
-
 
                 System.out.println();
                 System.out.println(
@@ -133,7 +158,10 @@ public class NewsImageMigrationService {
                 );
 
                 System.out.println(
-                        "OLD IMAGE FOUND"
+                        "MIGRATING "
+                                + oldImageCount
+                                + " / "
+                                + batchSize
                 );
 
                 System.out.println(
@@ -156,7 +184,6 @@ public class NewsImageMigrationService {
                                 + news.getSourceUrl()
                 );
 
-
                 // =================================================
                 // CATEGORY
                 // =================================================
@@ -164,13 +191,11 @@ public class NewsImageMigrationService {
                 String category =
                         news.getCategory();
 
-
                 if (category == null ||
                         category.isBlank()) {
 
                     category = "General";
                 }
-
 
                 // =================================================
                 // SOURCE URL
@@ -178,7 +203,6 @@ public class NewsImageMigrationService {
 
                 String sourceUrl =
                         news.getSourceUrl();
-
 
                 // =================================================
                 // NO SOURCE URL
@@ -192,19 +216,15 @@ public class NewsImageMigrationService {
                                     category
                             );
 
-
                     news.setImageUrl(
                             fallback
                     );
-
 
                     newsRepository.save(
                             news
                     );
 
-
                     migratedCount++;
-
 
                     System.out.println(
                             "No source URL."
@@ -215,9 +235,12 @@ public class NewsImageMigrationService {
                                     + fallback
                     );
 
+                    System.out.println(
+                            "Migration successful."
+                    );
+
                     continue;
                 }
-
 
                 // =================================================
                 // RESOLVE NEW IMAGE
@@ -229,7 +252,6 @@ public class NewsImageMigrationService {
                                 sourceUrl,
                                 category
                         );
-
 
                 // =================================================
                 // SAFETY FALLBACK
@@ -244,7 +266,6 @@ public class NewsImageMigrationService {
                             );
                 }
 
-
                 // =================================================
                 // UPDATE DATABASE ONLY
                 // =================================================
@@ -253,14 +274,11 @@ public class NewsImageMigrationService {
                         resolvedImage
                 );
 
-
                 newsRepository.save(
                         news
                 );
 
-
                 migratedCount++;
-
 
                 System.out.println(
                         "NEW IMAGE: "
@@ -275,11 +293,9 @@ public class NewsImageMigrationService {
                         "----------------------------------------"
                 );
 
-
             } catch (Exception e) {
 
                 failedCount++;
-
 
                 System.out.println();
                 System.out.println(
@@ -301,9 +317,20 @@ public class NewsImageMigrationService {
                 );
 
                 e.printStackTrace();
+
+                // =================================================
+                // IMPORTANT
+                // =================================================
+                //
+                // We DO NOT replace the failed image with
+                // anything here.
+                //
+                // Therefore the old /uploads/news/... URL
+                // remains and this article can be retried
+                // during a later batch.
+                //
             }
         }
-
 
         // =====================================================
         // SUMMARY
@@ -315,7 +342,7 @@ public class NewsImageMigrationService {
         );
 
         System.out.println(
-                "OLD NEWS IMAGE MIGRATION COMPLETED"
+                "BATCH NEWS IMAGE MIGRATION COMPLETED"
         );
 
         System.out.println(
@@ -323,12 +350,17 @@ public class NewsImageMigrationService {
         );
 
         System.out.println(
-                "Total articles: "
+                "Total articles in database: "
                         + allNews.size()
         );
 
         System.out.println(
-                "Old local images found: "
+                "Batch size: "
+                        + batchSize
+        );
+
+        System.out.println(
+                "Old images processed: "
                         + oldImageCount
         );
 
@@ -359,10 +391,8 @@ public class NewsImageMigrationService {
                 "========================================"
         );
 
-
         return migratedCount;
     }
-
 
     // =====================================================
     // CHECK OLD LOCAL IMAGE
@@ -377,7 +407,6 @@ public class NewsImageMigrationService {
                 );
     }
 
-
     // =====================================================
     // FALLBACK
     // =====================================================
@@ -391,13 +420,11 @@ public class NewsImageMigrationService {
                         ? "General"
                         : category.trim();
 
-
         return "/images/fallback?category="
                 + encodeCategory(
                         safeCategory
                 );
     }
-
 
     // =====================================================
     // CATEGORY ENCODING
