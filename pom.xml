@@ -205,18 +205,14 @@
         <!-- =================================================
              RESOURCE PACKAGING
              =================================================
-             
-             Normal Spring resources:
-                 src/main/resources/
 
-             PLUS:
-                 uploads/
+             Only standard Spring Boot resources are packaged.
 
-             The uploads directory will be copied into:
-                 target/classes/uploads/
+             News images are NOT stored locally.
 
-             and therefore packaged into the JAR as:
-                 uploads/...
+             Image URLs are stored in the database and rendered
+             directly by the browser.
+
              ================================================= -->
 
         <resources>
@@ -225,13 +221,12 @@
                 <directory>src/main/resources</directory>
             </resource>
 
-            <resource>
-                <directory>uploads</directory>
-                <targetPath>uploads</targetPath>
-            </resource>
-
         </resources>
 
+
+        <!-- =================================================
+             SPRING BOOT MAVEN PLUGIN
+             ================================================= -->
 
         <plugins>
 

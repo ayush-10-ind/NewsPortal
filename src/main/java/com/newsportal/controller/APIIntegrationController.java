@@ -3,6 +3,7 @@ package com.newsportal.controller;
 import com.newsportal.dto.NewsApiResponseDTO;
 import com.newsportal.service.NewsApiService;
 import com.newsportal.service.NewsArticleGenerationService;
+import com.newsportal.service.NewsImageMigrationService;
 import com.newsportal.service.NewsImportService;
 import com.newsportal.service.WebClientAPIService;
 
@@ -20,6 +21,7 @@ public class APIIntegrationController {
     private final NewsApiService newsApiService;
     private final NewsImportService newsImportService;
     private final NewsArticleGenerationService articleGenerationService;
+    private final NewsImageMigrationService newsImageMigrationService;
 
 
     @Autowired
@@ -27,12 +29,14 @@ public class APIIntegrationController {
             WebClientAPIService webClientService,
             NewsApiService newsApiService,
             NewsImportService newsImportService,
-            NewsArticleGenerationService articleGenerationService) {
+            NewsArticleGenerationService articleGenerationService,
+            NewsImageMigrationService newsImageMigrationService) {
 
         this.webClientService = webClientService;
         this.newsApiService = newsApiService;
         this.newsImportService = newsImportService;
         this.articleGenerationService = articleGenerationService;
+        this.newsImageMigrationService = newsImageMigrationService;
     }
 
 
@@ -109,5 +113,31 @@ public class APIIntegrationController {
 
         return articleGenerationService
                 .generateArticle(id);
+    }
+
+
+    // =====================================================
+    // ONE-TIME IMAGE MIGRATION
+    // =====================================================
+    //
+    //
+    // 1. External publisher image URL
+    // OR
+    // 2. AgniPress dynamic fallback
+    //
+    // This endpoint is temporary and should be removed
+    // after the migration has been successfully completed.
+    //
+
+    @GetMapping("/images/migrate")
+    public String migrateOldImages() {
+
+        int migratedCount =
+                newsImageMigrationService.migrateOldImages();
+
+        return "Image migration completed. "
+                + "Migrated "
+                + migratedCount
+                + " articles.";
     }
 }

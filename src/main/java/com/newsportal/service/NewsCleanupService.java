@@ -14,22 +14,16 @@ public class NewsCleanupService {
 
     private final NewsRepository newsRepository;
 
-    private final ImageStorageService imageStorageService;
-
 
     // =====================================================
     // CONSTRUCTOR
     // =====================================================
 
     public NewsCleanupService(
-            NewsRepository newsRepository,
-            ImageStorageService imageStorageService) {
+            NewsRepository newsRepository) {
 
         this.newsRepository =
                 newsRepository;
-
-        this.imageStorageService =
-                imageStorageService;
     }
 
 
@@ -48,13 +42,16 @@ public class NewsCleanupService {
         System.out.println(
                 "========================================"
         );
+
         System.out.println(
                 "OLD NEWS CLEANUP STARTED"
         );
+
         System.out.println(
                 "Cutoff date: "
                         + cutoffDate
         );
+
         System.out.println(
                 "========================================"
         );
@@ -94,7 +91,7 @@ public class NewsCleanupService {
 
 
         // =================================================
-        // DELETE EACH ARTICLE
+        // DELETE OLD ARTICLES
         // =================================================
 
         for (News news : oldNews) {
@@ -122,32 +119,24 @@ public class NewsCleanupService {
                 );
 
 
-                // =========================================
-                // DELETE LOCAL IMAGE FIRST
-                // =========================================
-
-                String imageUrl =
-                        news.getImageUrl();
-
-
-                if (imageUrl != null &&
-                        !imageUrl.isBlank()) {
-
-                    imageStorageService
-                            .deleteLocalImage(
-                                    imageUrl
-                            );
-                }
+                // =================================================
+                // IMPORTANT
+                // =================================================
+                //
+                // Images are no longer stored locally.
+                //
+                // We only store external image URLs in the
+                // database. Therefore there is NO image file
+                // to delete here.
+                //
+                // =================================================
 
 
                 // =========================================
                 // DELETE DATABASE ARTICLE
                 // =========================================
 
-                newsRepository.delete(
-                        news
-                );
-
+                newsRepository.delete(news);
 
                 deletedCount++;
 
@@ -168,6 +157,8 @@ public class NewsCleanupService {
                         "Error: "
                                 + e.getMessage()
                 );
+
+                e.printStackTrace();
             }
         }
 
@@ -188,6 +179,14 @@ public class NewsCleanupService {
         System.out.println(
                 "Articles deleted: "
                         + deletedCount
+        );
+
+        System.out.println(
+                "Images deleted: 0"
+        );
+
+        System.out.println(
+                "Reason: AgniPress does not store news images locally."
         );
 
         System.out.println(

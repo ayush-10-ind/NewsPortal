@@ -1,53 +1,39 @@
 package com.newsportal.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+    /*
+     * =====================================================
+     * AGNIPRESS WEB CONFIGURATION
+     * =====================================================
+     *
+     * News images are NOT stored locally.
+     *
+     * ArticleImageService stores only:
+     *
+     * 1. NewsAPI external image URLs
+     * 2. Publisher metadata image URLs
+     * 3. AgniPress dynamic fallback URLs
+     *
+     * Therefore we intentionally DO NOT configure
+     * /uploads/** as a static resource location.
+     *
+     * News images are rendered directly by the browser
+     * from their external URLs.
+     *
+     * Example:
+     *
+     * https://publisher.com/image.jpg
+     *
+     * or:
+     *
+     * /images/fallback?category=Technology
+     *
+     * No local image storage is required.
+     */
 
-        /*
-         * =====================================================
-         * NEWS IMAGE RESOURCES
-         * =====================================================
-         *
-         * Railway:
-         *   /app/uploads/
-         *
-         * Local development:
-         *   ./uploads/
-         *
-         * Fallback:
-         *   classpath:/uploads/
-         *
-         * URL:
-         *   /uploads/news/<filename>
-         *
-         * The order is intentional:
-         *
-         * 1. Railway persistent volume
-         * 2. Local uploads folder
-         * 3. Classpath fallback
-         */
-
-        registry
-                .addResourceHandler("/uploads/**")
-                .addResourceLocations(
-                        "file:/app/uploads/",
-                        "file:./uploads/",
-                        "classpath:/uploads/"
-                );
-
-        System.out.println("========================================");
-        System.out.println("UPLOAD RESOURCE MAPPING ENABLED");
-        System.out.println("URL: /uploads/**");
-        System.out.println("RAILWAY: file:/app/uploads/");
-        System.out.println("LOCAL: file:./uploads/");
-        System.out.println("FALLBACK: classpath:/uploads/");
-        System.out.println("========================================");
-    }
 }

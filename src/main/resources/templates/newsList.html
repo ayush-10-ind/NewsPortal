@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org">
 
@@ -9,7 +10,7 @@
     <meta name="viewport"
           content="width=device-width, initial-scale=1.0">
 
-    <title>Latest News | News Portal</title>
+    <title>Latest News | AgniPress</title>
 
 
     <!-- =====================================================
@@ -67,7 +68,6 @@
             max-width: 1500px;
             margin: auto;
             padding: 22px 40px;
-
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -85,14 +85,11 @@
         .brand-logo {
             width: 42px;
             height: 42px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             background: #111;
             color: white;
-
             font-family: "Playfair Display", serif;
             font-size: 19px;
         }
@@ -109,7 +106,6 @@
             display: flex;
             align-items: center;
             gap: 26px;
-
             font-size: 13px;
             font-weight: 600;
             letter-spacing: 0.06em;
@@ -140,9 +136,7 @@
         .hero {
             border-top: 1px solid #111;
             border-bottom: 1px solid #d8d2c8;
-
             padding: 40px 0;
-
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
@@ -152,10 +146,8 @@
 
         .eyebrow {
             color: #b93820;
-
             font-size: 11px;
             font-weight: 700;
-
             letter-spacing: 0.2em;
             text-transform: uppercase;
         }
@@ -163,7 +155,6 @@
 
         .hero h1 {
             margin: 12px 0 0;
-
             font-family: "Playfair Display", serif;
             font-size: clamp(58px, 7vw, 100px);
             font-weight: 400;
@@ -173,9 +164,7 @@
 
         .hero-description {
             max-width: 350px;
-
             color: #777;
-
             font-family: "Playfair Display", serif;
             font-size: 15px;
             line-height: 1.6;
@@ -188,11 +177,14 @@
 
         .filter-bar {
             padding: 25px 0;
-
             display: grid;
-            grid-template-columns: 1.5fr 1fr 1fr auto auto;
+            grid-template-columns:
+                1.5fr
+                1fr
+                1fr
+                auto
+                auto;
             gap: 12px;
-
             border-bottom: 1px solid #d8d2c8;
         }
 
@@ -207,7 +199,6 @@
         .filter-label {
             font-size: 9px;
             font-weight: 700;
-
             letter-spacing: 0.16em;
             text-transform: uppercase;
         }
@@ -217,12 +208,9 @@
         select {
             width: 100%;
             height: 42px;
-
             padding: 0 12px;
-
             border: 1px solid #d3cec5;
             background: #fffdf9;
-
             font-family: "DM Sans", sans-serif;
             font-size: 12px;
         }
@@ -238,19 +226,17 @@
         .btn {
             height: 42px;
             padding: 0 20px;
-
             border: 1px solid #111;
-
             background: #111;
             color: white;
-
             font-size: 10px;
             font-weight: 700;
-
             letter-spacing: 0.12em;
             text-transform: uppercase;
-
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
 
@@ -266,6 +252,12 @@
         }
 
 
+        .btn-light:hover {
+            background: #111;
+            color: white;
+        }
+
+
         /* =====================================================
            MOST READ
            ===================================================== */
@@ -277,11 +269,9 @@
 
         .section-title {
             margin-bottom: 0;
-
             font-family: "Playfair Display", serif;
             font-size: 28px;
             font-weight: 400;
-
             border-bottom: 1px solid #111;
             padding-bottom: 10px;
         }
@@ -290,16 +280,13 @@
         .most-read-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-
             border-bottom: 1px solid #111;
         }
 
 
         .most-read-item {
             min-height: 105px;
-
             padding: 17px;
-
             border-right: 1px solid #d3cec5;
         }
 
@@ -311,7 +298,6 @@
 
         .most-read-number {
             color: #b93820;
-
             font-size: 12px;
             font-weight: 700;
         }
@@ -319,9 +305,7 @@
 
         .most-read-category {
             margin-top: 8px;
-
             color: #777;
-
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 0.12em;
@@ -330,7 +314,6 @@
 
         .most-read-title {
             margin-top: 6px;
-
             font-family: "Playfair Display", serif;
             font-size: 15px;
             line-height: 1.25;
@@ -343,10 +326,9 @@
 
         .news-grid {
             margin-top: 55px;
-
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-
+            grid-template-columns:
+                repeat(3, minmax(0, 1fr));
             gap: 45px 30px;
         }
 
@@ -357,7 +339,6 @@
 
         .news-card {
             min-width: 0;
-
             border-bottom: 1px solid #d3cec5;
             padding-bottom: 20px;
         }
@@ -369,59 +350,83 @@
 
         .news-card-image {
             position: relative;
-
             width: 100%;
             height: 275px;
-
             overflow: hidden;
-
-            background: #111;
+            background: #171717;
         }
+
+
+        /*
+         * =====================================================
+         * DIRECT IMAGE RENDERING
+         * =====================================================
+         *
+         * Images are rendered directly from news.imageUrl.
+         *
+         * There is NO:
+         *
+         * /uploads/news/
+         *
+         * and NO:
+         *
+         * image proxy
+         *
+         * The URL can be:
+         *
+         * 1. External publisher image:
+         *
+         *    https://publisher.com/image.jpg
+         *
+         * 2. AgniPress dynamic fallback:
+         *
+         *    /images/fallback?category=Sports
+         *
+         * No image files are stored locally.
+         * No image proxy is used.
+         * =====================================================
+         */
 
 
         .news-card-image img {
             display: block;
-
             width: 100%;
             height: 100%;
-
             object-fit: cover;
         }
 
 
         .source-badge {
             position: absolute;
-
             left: 14px;
             bottom: 14px;
-
             padding: 8px 11px;
-
             background: #111;
             color: white;
-
             font-size: 9px;
             font-weight: 700;
-
             letter-spacing: 0.08em;
             text-transform: uppercase;
+            z-index: 3;
         }
 
+
+        /* =====================================================
+           IMAGE FALLBACK
+           ===================================================== */
 
         .image-fallback {
             width: 100%;
             height: 100%;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
             background: #171717;
             color: white;
-
             font-family: "Playfair Display", serif;
             font-size: 25px;
             letter-spacing: 0.08em;
+            text-align: center;
         }
 
 
@@ -436,10 +441,8 @@
 
         .category {
             color: #b93820;
-
             font-size: 10px;
             font-weight: 700;
-
             letter-spacing: 0.18em;
             text-transform: uppercase;
         }
@@ -447,22 +450,17 @@
 
         .news-card-title {
             margin: 10px 0 12px;
-
             font-family: "Playfair Display", serif;
-
             font-size: 28px;
             font-weight: 400;
-
             line-height: 1.12;
         }
 
 
         .news-card-description {
             color: #777;
-
             font-family: "Playfair Display", serif;
             font-size: 15px;
-
             line-height: 1.55;
         }
 
@@ -470,18 +468,13 @@
         .news-meta {
             margin-top: 20px;
             padding-top: 14px;
-
             border-top: 1px solid #d8d2c8;
-
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
-
             color: #555;
-
             font-size: 9px;
             font-weight: 600;
-
             letter-spacing: 0.08em;
             text-transform: uppercase;
         }
@@ -489,7 +482,6 @@
 
         .news-actions {
             margin-top: 22px;
-
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -500,15 +492,12 @@
         .read-story {
             display: inline-flex;
             align-items: center;
-
+            justify-content: center;
             padding: 12px 17px;
-
             background: #111;
             color: white;
-
             font-size: 10px;
             font-weight: 700;
-
             letter-spacing: 0.1em;
             text-transform: uppercase;
         }
@@ -520,13 +509,13 @@
 
 
         .original-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             padding: 12px 17px;
-
             border: 1px solid #d3cec5;
-
             font-size: 10px;
             font-weight: 700;
-
             letter-spacing: 0.1em;
             text-transform: uppercase;
         }
@@ -534,6 +523,8 @@
 
         .original-link:hover {
             border-color: #111;
+            background: #111;
+            color: white;
         }
 
 
@@ -544,9 +535,7 @@
         .pagination {
             margin-top: 60px;
             padding-top: 25px;
-
             border-top: 1px solid #111;
-
             display: flex;
             align-items: center;
             justify-content: center;
@@ -557,16 +546,15 @@
         .page-btn {
             min-width: 38px;
             height: 38px;
-
             padding: 0 10px;
-
             border: 1px solid #d3cec5;
             background: transparent;
-
             font-size: 11px;
             font-weight: 700;
-
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
 
@@ -610,12 +598,14 @@
 
 
             .news-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                grid-template-columns:
+                    repeat(2, minmax(0, 1fr));
             }
 
 
             .most-read-grid {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns:
+                    repeat(3, 1fr);
             }
 
         }
@@ -659,6 +649,23 @@
                 height: 230px;
             }
 
+
+            .news-card-title {
+                font-size: 25px;
+            }
+
+
+            .news-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+
+            .read-story,
+            .original-link {
+                width: 100%;
+            }
+
         }
 
     </style>
@@ -668,11 +675,13 @@
 
 <body>
 
+
 <!-- =====================================================
      SHARED AGNIPRESS NAVBAR
      ===================================================== -->
 
 <div th:replace="~{fragments/navbar :: navbar}"></div>
+
 
 <!-- =====================================================
      PAGE
@@ -693,6 +702,7 @@
                 News Portal
             </div>
 
+
             <h1>
                 Latest<br>
                 News.
@@ -712,7 +722,6 @@
     </section>
 
 
-
     <!-- =================================================
          FILTERS
          ================================================= -->
@@ -722,6 +731,8 @@
             method="get"
             action="/newsList">
 
+
+        <!-- SEARCH -->
 
         <div class="filter-group">
 
@@ -737,6 +748,8 @@
 
         </div>
 
+
+        <!-- CATEGORY -->
 
         <div class="filter-group">
 
@@ -762,6 +775,8 @@
         </div>
 
 
+        <!-- SORT -->
+
         <div class="filter-group">
 
             <label class="filter-label">
@@ -770,25 +785,36 @@
 
             <select name="sortBy">
 
-                <option value="latest"
+                <option
+                        value="latest"
                         th:selected="${sortBy == 'latest'}">
+
                     Latest First
+
                 </option>
 
-                <option value="oldest"
+                <option
+                        value="oldest"
                         th:selected="${sortBy == 'oldest'}">
+
                     Oldest First
+
                 </option>
 
-                <option value="views"
+                <option
+                        value="views"
                         th:selected="${sortBy == 'views'}">
+
                     Most Viewed
+
                 </option>
 
             </select>
 
         </div>
 
+
+        <!-- SEARCH BUTTON -->
 
         <div class="filter-group">
 
@@ -807,6 +833,8 @@
         </div>
 
 
+        <!-- CLEAR -->
+
         <div class="filter-group">
 
             <label class="filter-label">
@@ -823,9 +851,7 @@
 
         </div>
 
-
     </form>
-
 
 
     <!-- =================================================
@@ -841,44 +867,59 @@
 
         <div class="most-read-grid">
 
+
+            <!-- MOST READ ARTICLES -->
+
             <div
                     class="most-read-item"
                     th:each="item, stat : ${mostRead}">
 
-                <div class="most-read-number"
-                     th:text="${'0' + (stat.index + 1)}">
+
+                <div
+                        class="most-read-number"
+                        th:text="${'0' + (stat.index + 1)}">
+
                     01
+
                 </div>
 
 
                 <div
                         class="most-read-category"
                         th:text="${item.category}">
+
                     CATEGORY
+
                 </div>
 
 
                 <div
                         class="most-read-title"
                         th:text="${item.title}">
+
                     Article title
+
                 </div>
 
             </div>
 
 
-            <!-- FALLBACK -->
+            <!-- MOST READ FALLBACK -->
+
             <div
                     class="most-read-item"
                     th:if="${mostRead == null or mostRead.isEmpty()}">
+
 
                 <div class="most-read-number">
                     01
                 </div>
 
+
                 <div class="most-read-category">
                     News
                 </div>
+
 
                 <div class="most-read-title">
                     No popular stories yet.
@@ -891,7 +932,6 @@
     </section>
 
 
-
     <!-- =================================================
          NEWS GRID
          ================================================= -->
@@ -902,81 +942,96 @@
         <!-- =================================================
              NEWS CARD
              ================================================= -->
-<article
-        class="news-card"
-        th:each="news : ${newsPage.content}">
+
+        <article
+                class="news-card"
+                th:each="news : ${newsPage.content}">
 
 
-<!-- =====================================================
-     IMAGE
-     ===================================================== -->
+            <!-- =================================================
+                 IMAGE
+                 ================================================= -->
 
-<div class="news-card-image">
-
-    <!-- LOCAL IMAGE -->
-    <img
-            th:if="${news.imageUrl != null
-                    and !news.imageUrl.isEmpty()
-                    and news.imageUrl.startsWith('/uploads/news/')}"
-
-            th:src="${news.imageUrl}"
-
-            th:alt="${news.title}"
-
-            loading="lazy"
-
-            onerror="
-                this.style.display='none';
-                this.parentElement
-                    .querySelector('.image-fallback')
-                    .style.display='flex';
-            ">
+            <div class="news-card-image">
 
 
-    <!-- EXTERNAL IMAGE -->
-    <img
-            th:if="${news.imageUrl != null
-                    and !news.imageUrl.isEmpty()
-                    and !news.imageUrl.startsWith('/uploads/news/')}"
+                <!-- =================================================
+                     DIRECT IMAGE
+                     =================================================
 
-            th:src="@{/images/proxy(url=${news.imageUrl})}"
+                     The browser loads news.imageUrl directly.
 
-            th:alt="${news.title}"
+                     Level 1:
+                     External NewsAPI image
 
-            loading="lazy"
+                     Level 2:
+                     Publisher metadata image
 
-            onerror="
-                this.style.display='none';
-                this.parentElement
-                    .querySelector('.image-fallback')
-                    .style.display='flex';
-            ">
+                     Level 3:
+                     AgniPress fallback
+
+                     No local image storage.
+                     No image proxy.
+                     ================================================= -->
+
+                <img
+                        th:if="${news.imageUrl != null
+                                and !news.imageUrl.isEmpty()}"
+                        th:src="${news.imageUrl}"
+                        th:alt="${news.title}"
+                        loading="lazy"
+                        decoding="async"
+                        onerror="
+                            this.style.display='none';
+
+                            const fallback =
+                                this.parentElement
+                                    .querySelector('.image-fallback');
+
+                            if (fallback) {
+                                fallback.style.display='flex';
+                            }
+                        ">
 
 
-    <!-- FALLBACK -->
-    <div
-            class="image-fallback"
-            style="display:none;">
+                <!-- =================================================
+                     FALLBACK
+                     =================================================
 
-        NEWS PORTAL
+                     If imageUrl is empty, show fallback immediately.
 
-    </div>
+                     If an external image fails, JavaScript
+                     displays the fallback automatically.
+                     ================================================= -->
+
+                <div
+                        class="image-fallback"
+                        th:style="${news.imageUrl == null
+                                or news.imageUrl.isEmpty()}
+                                ? 'display:flex;'
+                                : 'display:none;'">
+
+                    NEWS PORTAL
+
+                </div>
 
 
-    <!-- SOURCE -->
-    <div
-            class="source-badge"
+                <!-- =================================================
+                     SOURCE BADGE
+                     ================================================= -->
 
-            th:if="${news.sourceName != null
-                    and !news.sourceName.isEmpty()}"
+                <div
+                        class="source-badge"
+                        th:if="${news.sourceName != null
+                                and !news.sourceName.isEmpty()}"
+                        th:text="${news.sourceName}">
 
-            th:text="${news.sourceName}">
+                    SOURCE
 
-        SOURCE
+                </div>
 
-    </div>
+            </div>
 
-</div>
 
             <!-- =================================================
                  ARTICLE CONTENT
@@ -990,7 +1045,9 @@
                 <div
                         class="category"
                         th:text="${news.category}">
+
                     GENERAL
+
                 </div>
 
 
@@ -999,7 +1056,9 @@
                 <h2
                         class="news-card-title"
                         th:text="${news.title}">
+
                     News article title
+
                 </h2>
 
 
@@ -1008,11 +1067,15 @@
                 <div
                         class="news-card-description"
                         th:text="${news.content}">
+
                     News article description.
+
                 </div>
 
 
-                <!-- META -->
+                <!-- =================================================
+                     META
+                     ================================================= -->
 
                 <div class="news-meta">
 
@@ -1022,7 +1085,9 @@
                                     and !news.sourceName.isEmpty()
                                     ? news.sourceName
                                     : 'NEWS PORTAL'}">
+
                         NEWS PORTAL
+
                     </span>
 
 
@@ -1034,7 +1099,9 @@
                                     and !news.author.isEmpty()
                                     ? news.author
                                     : 'STAFF'}">
+
                         STAFF
+
                     </span>
 
 
@@ -1043,7 +1110,9 @@
 
                     <span
                             th:text="${news.publishedDate}">
+
                         DATE
+
                     </span>
 
 
@@ -1054,35 +1123,39 @@
                             th:text="${news.viewCount != null
                                     ? news.viewCount
                                     : 0} + ' VIEWS'">
+
                         0 VIEWS
+
                     </span>
 
                 </div>
 
 
-
-                <!-- ACTIONS -->
+                <!-- =================================================
+                     ACTIONS
+                     ================================================= -->
 
                 <div class="news-actions">
 
 
                     <!-- READ STORY -->
 
-                   <a th:href="@{/viewNews/{id}(id=${news.id})}">
-    READ STORY →
-</a>
+                    <a
+                            class="read-story"
+                            th:href="@{/viewNews/{id}(id=${news.id})}">
+
+                        READ STORY →
+
+                    </a>
 
 
-                    <!-- ORIGINAL -->
+                    <!-- ORIGINAL ARTICLE -->
 
                     <a
                             class="original-link"
-
                             th:if="${news.sourceUrl != null
                                     and !news.sourceUrl.isEmpty()}"
-
                             th:href="${news.sourceUrl}"
-
                             target="_blank"
                             rel="noopener noreferrer">
 
@@ -1090,16 +1163,13 @@
 
                     </a>
 
-
                 </div>
 
             </div>
 
         </article>
 
-
     </section>
-
 
 
     <!-- =================================================
@@ -1115,9 +1185,7 @@
 
         <a
                 class="page-btn"
-
                 th:if="${newsPage.hasPrevious()}"
-
                 th:href="@{/newsList(
                     page=${newsPage.number - 1},
                     keyword=${keyword},
@@ -1130,42 +1198,39 @@
         </a>
 
 
-      <!-- PAGE NUMBERS -->
+        <!-- PAGE NUMBERS -->
 
-<a
-        class="page-btn"
+        <a
+                class="page-btn"
+                th:each="i : ${#numbers.sequence(
+                    T(java.lang.Math).max(
+                        0,
+                        newsPage.number - 2
+                    ),
+                    T(java.lang.Math).min(
+                        newsPage.totalPages - 1,
+                        newsPage.number + 2
+                    )
+                )}"
+                th:classappend="${i == newsPage.number ? ' active' : ''}"
+                th:href="@{/newsList(
+                    page=${i},
+                    keyword=${keyword},
+                    category=${category},
+                    sortBy=${sortBy}
+                )}"
+                th:text="${i + 1}">
 
-        th:each="i : ${#numbers.sequence(
-            T(java.lang.Math).max(0, newsPage.number - 2),
-            T(java.lang.Math).min(
-                newsPage.totalPages - 1,
-                newsPage.number + 2
-            )
-        )}"
+            1
 
-        th:classappend="${i == newsPage.number ? ' active' : ''}"
-
-        th:href="@{/newsList(
-            page=${i},
-            keyword=${keyword},
-            category=${category},
-            sortBy=${sortBy}
-        )}"
-
-        th:text="${i + 1}">
-
-    1
-
-</a>
+        </a>
 
 
         <!-- NEXT -->
 
         <a
                 class="page-btn"
-
                 th:if="${newsPage.hasNext()}"
-
                 th:href="@{/newsList(
                     page=${newsPage.number + 1},
                     keyword=${keyword},
@@ -1178,7 +1243,6 @@
         </a>
 
     </div>
-
 
 </main>
 

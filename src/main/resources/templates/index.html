@@ -32,6 +32,7 @@
 
 <main>
 
+
 <!-- =====================================================
      BREAKING NEWS TICKER
      ===================================================== -->
@@ -62,6 +63,7 @@
         <div class="breaking-track"
              id="breakingTrack">
 
+
             <th:block
                     th:if="${latestNews != null}"
                     th:each="news : ${latestNews}">
@@ -75,14 +77,20 @@
                             th:text="${news.category != null
                                       ? news.category
                                       : 'NEWS'}">
+
                         NEWS
+
                     </span>
+
 
                     <span
                             class="breaking-headline"
                             th:text="${news.title}">
+
                         Latest breaking news headline
+
                     </span>
+
 
                     <span class="breaking-arrow">
                         →
@@ -90,11 +98,13 @@
 
                 </a>
 
+
                 <span class="breaking-divider">
                     /
                 </span>
 
             </th:block>
+
 
 
             <!-- DUPLICATE TRACK -->
@@ -112,20 +122,27 @@
                             th:text="${news.category != null
                                       ? news.category
                                       : 'NEWS'}">
+
                         NEWS
+
                     </span>
+
 
                     <span
                             class="breaking-headline"
                             th:text="${news.title}">
+
                         Latest breaking news headline
+
                     </span>
+
 
                     <span class="breaking-arrow">
                         →
                     </span>
 
                 </a>
+
 
                 <span class="breaking-divider">
                     /
@@ -138,6 +155,7 @@
     </div>
 
 </section>
+
 
 
 <!-- =====================================================
@@ -168,6 +186,7 @@
         </div>
 
 
+
         <!-- HERO GRID -->
 
         <div class="home-hero-grid">
@@ -193,7 +212,6 @@
                 <h1 class="home-hero-title">
 
                     News that
-
                     <em>matters.</em>
 
                 </h1>
@@ -241,6 +259,7 @@
             </div>
 
 
+
             <!-- =================================================
                  FEATURED STORY
                  ================================================= -->
@@ -257,20 +276,30 @@
                         th:href="@{/viewNews/{id}(id=${featuredNews.id})}">
 
 
-                    <!-- LOCAL IMAGE -->
+                    <!-- =================================================
+                         DIRECT IMAGE
+                         =================================================
+
+                         Images are now rendered directly.
+
+                         Supported values:
+
+                         1. External image URL
+                            https://example.com/image.jpg
+
+                         2. AgniPress fallback
+                            /images/fallback?category=Technology
+
+                         No image proxy.
+                         No local image storage.
+                         ================================================= -->
 
                     <img
                             th:if="${featuredNews.imageUrl != null
-                                    and !featuredNews.imageUrl.isEmpty()
-                                    and !featuredNews.imageUrl.startsWith('http://')
-                                    and !featuredNews.imageUrl.startsWith('https://')}"
-
+                                    and !featuredNews.imageUrl.isEmpty()}"
                             th:src="${featuredNews.imageUrl}"
-
                             th:alt="${featuredNews.title}"
-
                             loading="eager"
-
                             onerror="
                                 this.style.display='none';
                                 this.classList.add('image-error');
@@ -278,28 +307,7 @@
                             ">
 
 
-                    <!-- EXTERNAL IMAGE -->
-
-                    <img
-                            th:if="${featuredNews.imageUrl != null
-                                    and !featuredNews.imageUrl.isEmpty()
-                                    and (featuredNews.imageUrl.startsWith('http://')
-                                    or featuredNews.imageUrl.startsWith('https://'))}"
-
-                            th:src="@{/images/proxy(url=${featuredNews.imageUrl})}"
-
-                            th:alt="${featuredNews.title}"
-
-                            loading="eager"
-
-                            onerror="
-                                this.style.display='none';
-                                this.classList.add('image-error');
-                                this.parentElement.classList.add('image-error');
-                            ">
-
-
-                    <!-- FALLBACK -->
+                    <!-- FEATURED FALLBACK -->
 
                     <div class="home-featured-fallback">
 
@@ -319,9 +327,11 @@
                 </a>
 
 
+
                 <!-- FEATURED CONTENT -->
 
                 <div class="home-featured-content">
+
 
                     <span
                             class="home-article-category"
@@ -353,17 +363,20 @@
                         <span
                                 th:if="${#strings.length(featuredNews.content) > 180}"
                                 th:text="${#strings.substring(featuredNews.content, 0, 180) + '...'}">
+
                         </span>
 
                         <span
                                 th:if="${#strings.length(featuredNews.content) <= 180}"
                                 th:text="${featuredNews.content}">
+
                         </span>
 
                     </p>
 
 
                     <div class="home-featured-meta">
+
 
                         <span
                                 th:if="${featuredNews.sourceName != null
@@ -374,9 +387,11 @@
 
                         </span>
 
+
                         <span>
                             /
                         </span>
+
 
                         <span
                                 th:text="${featuredNews.publishedDate}">
@@ -396,6 +411,7 @@
     </div>
 
 </section>
+
 
 
 <!-- =====================================================
@@ -427,11 +443,13 @@
                     class="section-link">
 
                 View All Stories
+
                 →
 
             </a>
 
         </div>
+
 
 
         <div class="home-news-grid">
@@ -450,41 +468,16 @@
                         th:href="@{/viewNews/{id}(id=${news.id})}">
 
 
-                    <!-- LOCAL IMAGE -->
+                    <!-- =================================================
+                         DIRECT IMAGE
+                         ================================================= -->
 
                     <img
                             th:if="${news.imageUrl != null
-                                    and !news.imageUrl.isEmpty()
-                                    and !news.imageUrl.startsWith('http://')
-                                    and !news.imageUrl.startsWith('https://')}"
-
+                                    and !news.imageUrl.isEmpty()}"
                             th:src="${news.imageUrl}"
-
                             th:alt="${news.title}"
-
                             loading="lazy"
-
-                            onerror="
-                                this.style.display='none';
-                                this.classList.add('image-error');
-                                this.parentElement.classList.add('image-error');
-                            ">
-
-
-                    <!-- EXTERNAL IMAGE -->
-
-                    <img
-                            th:if="${news.imageUrl != null
-                                    and !news.imageUrl.isEmpty()
-                                    and (news.imageUrl.startsWith('http://')
-                                    or news.imageUrl.startsWith('https://'))}"
-
-                            th:src="@{/images/proxy(url=${news.imageUrl})}"
-
-                            th:alt="${news.title}"
-
-                            loading="lazy"
-
                             onerror="
                                 this.style.display='none';
                                 this.classList.add('image-error');
@@ -503,9 +496,11 @@
                 </a>
 
 
+
                 <!-- CONTENT -->
 
                 <div class="home-news-content">
+
 
                     <span
                             class="home-article-category"
@@ -537,17 +532,20 @@
                         <span
                                 th:if="${#strings.length(news.content) > 110}"
                                 th:text="${#strings.substring(news.content, 0, 110) + '...'}">
+
                         </span>
 
                         <span
                                 th:if="${#strings.length(news.content) <= 110}"
                                 th:text="${news.content}">
+
                         </span>
 
                     </p>
 
 
                     <div class="home-news-meta">
+
 
                         <span
                                 th:if="${news.sourceName != null
@@ -558,9 +556,11 @@
 
                         </span>
 
+
                         <span>
                             /
                         </span>
+
 
                         <span
                                 th:text="${news.publishedDate}">
@@ -580,6 +580,7 @@
     </div>
 
 </section>
+
 
 
 <!-- =====================================================
@@ -611,6 +612,7 @@
         </div>
 
 
+
         <div class="most-read-list">
 
 
@@ -631,6 +633,7 @@
 
 
                 <div class="most-read-main">
+
 
                     <span
                             class="home-article-category"
@@ -682,6 +685,7 @@
 </section>
 
 
+
 <!-- =====================================================
      CATEGORIES
      ===================================================== -->
@@ -689,6 +693,7 @@
 <section class="home-categories">
 
     <div class="editorial-container">
+
 
         <span class="section-kicker">
             EXPLORE
@@ -741,6 +746,7 @@
 </section>
 
 
+
 <!-- =====================================================
      DAILY BRIEFING
      ===================================================== -->
@@ -751,15 +757,18 @@
 
         <div class="briefing-inner">
 
+
             <div>
 
                 <span class="section-kicker">
                     THE DAILY BRIEFING
                 </span>
 
+
                 <h2>
                     Stay informed.
                 </h2>
+
 
                 <p>
                     A concise look at the stories
@@ -787,7 +796,9 @@
 
 </section>
 
+
 </main>
+
 
 
 <!-- =========================================================
@@ -804,6 +815,7 @@
             <div class="footer-brand">
                 NEWS PORTAL
             </div>
+
 
             <p>
                 Independent reporting and stories
@@ -852,6 +864,7 @@
     </div>
 
 
+
     <div class="editorial-container footer-bottom">
 
         <span>
@@ -865,6 +878,7 @@
     </div>
 
 </footer>
+
 
 
 <script th:src="@{/newsportal.js}"></script>
