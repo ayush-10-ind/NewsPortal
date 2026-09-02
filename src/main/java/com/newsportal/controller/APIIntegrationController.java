@@ -110,23 +110,7 @@ public class APIIntegrationController {
     }
 
     // =====================================================
-    // BATCH IMAGE MIGRATION
-    // =====================================================
-    //
-    // Migrates only a small number of old local image
-    // records per HTTP request.
-    //
-    // Example:
-    //
-    // /api-integration/images/migrate?batchSize=10
-    //
-    // Maximum batch size is enforced inside the service.
-    //
-    // This endpoint is TEMPORARY.
-    //
-    // Remove it after the production migration is
-    // completely finished and verified.
-    //
+    // START BACKGROUND IMAGE MIGRATION
     // =====================================================
 
     @GetMapping("/images/migrate")
@@ -137,16 +121,18 @@ public class APIIntegrationController {
             )
             int batchSize) {
 
-        int migratedCount =
-                newsImageMigrationService
-                        .migrateOldImages(batchSize);
+        return newsImageMigrationService
+                .startMigration(batchSize);
+    }
 
-        return "Image migration batch completed. "
-                + "Migrated "
-                + migratedCount
-                + " articles. "
-                + "Requested batch size: "
-                + batchSize
-                + ".";
+    // =====================================================
+    // IMAGE MIGRATION STATUS
+    // =====================================================
+
+    @GetMapping("/images/migrate/status")
+    public String migrationStatus() {
+
+        return newsImageMigrationService
+                .getStatus();
     }
 }
