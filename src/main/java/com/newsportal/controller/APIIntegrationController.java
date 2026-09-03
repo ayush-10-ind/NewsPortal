@@ -19,9 +19,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class APIIntegrationController {
 
     private final WebClientAPIService webClientService;
+
     private final NewsApiService newsApiService;
+
     private final NewsImportService newsImportService;
+
     private final NewsArticleGenerationService articleGenerationService;
+
     private final NewsImageMigrationService newsImageMigrationService;
 
 
@@ -33,11 +37,20 @@ public class APIIntegrationController {
             NewsArticleGenerationService articleGenerationService,
             NewsImageMigrationService newsImageMigrationService) {
 
-        this.webClientService = webClientService;
-        this.newsApiService = newsApiService;
-        this.newsImportService = newsImportService;
-        this.articleGenerationService = articleGenerationService;
-        this.newsImageMigrationService = newsImageMigrationService;
+        this.webClientService =
+                webClientService;
+
+        this.newsApiService =
+                newsApiService;
+
+        this.newsImportService =
+                newsImportService;
+
+        this.articleGenerationService =
+                articleGenerationService;
+
+        this.newsImageMigrationService =
+                newsImageMigrationService;
     }
 
 
@@ -73,7 +86,8 @@ public class APIIntegrationController {
     @GetMapping("/ashna/models")
     public String getAshnaModels() {
 
-        return webClientService.getAshnaModels();
+        return webClientService
+                .getAshnaModels();
     }
 
 
@@ -84,7 +98,8 @@ public class APIIntegrationController {
     @GetMapping("/newsapi/test")
     public NewsApiResponseDTO testNewsApi() {
 
-        return newsApiService.getTopHeadlines();
+        return newsApiService
+                .getTopHeadlines();
     }
 
 
@@ -96,7 +111,8 @@ public class APIIntegrationController {
     public String importNews() {
 
         int count =
-                newsImportService.importNews();
+                newsImportService
+                        .importNews();
 
         return "Imported "
                 + count
@@ -118,20 +134,20 @@ public class APIIntegrationController {
 
 
     // =====================================================
-    // START ONE IMAGE MIGRATION BATCH
+    // MANUAL IMAGE MIGRATION BATCH
     //
     // Example:
     //
-    // /api-integration/images/migrate?batchSize=10
+    // /api-integration/images/migrate?batchSize=5
     //
-    // Processes only one batch.
+    // The monitor automatically continues afterward.
     // =====================================================
 
     @GetMapping("/images/migrate")
     public String migrateOldImages(
             @RequestParam(
                     name = "batchSize",
-                    defaultValue = "1"
+                    defaultValue = "5"
             )
             int batchSize) {
 
@@ -141,14 +157,14 @@ public class APIIntegrationController {
 
 
     // =====================================================
-    // START COMPLETE IMAGE MIGRATION
+    // FULL IMAGE MIGRATION
     //
     // Example:
     //
     // /api-integration/images/migrate/all
     //
-    // This starts the migration once and automatically
-    // continues through all remaining old image records.
+    // The migration monitor processes small batches
+    // automatically until remaining = 0.
     // =====================================================
 
     @GetMapping("/images/migrate/all")

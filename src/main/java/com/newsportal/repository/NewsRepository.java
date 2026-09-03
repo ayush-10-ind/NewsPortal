@@ -26,7 +26,6 @@ public interface NewsRepository extends JpaRepository<News, Long> {
 
     // =====================================================
     // SEARCH
-    // Searches title OR content
     // =====================================================
 
     Page<News> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
@@ -106,21 +105,17 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     // =====================================================
     // IMAGE MIGRATION
     //
-    // Finds ONLY articles that still contain old local
-    // /uploads/news/ image paths.
+    // Only fetch a small number of old local-image records.
+    // This avoids loading the entire news table into memory.
     // =====================================================
 
-    Page<News> findByImageUrlStartingWith(
-            String imagePrefix,
-            Pageable pageable
+    List<News> findTop5ByImageUrlStartingWithOrderByIdAsc(
+            String imagePrefix
     );
 
 
     // =====================================================
     // IMAGE MIGRATION COUNT
-    //
-    // Counts only articles that still contain old local
-    // image paths.
     // =====================================================
 
     long countByImageUrlStartingWith(
