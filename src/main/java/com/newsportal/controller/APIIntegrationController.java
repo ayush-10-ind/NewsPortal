@@ -24,6 +24,7 @@ public class APIIntegrationController {
     private final NewsArticleGenerationService articleGenerationService;
     private final NewsImageMigrationService newsImageMigrationService;
 
+
     @Autowired
     public APIIntegrationController(
             WebClientAPIService webClientService,
@@ -39,6 +40,7 @@ public class APIIntegrationController {
         this.newsImageMigrationService = newsImageMigrationService;
     }
 
+
     // =====================================================
     // WEBCLIENT TEST
     // =====================================================
@@ -49,6 +51,7 @@ public class APIIntegrationController {
         return webClientService
                 .getDataFromAPI("/posts/1");
     }
+
 
     // =====================================================
     // ASHNA TEST
@@ -62,6 +65,7 @@ public class APIIntegrationController {
         );
     }
 
+
     // =====================================================
     // ASHNA MODELS
     // =====================================================
@@ -72,6 +76,7 @@ public class APIIntegrationController {
         return webClientService.getAshnaModels();
     }
 
+
     // =====================================================
     // NEWS API TEST
     // =====================================================
@@ -81,6 +86,7 @@ public class APIIntegrationController {
 
         return newsApiService.getTopHeadlines();
     }
+
 
     // =====================================================
     // FAST NEWS IMPORT
@@ -97,6 +103,7 @@ public class APIIntegrationController {
                 + " new articles.";
     }
 
+
     // =====================================================
     // MANUAL ASHNA ARTICLE GENERATION
     // =====================================================
@@ -109,8 +116,15 @@ public class APIIntegrationController {
                 .generateArticle(id);
     }
 
+
     // =====================================================
-    // START BACKGROUND IMAGE MIGRATION
+    // START ONE IMAGE MIGRATION BATCH
+    //
+    // Example:
+    //
+    // /api-integration/images/migrate?batchSize=10
+    //
+    // Processes only one batch.
     // =====================================================
 
     @GetMapping("/images/migrate")
@@ -124,6 +138,26 @@ public class APIIntegrationController {
         return newsImageMigrationService
                 .startMigration(batchSize);
     }
+
+
+    // =====================================================
+    // START COMPLETE IMAGE MIGRATION
+    //
+    // Example:
+    //
+    // /api-integration/images/migrate/all
+    //
+    // This starts the migration once and automatically
+    // continues through all remaining old image records.
+    // =====================================================
+
+    @GetMapping("/images/migrate/all")
+    public String migrateAllOldImages() {
+
+        return newsImageMigrationService
+                .startFullMigration();
+    }
+
 
     // =====================================================
     // IMAGE MIGRATION STATUS
