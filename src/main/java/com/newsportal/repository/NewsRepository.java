@@ -101,4 +101,29 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     List<News> findByPublishedDateBefore(
             LocalDate cutoffDate
     );
+
+
+    // =====================================================
+    // IMAGE MIGRATION
+    //
+    // Finds ONLY articles that still contain old local
+    // /uploads/news/ image paths.
+    // =====================================================
+
+    Page<News> findByImageUrlStartingWith(
+            String imagePrefix,
+            Pageable pageable
+    );
+
+
+    // =====================================================
+    // IMAGE MIGRATION COUNT
+    //
+    // Counts only articles that still contain old local
+    // image paths.
+    // =====================================================
+
+    long countByImageUrlStartingWith(
+            String imagePrefix
+    );
 }

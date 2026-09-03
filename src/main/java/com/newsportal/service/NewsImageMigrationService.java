@@ -3,6 +3,7 @@ package com.newsportal.service;
 import com.newsportal.entity.News;
 import com.newsportal.repository.NewsRepository;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -14,25 +15,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class NewsImageMigrationService {
 
+    private static final String OLD_IMAGE_PREFIX = "/uploads/news/";
+
     private final NewsRepository newsRepository;
     private final ArticleImageService articleImageService;
     private final TransactionTemplate transactionTemplate;
 
-    // =====================================================
-    // MIGRATION STATE
-    // =====================================================
-
-    private final AtomicBoolean running =
+    private final AtomicBoolean migrationRunning =
             new AtomicBoolean(false);
 
-    private final AtomicInteger totalProcessed =
+    private final AtomicInteger totalMigrated =
             new AtomicInteger(0);
 
-    private final AtomicInteger migrated =
+    private final AtomicInteger totalFailed =
             new AtomicInteger(0);
 
-    private final AtomicInteger failed =
-            new AtomicInteger(0);
 
     // =====================================================
     // CONSTRUCTOR
@@ -48,33 +45,38 @@ public class NewsImageMigrationService {
         this.transactionTemplate = transactionTemplate;
     }
 
+
     // =====================================================
-    // START BACKGROUND MIGRATION
+    // START ONE MIGRATION BATCH
     // =====================================================
 
-    public synchronized String startMigration(
-            int requestedBatchSize) {
+    public String startMigration(int requestedBatchSize) {
 
-        if (running.get()) {
-
-            return "Image migration is already running. "
-                    + "Check /api-integration/images/migrate/status";
-        }
-
+        /*
+         * Safety limit:
+         *
+         * Minimum = 1
+         * Maximum = 10
+         *
+         * This prevents accidentally starting a huge batch
+         * that could generate many external HTTP requests.
+         */
         int batchSize =
                 Math.max(
                         1,
-                        Math.min(
-                                requestedBatchSize,
-                                5
-                        )
+                        Math.min(requestedBatchSize, 10)
                 );
 
-        running.set(true);
 
-        totalProcessed.set(0);
-        migrated.set(0);
-        failed.set(0);
+        /*
+         * Prevent two migration threads from running at the
+         * same time.
+         */
+        if (!migrationRunning.compareAndSet(false, true)) {
+
+            return "Image migration is already running.";
+        }
+
 
         Thread migrationThread =
                 new Thread(
@@ -82,390 +84,370 @@ public class NewsImageMigrationService {
                         "news-image-migration"
                 );
 
+
+        /*
+         * Do not keep the JVM alive if the application shuts down.
+         */
         migrationThread.setDaemon(true);
+
         migrationThread.start();
 
-        return "Image migration started in background. "
+
+        return "Image migration started. "
                 + "Batch size: "
-                + batchSize
-                + ". "
-                + "Check /api-integration/images/migrate/status";
+                + batchSize;
     }
 
+
     // =====================================================
-    // BACKGROUND MIGRATION
+    // RUN ONE BATCH ONLY
     // =====================================================
 
     private void runMigration(int batchSize) {
 
-        System.out.println();
-        System.out.println(
-                "========================================"
-        );
-        System.out.println(
-                "BACKGROUND NEWS IMAGE MIGRATION STARTED"
-        );
-        System.out.println(
-                "Batch size: " + batchSize
-        );
-        System.out.println(
-                "========================================"
-        );
+        int migratedThisBatch = 0;
+        int failedThisBatch = 0;
 
         try {
 
-            while (true) {
+            /*
+             * IMPORTANT:
+             *
+             * This query fetches ONLY articles whose image URL
+             * still starts with /uploads/news/.
+             *
+             * It does NOT load all 1,912 articles.
+             */
+            List<News> candidates =
+                    newsRepository
+                            .findByImageUrlStartingWith(
+                                    OLD_IMAGE_PREFIX,
+                                    PageRequest.of(
+                                            0,
+                                            batchSize,
+                                            Sort.by(
+                                                    Sort.Direction.ASC,
+                                                    "id"
+                                            )
+                                    )
+                            )
+                            .getContent();
 
-                // =============================================
-                // GET NEXT OLD IMAGE
-                // =============================================
 
-                List<News> oldNews =
-                        newsRepository.findAll(
-                                Sort.by(
-                                        Sort.Direction.ASC,
-                                        "id"
-                                )
-                        );
+            /*
+             * Nothing left to migrate.
+             */
+            if (candidates.isEmpty()) {
 
-                News target = null;
-
-                for (News news : oldNews) {
-
-                    if (news != null &&
-                            isOldLocalImage(
-                                    news.getImageUrl()
-                            )) {
-
-                        target = news;
-                        break;
-                    }
-                }
-
-                // =============================================
-                // NOTHING LEFT
-                // =============================================
-
-                if (target == null) {
-
-                    System.out.println();
-                    System.out.println(
-                            "========================================"
-                    );
-                    System.out.println(
-                            "IMAGE MIGRATION COMPLETED"
-                    );
-                    System.out.println(
-                            "Migrated: "
-                                    + migrated.get()
-                    );
-                    System.out.println(
-                            "Failed: "
-                                    + failed.get()
-                    );
-                    System.out.println(
-                            "========================================"
-                    );
-
-                    break;
-                }
-
-                // =============================================
-                // MIGRATE ONE ARTICLE
-                // =============================================
-
-                migrateSingleArticle(
-                        target.getId()
+                System.out.println(
+                        "Image migration: "
+                                + "no old local images remaining."
                 );
 
-                totalProcessed.incrementAndGet();
-
-                // =============================================
-                // SMALL DELAY
-                // =============================================
-                //
-                // Prevents hammering publishers and Railway.
-                //
-
-                Thread.sleep(300);
-
+                return;
             }
 
-        } catch (InterruptedException e) {
 
-            Thread.currentThread().interrupt();
+            /*
+             * Process only this batch.
+             */
+            for (News candidate : candidates) {
 
-            System.out.println(
-                    "Image migration thread interrupted."
+                try {
+
+                    boolean migrated =
+                            migrateSingleArticle(
+                                    candidate.getId()
+                            );
+
+
+                    if (migrated) {
+
+                        migratedThisBatch++;
+
+                        totalMigrated.incrementAndGet();
+
+                    } else {
+
+                        failedThisBatch++;
+
+                        totalFailed.incrementAndGet();
+                    }
+
+
+                } catch (Exception ex) {
+
+                    failedThisBatch++;
+
+                    totalFailed.incrementAndGet();
+
+
+                    System.err.println(
+                            "Failed to migrate image "
+                                    + "for article ID "
+                                    + candidate.getId()
+                                    + ": "
+                                    + ex.getMessage()
+                    );
+                }
+            }
+
+
+        } catch (Exception ex) {
+
+            System.err.println(
+                    "Image migration batch failed: "
+                            + ex.getMessage()
             );
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Background image migration failed: "
-                            + e.getMessage()
-            );
-
-            e.printStackTrace();
 
         } finally {
 
-            running.set(false);
+            migrationRunning.set(false);
+
+
+            System.out.println(
+                    "========================================"
+            );
+
+            System.out.println(
+                    "Image migration batch completed."
+            );
+
+            System.out.println(
+                    "Migrated this batch: "
+                            + migratedThisBatch
+            );
+
+            System.out.println(
+                    "Failed this batch: "
+                            + failedThisBatch
+            );
+
+            System.out.println(
+                    "Total migrated: "
+                            + totalMigrated.get()
+            );
+
+            System.out.println(
+                    "Total failed: "
+                            + totalFailed.get()
+            );
+
+            System.out.println(
+                    "========================================"
+            );
         }
     }
+
 
     // =====================================================
     // MIGRATE ONE ARTICLE
     // =====================================================
 
-    private void migrateSingleArticle(Long newsId) {
+    private boolean migrateSingleArticle(Long newsId) {
 
-        try {
+        News news =
+                newsRepository
+                        .findById(newsId)
+                        .orElse(null);
 
-            News news =
-                    newsRepository
-                            .findById(newsId)
-                            .orElse(null);
 
-            if (news == null) {
-                return;
-            }
+        /*
+         * Article disappeared between the batch query and
+         * this operation.
+         */
+        if (news == null) {
 
-            // Another process may already have migrated it.
-
-            if (!isOldLocalImage(
-                    news.getImageUrl()
-            )) {
-                return;
-            }
-
-            System.out.println();
-            System.out.println(
-                    "----------------------------------------"
-            );
-
-            System.out.println(
-                    "MIGRATING NEWS ID: "
-                            + news.getId()
-            );
-
-            System.out.println(
-                    "TITLE: "
-                            + news.getTitle()
-            );
-
-            System.out.println(
-                    "OLD IMAGE: "
-                            + news.getImageUrl()
-            );
-
-            String category =
-                    news.getCategory();
-
-            if (category == null ||
-                    category.isBlank()) {
-
-                category = "General";
-            }
-
-            String sourceUrl =
-                    news.getSourceUrl();
-
-            String resolvedImage;
-
-            // =============================================
-            // NO SOURCE URL
-            // =============================================
-
-            if (sourceUrl == null ||
-                    sourceUrl.isBlank()) {
-
-                resolvedImage =
-                        buildFallbackImageUrl(
-                                category
-                        );
-
-            } else {
-
-                // =============================================
-                // RESOLVE IMAGE
-                // =============================================
-
-                resolvedImage =
-                        articleImageService.resolveImage(
-                                null,
-                                sourceUrl,
-                                category
-                        );
-
-                if (resolvedImage == null ||
-                        resolvedImage.isBlank()) {
-
-                    resolvedImage =
-                            buildFallbackImageUrl(
-                                    category
-                            );
-                }
-            }
-
-            final String finalImage =
-                    resolvedImage;
-
-            // =============================================
-            // INDEPENDENT TRANSACTION
-            // =============================================
-
-            transactionTemplate.executeWithoutResult(
-                    status -> {
-
-                        News current =
-                                newsRepository
-                                        .findById(newsId)
-                                        .orElse(null);
-
-                        if (current == null) {
-                            return;
-                        }
-
-                        if (!isOldLocalImage(
-                                current.getImageUrl()
-                        )) {
-                            return;
-                        }
-
-                        current.setImageUrl(
-                                finalImage
-                        );
-
-                        newsRepository.save(
-                                current
-                        );
-                    }
-            );
-
-            migrated.incrementAndGet();
-
-            System.out.println(
-                    "NEW IMAGE: "
-                            + finalImage
-            );
-
-            System.out.println(
-                    "DATABASE COMMIT SUCCESSFUL."
-            );
-
-            System.out.println(
-                    "MIGRATED COUNT: "
-                            + migrated.get()
-            );
-
-            System.out.println(
-                    "----------------------------------------"
-            );
-
-        } catch (Exception e) {
-
-            failed.incrementAndGet();
-
-            System.out.println();
-            System.out.println(
-                    "IMAGE MIGRATION FAILED"
-            );
-
-            System.out.println(
-                    "News ID: "
-                            + newsId
-            );
-
-            System.out.println(
-                    "Error: "
-                            + e.getMessage()
-            );
-
-            e.printStackTrace();
+            return false;
         }
+
+
+        String currentImageUrl =
+                news.getImageUrl();
+
+
+        /*
+         * Another migration request may have already processed
+         * this article.
+         */
+        if (!isOldLocalImage(currentImageUrl)) {
+
+            return false;
+        }
+
+
+        String sourceUrl =
+                news.getSourceUrl();
+
+
+        String newImageUrl;
+
+
+        // =================================================
+        // NO SOURCE URL
+        // =================================================
+
+        if (sourceUrl == null || sourceUrl.isBlank()) {
+
+            newImageUrl =
+                    buildFallbackUrl(
+                            news.getCategory()
+                    );
+
+        } else {
+
+            /*
+             * Existing ArticleImageService handles:
+             *
+             * Level 1:
+             * External NewsAPI image
+             *
+             * Level 2:
+             * Publisher og:image / twitter:image
+             *
+             * Level 3:
+             * AgniPress fallback
+             *
+             * We pass null for the NewsAPI image because these
+             * old records only contain the old local path.
+             */
+            newImageUrl =
+                    articleImageService.resolveImage(
+                            null,
+                            sourceUrl,
+                            news.getCategory()
+                    );
+        }
+
+
+        /*
+         * Absolute safety fallback.
+         *
+         * The database must NEVER be left with a blank image URL
+         * after a successful migration.
+         */
+        if (newImageUrl == null || newImageUrl.isBlank()) {
+
+            newImageUrl =
+                    buildFallbackUrl(
+                            news.getCategory()
+                    );
+        }
+
+
+        final String resolvedImageUrl =
+                newImageUrl;
+
+
+        // =================================================
+        // SAVE URL ONLY
+        // =================================================
+
+        transactionTemplate.executeWithoutResult(
+                status -> {
+
+                    News current =
+                            newsRepository
+                                    .findById(newsId)
+                                    .orElse(null);
+
+
+                    if (current == null) {
+                        return;
+                    }
+
+
+                    /*
+                     * Prevent overwriting an image that another
+                     * migration process has already updated.
+                     */
+                    if (!isOldLocalImage(
+                            current.getImageUrl()
+                    )) {
+
+                        return;
+                    }
+
+
+                    /*
+                     * IMPORTANT:
+                     *
+                     * Only the URL is stored.
+                     *
+                     * No image binary is written to Railway.
+                     */
+                    current.setImageUrl(
+                            resolvedImageUrl
+                    );
+
+
+                    newsRepository.save(current);
+                }
+        );
+
+
+        return true;
     }
 
+
     // =====================================================
-    // STATUS
+    // MIGRATION STATUS
     // =====================================================
 
     public String getStatus() {
 
+        /*
+         * Efficient database COUNT.
+         *
+         * We no longer load all news records into Java memory.
+         */
         long remaining =
                 newsRepository
-                        .findAll()
-                        .stream()
-                        .filter(
-                                news ->
-                                        news != null &&
-                                        isOldLocalImage(
-                                                news.getImageUrl()
-                                        )
-                        )
-                        .count();
+                        .countByImageUrlStartingWith(
+                                OLD_IMAGE_PREFIX
+                        );
 
-        return "{"
-                + "\"running\":"
-                + running.get()
-                + ","
-                + "\"processed\":"
-                + totalProcessed.get()
-                + ","
-                + "\"migrated\":"
-                + migrated.get()
-                + ","
-                + "\"failed\":"
-                + failed.get()
-                + ","
-                + "\"remaining\":"
+
+        return "Image migration status: "
+                + "remaining="
                 + remaining
-                + "}";
+                + ", totalMigrated="
+                + totalMigrated.get()
+                + ", totalFailed="
+                + totalFailed.get()
+                + ", running="
+                + migrationRunning.get();
     }
 
+
     // =====================================================
-    // OLD LOCAL IMAGE CHECK
+    // CHECK FOR OLD LOCAL IMAGE
     // =====================================================
 
     private boolean isOldLocalImage(
             String imageUrl) {
 
-        return imageUrl != null &&
-                imageUrl.startsWith(
-                        "/uploads/news/"
+        return imageUrl != null
+                && imageUrl.startsWith(
+                        OLD_IMAGE_PREFIX
                 );
     }
 
+
     // =====================================================
-    // FALLBACK IMAGE
+    // AGNIPRESS FALLBACK IMAGE
     // =====================================================
 
-    private String buildFallbackImageUrl(
+    private String buildFallbackUrl(
             String category) {
 
         String safeCategory =
-                category == null ||
-                        category.isBlank()
-                        ? "General"
+                category == null || category.isBlank()
+                        ? "general"
                         : category.trim();
 
+
         return "/images/fallback?category="
-                + encodeCategory(
-                        safeCategory
-                );
-    }
-
-    // =====================================================
-    // CATEGORY ENCODING
-    // =====================================================
-
-    private String encodeCategory(
-            String category) {
-
-        return category
-                .replace(" ", "%20")
-                .replace("&", "%26")
-                .replace("?", "%3F")
-                .replace("#", "%23");
+                + safeCategory;
     }
 }
