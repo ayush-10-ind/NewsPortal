@@ -4,6 +4,8 @@ import com.newsportal.dto.NewsApiArticleDTO;
 import com.newsportal.entity.News;
 import com.newsportal.entity.NewsSourceType;
 import com.newsportal.repository.NewsRepository;
+import com.newsportal.source.NewsSection;
+import com.newsportal.source.SectionRouterService;
 
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,12 @@ public class NewsImportService {
     private final ArticleImageService
             articleImageService;
 
+    private final SectionRouterService
+            sectionRouterService;
+
+    private final AshnaArticleAnalyzerService
+            ashnaArticleAnalyzerService;
+
 
     // =====================================================
     // CONSTRUCTOR
@@ -35,7 +43,9 @@ public class NewsImportService {
             NewsApiService newsApiService,
             NewsRepository newsRepository,
             NewsArticleGenerationService articleGenerationService,
-            ArticleImageService articleImageService) {
+            ArticleImageService articleImageService,
+            SectionRouterService sectionRouterService,
+            AshnaArticleAnalyzerService ashnaArticleAnalyzerService) {
 
         this.newsApiService =
                 newsApiService;
@@ -48,6 +58,12 @@ public class NewsImportService {
 
         this.articleImageService =
                 articleImageService;
+
+        this.sectionRouterService =
+                sectionRouterService;
+
+        this.ashnaArticleAnalyzerService =
+                ashnaArticleAnalyzerService;
     }
 
 
@@ -61,13 +77,14 @@ public class NewsImportService {
         System.out.println(
                 "========================================"
         );
+
         System.out.println(
-                "NEWS IMPORT STARTED"
+                "AGNIPRESS NEWS IMPORT STARTED"
         );
+
         System.out.println(
                 "========================================"
         );
-
 
         System.out.println(
                 "Fetching latest news from News API..."
@@ -99,11 +116,42 @@ public class NewsImportService {
 
         int rejectedCount = 0;
 
+        int noSourceCount = 0;
+
+        int ashnaSuccessCount = 0;
+
+        int ashnaFailureCount = 0;
+
+        int ashnaRejectedCount = 0;
+
         int imageLevel1Count = 0;
 
         int imageLevel2Count = 0;
 
         int imageLevel3Count = 0;
+
+
+        // =================================================
+        // SECTION STATISTICS
+        // =================================================
+
+        int indiaCount = 0;
+
+        int worldCount = 0;
+
+        int sportsCount = 0;
+
+        int animeCount = 0;
+
+        int businessCount = 0;
+
+        int technologyCount = 0;
+
+        int entertainmentCount = 0;
+
+        int scienceCount = 0;
+
+        int gamingCount = 0;
 
 
         // =================================================
@@ -143,7 +191,7 @@ public class NewsImportService {
 
 
                 // =========================================
-                // QUALITY FILTER
+                // BASIC QUALITY FILTER
                 // =========================================
 
                 if (isLowQualityArticle(article)) {
@@ -183,26 +231,33 @@ public class NewsImportService {
 
 
                 // =========================================
-                // CATEGORY
+                // SOURCE INFORMATION
                 // =========================================
 
-                String category =
-                        article.getCategory();
+                String sourceName =
+                        "Unknown";
 
+                if (article.getSource() != null &&
+                        article.getSource().getName() != null &&
+                        !article.getSource().getName().isBlank()) {
 
-                if (category == null ||
-                        category.isBlank()) {
-
-                    category = "General";
+                    sourceName =
+                            article.getSource()
+                                    .getName()
+                                    .trim();
                 }
 
 
-                category =
-                        category.trim();
+                String author =
+                        article.getAuthor();
+
+
+                String publishedDate =
+                        article.getPublishedAt();
 
 
                 // =========================================
-                // CONTENT
+                // RAW CONTENT
                 // =========================================
 
                 String initialContent =
@@ -222,6 +277,303 @@ public class NewsImportService {
 
                     initialContent =
                             "Article content is being prepared.";
+                }
+
+
+                // =========================================
+                // ORIGINAL SECTION
+                //
+                // This is only the initial hint.
+                // Ashna will make the final classification.
+                // =========================================
+
+                String rawCategory =
+                        article.getCategory();
+
+
+                if (rawCategory == null ||
+                        rawCategory.isBlank()) {
+
+                    rawCategory =
+                            "General";
+                }
+
+
+                NewsSection initialSection =
+                        sectionRouterService
+                                .resolveSection(
+                                        rawCategory
+                                );
+
+
+                // =========================================
+                // ASHNA ARTICLE ANALYSIS
+                // =========================================
+
+                System.out.println();
+                System.out.println(
+                        "----------------------------------------"
+                );
+
+                System.out.println(
+                        "ASHNA ANALYSIS STARTED"
+                );
+
+                System.out.println(
+                        "Title: "
+                                + title
+                );
+
+                System.out.println(
+                        "Source: "
+                                + sourceName
+                );
+
+
+                AshnaArticleAnalyzerService
+                        .ArticleAnalysis analysis = null;
+
+
+                try {
+
+                    analysis =
+                            ashnaArticleAnalyzerService
+                                    .analyzeArticle(
+                                            title,
+                                            sourceName,
+                                            sourceUrl,
+                                            author,
+                                            publishedDate,
+                                            initialContent
+                                    );
+
+
+                    ashnaSuccessCount++;
+
+
+                    System.out.println(
+                            "ASHNA ANALYSIS COMPLETED"
+                    );
+
+                    System.out.println(
+                            "Section: "
+                                    + analysis.getSection()
+                    );
+
+                    System.out.println(
+                            "Quality Score: "
+                                    + analysis.getQualityScore()
+                    );
+
+                    System.out.println(
+                            "Newsworthy: "
+                                    + analysis.isNewsworthy()
+                    );
+
+
+                } catch (Exception ashnaException) {
+
+                    ashnaFailureCount++;
+
+
+                    System.out.println(
+                            "ASHNA ANALYSIS FAILED"
+                    );
+
+                    System.out.println(
+                            "Reason: "
+                                    + ashnaException.getMessage()
+                    );
+
+                    System.out.println(
+                            "Falling back to NewsAPI data."
+                    );
+                }
+
+
+                // =========================================
+                // DETERMINE FINAL SECTION
+                // =========================================
+
+                NewsSection section =
+                        initialSection;
+
+
+                if (analysis != null &&
+                        analysis.getSection() != null &&
+                        !analysis.getSection().isBlank()) {
+
+                    section =
+                            sectionRouterService
+                                    .resolveSection(
+                                            analysis.getSection()
+                                    );
+                }
+
+
+                String category =
+                        section.getDisplayName();
+
+
+                // =========================================
+                // ASHNA NEWSWORTHINESS CHECK
+                // =========================================
+
+                if (analysis != null) {
+
+                    if (!analysis.isNewsworthy()) {
+
+                        ashnaRejectedCount++;
+
+                        rejectedCount++;
+
+
+                        System.out.println(
+                                "REJECTED BY ASHNA: "
+                                        + title
+                        );
+
+                        System.out.println(
+                                "Reason: Article was not "
+                                        + "considered newsworthy."
+                        );
+
+                        continue;
+                    }
+
+
+                    if (analysis.getQualityScore() < 4) {
+
+                        ashnaRejectedCount++;
+
+                        rejectedCount++;
+
+
+                        System.out.println(
+                                "REJECTED BY ASHNA QUALITY FILTER: "
+                                        + title
+                        );
+
+                        System.out.println(
+                                "Quality Score: "
+                                        + analysis.getQualityScore()
+                        );
+
+                        continue;
+                    }
+                }
+
+
+                // =========================================
+                // CHECK SECTION SOURCE
+                // =========================================
+
+                if (!sectionRouterService
+                        .hasSource(section)) {
+
+                    System.out.println(
+                            "No usable source configured for section: "
+                                    + category
+                    );
+
+                    noSourceCount++;
+
+                    continue;
+                }
+
+
+                // =========================================
+                // ASHNA HEADLINE
+                // =========================================
+
+                String finalTitle =
+                        title;
+
+
+                if (analysis != null &&
+                        analysis.getHeadline() != null &&
+                        !analysis.getHeadline().isBlank()) {
+
+                    finalTitle =
+                            analysis.getHeadline().trim();
+                }
+
+
+                // =========================================
+                // ASHNA CONTENT
+                // =========================================
+
+                String finalContent =
+                        initialContent;
+
+
+                if (analysis != null &&
+                        analysis.getContent() != null &&
+                        !analysis.getContent().isBlank()) {
+
+                    finalContent =
+                            analysis.getContent().trim();
+                }
+
+
+                // =========================================
+                // ASHNA AUTHOR
+                // =========================================
+
+                String finalAuthor =
+                        author;
+
+
+                if (analysis != null &&
+                        analysis.getAuthor() != null &&
+                        !analysis.getAuthor().isBlank()) {
+
+                    finalAuthor =
+                            analysis.getAuthor().trim();
+                }
+
+
+                // =========================================
+                // SECTION STATISTICS
+                // =========================================
+
+                switch (section) {
+
+                    case INDIA:
+                        indiaCount++;
+                        break;
+
+                    case WORLD:
+                        worldCount++;
+                        break;
+
+                    case SPORTS:
+                        sportsCount++;
+                        break;
+
+                    case ANIME:
+                        animeCount++;
+                        break;
+
+                    case BUSINESS:
+                        businessCount++;
+                        break;
+
+                    case TECHNOLOGY:
+                        technologyCount++;
+                        break;
+
+                    case ENTERTAINMENT:
+                        entertainmentCount++;
+                        break;
+
+                    case SCIENCE:
+                        scienceCount++;
+                        break;
+
+                    case GAMING:
+                        gamingCount++;
+                        break;
                 }
 
 
@@ -284,12 +636,12 @@ public class NewsImportService {
 
 
                 news.setTitle(
-                        title
+                        finalTitle
                 );
 
 
                 news.setAuthor(
-                        article.getAuthor()
+                        finalAuthor
                 );
 
 
@@ -299,7 +651,7 @@ public class NewsImportService {
 
 
                 news.setContent(
-                        initialContent
+                        finalContent
                 );
 
 
@@ -314,16 +666,12 @@ public class NewsImportService {
 
 
                 // =========================================
-                // SOURCE
+                // SOURCE NAME
                 // =========================================
 
-                if (article.getSource() != null) {
-
-                    news.setSourceName(
-                            article.getSource()
-                                    .getName()
-                    );
-                }
+                news.setSourceName(
+                        sourceName
+                );
 
 
                 news.setSourceType(
@@ -337,7 +685,7 @@ public class NewsImportService {
 
                 news.setPublishedDate(
                         convertPublishedDate(
-                                article.getPublishedAt()
+                                publishedDate
                         )
                 );
 
@@ -355,7 +703,16 @@ public class NewsImportService {
                 importedCount++;
 
 
+                // =========================================
+                // IMPORT LOG
+                // =========================================
+
                 System.out.println();
+
+                System.out.println(
+                        "----------------------------------------"
+                );
+
                 System.out.println(
                         "IMPORTED ARTICLE"
                 );
@@ -366,8 +723,22 @@ public class NewsImportService {
                 );
 
                 System.out.println(
-                        "Category: "
+                        "Section: "
                                 + category
+                );
+
+                System.out.println(
+                        "Source: "
+                                + savedNews.getSourceName()
+                );
+
+                System.out.println(
+                        "Ashna Quality: "
+                                + (
+                                analysis != null
+                                        ? analysis.getQualityScore()
+                                        : "N/A"
+                        )
                 );
 
                 System.out.println(
@@ -375,9 +746,23 @@ public class NewsImportService {
                                 + resolvedImage
                 );
 
+                System.out.println(
+                        "----------------------------------------"
+                );
+
 
                 // =========================================
-                // ASHNA BACKGROUND GENERATION
+                // EXISTING ASHNA ARTICLE GENERATION
+                // =========================================
+                //
+                // This remains separate from the analyzer.
+                //
+                // Analyzer:
+                // classification + quality + metadata
+                //
+                // Generation:
+                // final editorial article
+                //
                 // =========================================
 
                 articleGenerationService
@@ -410,12 +795,13 @@ public class NewsImportService {
         // =================================================
 
         System.out.println();
+
         System.out.println(
                 "========================================"
         );
 
         System.out.println(
-                "NEWS IMPORT COMPLETED"
+                "AGNIPRESS NEWS IMPORT COMPLETED"
         );
 
         System.out.println(
@@ -440,6 +826,104 @@ public class NewsImportService {
         System.out.println(
                 "Low-quality articles rejected: "
                         + rejectedCount
+        );
+
+        System.out.println(
+                "No usable section source: "
+                        + noSourceCount
+        );
+
+
+        // =============================================
+        // ASHNA COUNTS
+        // =============================================
+
+        System.out.println();
+
+        System.out.println(
+                "ASHNA ANALYSIS BREAKDOWN"
+        );
+
+        System.out.println(
+                "Ashna analysis successful: "
+                        + ashnaSuccessCount
+        );
+
+        System.out.println(
+                "Ashna analysis failed: "
+                        + ashnaFailureCount
+        );
+
+        System.out.println(
+                "Rejected by Ashna: "
+                        + ashnaRejectedCount
+        );
+
+
+        // =============================================
+        // SECTION COUNTS
+        // =============================================
+
+        System.out.println();
+
+        System.out.println(
+                "SECTION BREAKDOWN"
+        );
+
+        System.out.println(
+                "India: "
+                        + indiaCount
+        );
+
+        System.out.println(
+                "World: "
+                        + worldCount
+        );
+
+        System.out.println(
+                "Sports: "
+                        + sportsCount
+        );
+
+        System.out.println(
+                "Anime: "
+                        + animeCount
+        );
+
+        System.out.println(
+                "Business: "
+                        + businessCount
+        );
+
+        System.out.println(
+                "Technology: "
+                        + technologyCount
+        );
+
+        System.out.println(
+                "Entertainment: "
+                        + entertainmentCount
+        );
+
+        System.out.println(
+                "Science: "
+                        + scienceCount
+        );
+
+        System.out.println(
+                "Gaming: "
+                        + gamingCount
+        );
+
+
+        // =============================================
+        // IMAGE COUNTS
+        // =============================================
+
+        System.out.println();
+
+        System.out.println(
+                "IMAGE BREAKDOWN"
         );
 
         System.out.println(
@@ -581,25 +1065,28 @@ public class NewsImportService {
         // CORPORATE PR / APPOINTMENT SIGNALS
         // =================================================
 
-        /*
-         * These are intentionally phrase based rather than
-         * blocking the word "announces" by itself.
-         *
-         * Genuine news often contains "announces".
-         */
-
         String[] corporatePressReleasePhrases = {
 
                 "announces retirement of",
+
                 "announces appointment of",
+
                 "announces the appointment of",
+
                 "appoints as senior",
+
                 "appoints as chief",
+
                 "appointed as chief",
+
                 "new managing director",
+
                 "new senior managing director",
+
                 "joins as chief",
+
                 "named as chief",
+
                 "corporate announcement"
         };
 
@@ -629,15 +1116,25 @@ public class NewsImportService {
         String[] commercialTitleSignals = {
 
                 "best ",
+
                 "top deals",
+
                 "where to buy",
+
                 "how to buy",
+
                 "buying guide",
+
                 "gift guide",
+
                 "shopping guide",
+
                 "review:",
+
                 "deal:",
+
                 "sale:",
+
                 "discount:"
         };
 

@@ -2,6 +2,9 @@ package com.newsportal.service;
 
 import com.newsportal.dto.NewsApiArticleDTO;
 import com.newsportal.dto.NewsApiResponseDTO;
+import com.newsportal.source.NewsSection;
+import com.newsportal.source.NewsSource;
+import com.newsportal.source.SectionRouterService;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,8 @@ public class NewsApiService {
 
     private final WebClient webClient;
 
+    private final SectionRouterService sectionRouterService;
+
     @Value("${newsapi.api-key}")
     private String apiKey;
 
@@ -29,11 +34,15 @@ public class NewsApiService {
     // =====================================================
 
     public NewsApiService(
-            @Value("${newsapi.base-url}") String baseUrl) {
+            @Value("${newsapi.base-url}") String baseUrl,
+            SectionRouterService sectionRouterService) {
 
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();
+
+        this.sectionRouterService =
+                sectionRouterService;
     }
 
 
@@ -59,10 +68,374 @@ public class NewsApiService {
 
 
     // =====================================================
-    // FETCH RECENT ARTICLES FOR ONE TOPIC
+    // SECTION-AWARE NEWS FETCH
     // =====================================================
 
-    private NewsApiResponseDTO searchNews(
+    public List<NewsApiArticleDTO> getNewsForSection(
+            NewsSection section) {
+
+        if (section == null) {
+
+            return List.of();
+        }
+
+
+        System.out.println();
+        System.out.println(
+                "========================================"
+        );
+
+        System.out.println(
+                "FETCHING SECTION: "
+                        + section.getDisplayName()
+        );
+
+        System.out.println(
+                "========================================"
+        );
+
+
+        /*
+         * Ask the SectionRouter which sources are
+         * currently usable for this section.
+         */
+
+        List<NewsSource> usableSources =
+                sectionRouterService
+                        .getUsableSources(section);
+
+
+        if (usableSources.isEmpty()) {
+
+            System.out.println(
+                    "No usable sources configured for: "
+                            + section.getDisplayName()
+            );
+
+            return List.of();
+        }
+
+
+        Map<String, NewsApiArticleDTO>
+                uniqueArticles =
+                new LinkedHashMap<>();
+
+
+        /*
+         * Currently only NEWS_API sources are handled here.
+         *
+         * RSS and dedicated Anime/Gaming providers will
+         * be implemented as separate services later.
+         */
+
+        for (NewsSource source :
+                usableSources) {
+
+            if (!"NEWS_API".equalsIgnoreCase(
+                    source.getProviderType())) {
+
+                continue;
+            }
+
+
+            try {
+
+                List<NewsApiArticleDTO> fetched =
+                        fetchFromNewsApi(
+                                section,
+                                source
+                        );
+
+
+                for (NewsApiArticleDTO article :
+                        fetched) {
+
+                    if (article == null ||
+                            article.getUrl() == null ||
+                            article.getUrl().isBlank()) {
+
+                        continue;
+                    }
+
+
+                    /*
+                     * Always use the AgniPress section,
+                     * not the provider's category.
+                     */
+
+                    article.setCategory(
+                            section.getDisplayName()
+                    );
+
+
+                    uniqueArticles.putIfAbsent(
+                            article.getUrl(),
+                            article
+                    );
+                }
+
+
+            } catch (Exception e) {
+
+                System.out.println(
+                        "Failed source: "
+                                + source.getName()
+                );
+
+                System.out.println(
+                        "Error: "
+                                + e.getMessage()
+                );
+            }
+        }
+
+
+        List<NewsApiArticleDTO> result =
+                new ArrayList<>(
+                        uniqueArticles.values()
+                );
+
+
+        System.out.println(
+                "Section "
+                        + section.getDisplayName()
+                        + " returned "
+                        + result.size()
+                        + " unique articles."
+        );
+
+
+        return result;
+    }
+
+
+    // =====================================================
+    // FETCH FROM NEWS API
+    // =====================================================
+
+    private List<NewsApiArticleDTO> fetchFromNewsApi(
+            NewsSection section,
+            NewsSource source) {
+
+        String sourceId =
+                source.getSourceId();
+
+
+        /*
+         * INDIA
+         *
+         * NewsAPI supports India through country=in.
+         */
+
+        if (section == NewsSection.INDIA) {
+
+            return fetchTopHeadlines(
+                    "in",
+                    null,
+                    null,
+                    20
+            );
+        }
+
+
+        /*
+         * NewsAPI has dedicated categories for these
+         * AgniPress sections.
+         */
+
+        switch (section) {
+
+            case SPORTS:
+
+                return fetchTopHeadlines(
+                        null,
+                        "sports",
+                        null,
+                        20
+                );
+
+
+            case BUSINESS:
+
+                return fetchTopHeadlines(
+                        null,
+                        "business",
+                        null,
+                        20
+                );
+
+
+            case TECHNOLOGY:
+
+                return fetchTopHeadlines(
+                        null,
+                        "technology",
+                        null,
+                        20
+                );
+
+
+            case ENTERTAINMENT:
+
+                return fetchTopHeadlines(
+                        null,
+                        "entertainment",
+                        null,
+                        20
+                );
+
+
+            case SCIENCE:
+
+                return fetchTopHeadlines(
+                        null,
+                        "science",
+                        null,
+                        20
+                );
+
+
+            /*
+             * NewsAPI does not provide a dedicated
+             * Anime category.
+             *
+             * Anime will be handled by an Anime-specific
+             * provider later.
+             */
+
+            case ANIME:
+
+                System.out.println(
+                        "Anime requires a dedicated provider."
+                );
+
+                return List.of();
+
+
+            /*
+             * NewsAPI does not provide a dedicated
+             * Gaming category.
+             */
+
+            case GAMING:
+
+                System.out.println(
+                        "Gaming requires a dedicated provider."
+                );
+
+                return List.of();
+
+
+            /*
+             * WORLD
+             *
+             * NewsAPI doesn't have a "world" category.
+             * Use /everything with international topics.
+             */
+
+            case WORLD:
+
+                return searchNews(
+                        "international OR "
+                                + "geopolitics OR "
+                                + "diplomacy OR "
+                                + "\"United Nations\" OR "
+                                + "NATO"
+                );
+
+
+            default:
+
+                return searchNews(
+                        "latest news"
+                );
+        }
+    }
+
+
+    // =====================================================
+    // TOP HEADLINES
+    // =====================================================
+
+    private List<NewsApiArticleDTO> fetchTopHeadlines(
+            String country,
+            String category,
+            String sources,
+            int pageSize) {
+
+        NewsApiResponseDTO response =
+                webClient
+                        .get()
+                        .uri(uriBuilder -> {
+
+                            uriBuilder
+                                    .path("/top-headlines");
+
+                            if (country != null &&
+                                    !country.isBlank()) {
+
+                                uriBuilder.queryParam(
+                                        "country",
+                                        country
+                                );
+                            }
+
+
+                            if (category != null &&
+                                    !category.isBlank()) {
+
+                                uriBuilder.queryParam(
+                                        "category",
+                                        category
+                                );
+                            }
+
+
+                            if (sources != null &&
+                                    !sources.isBlank()) {
+
+                                uriBuilder.queryParam(
+                                        "sources",
+                                        sources
+                                );
+                            }
+
+
+                            uriBuilder.queryParam(
+                                    "pageSize",
+                                    pageSize
+                            );
+
+
+                            return uriBuilder.build();
+                        })
+                        .header(
+                                "X-Api-Key",
+                                apiKey
+                        )
+                        .retrieve()
+                        .bodyToMono(
+                                NewsApiResponseDTO.class
+                        )
+                        .block();
+
+
+        if (response == null ||
+                response.getArticles() == null) {
+
+            return List.of();
+        }
+
+
+        return response.getArticles();
+    }
+
+
+    // =====================================================
+    // RECENT NEWS SEARCH
+    // =====================================================
+
+    private List<NewsApiArticleDTO> searchNews(
             String query) {
 
         String fromDate =
@@ -75,275 +448,116 @@ public class NewsApiService {
                         .toString();
 
 
-        return webClient
-                .get()
-                .uri(uriBuilder -> uriBuilder
-                        .path("/everything")
-                        .queryParam("q", query)
-                        .queryParam("from", fromDate)
-                        .queryParam("to", toDate)
-                        .queryParam("language", "en")
-                        .queryParam("sortBy", "publishedAt")
-                        .queryParam("pageSize", 8)
-                        .build())
-                .header(
-                        "X-Api-Key",
-                        apiKey
-                )
-                .retrieve()
-                .bodyToMono(
-                        NewsApiResponseDTO.class
-                )
-                .block();
+        NewsApiResponseDTO response =
+                webClient
+                        .get()
+                        .uri(uriBuilder -> uriBuilder
+                                .path("/everything")
+                                .queryParam(
+                                        "q",
+                                        query
+                                )
+                                .queryParam(
+                                        "from",
+                                        fromDate
+                                )
+                                .queryParam(
+                                        "to",
+                                        toDate
+                                )
+                                .queryParam(
+                                        "language",
+                                        "en"
+                                )
+                                .queryParam(
+                                        "sortBy",
+                                        "publishedAt"
+                                )
+                                .queryParam(
+                                        "pageSize",
+                                        20
+                                )
+                                .build())
+                        .header(
+                                "X-Api-Key",
+                                apiKey
+                        )
+                        .retrieve()
+                        .bodyToMono(
+                                NewsApiResponseDTO.class
+                        )
+                        .block();
+
+
+        if (response == null ||
+                response.getArticles() == null) {
+
+            return List.of();
+        }
+
+
+        return response.getArticles();
     }
 
 
     // =====================================================
-    // FETCH FRESH NEWS FROM MULTIPLE CATEGORIES
+    // BACKWARD COMPATIBILITY
     // =====================================================
+
+    /*
+     * Your existing NewsImportService currently calls:
+     *
+     *     getAllTopHeadlines()
+     *
+     * Keep this method so the project remains compatible
+     * while we transition the importer to section-aware
+     * fetching.
+     */
 
     public List<NewsApiArticleDTO> getAllTopHeadlines() {
 
-        Map<String, String> topics =
+        Map<String, NewsApiArticleDTO>
+                uniqueArticles =
                 new LinkedHashMap<>();
-
-
-        // =================================================
-        // TECHNOLOGY
-        // =================================================
-
-        topics.put(
-                "Technology",
-                "\"artificial intelligence\" OR " +
-                "cybersecurity OR " +
-                "software OR " +
-                "smartphone OR " +
-                "semiconductor OR " +
-                "\"cloud computing\" OR " +
-                "robotics OR " +
-                "Apple OR " +
-                "Google OR " +
-                "Microsoft OR " +
-                "Nvidia"
-        );
-
-
-        // =================================================
-        // BUSINESS
-        // =================================================
-
-        topics.put(
-                "Business",
-                "economy OR " +
-                "\"stock market\" OR " +
-                "stocks OR " +
-                "earnings OR " +
-                "banking OR " +
-                "investment OR " +
-                "markets OR " +
-                "companies OR " +
-                "corporate"
-        );
-
-
-        // =================================================
-        // SPORTS
-        // =================================================
-
-        topics.put(
-                "Sports",
-                "cricket OR " +
-                "football OR " +
-                "soccer OR " +
-                "tennis OR " +
-                "basketball OR " +
-                "\"Formula 1\" OR " +
-                "Olympics OR " +
-                "athlete OR " +
-                "championship"
-        );
-
-
-        // =================================================
-        // ENTERTAINMENT
-        // =================================================
-
-        topics.put(
-                "Entertainment",
-                "movies OR " +
-                "film OR " +
-                "television OR " +
-                "music OR " +
-                "streaming OR " +
-                "actor OR " +
-                "actress OR " +
-                "celebrity OR " +
-                "Hollywood"
-        );
-
-
-        // =================================================
-        // SCIENCE
-        // =================================================
-
-        topics.put(
-                "Science",
-                "scientific discovery OR " +
-                "space OR " +
-                "NASA OR " +
-                "astronomy OR " +
-                "physics OR " +
-                "biology OR " +
-                "\"clinical research\" OR " +
-                "\"scientific research\""
-        );
-
-
-        // =================================================
-        // WORLD
-        // =================================================
-
-        topics.put(
-                "World",
-                "\"world news\" OR " +
-                "\"international news\" OR " +
-                "geopolitics OR " +
-                "diplomacy OR " +
-                "\"international relations\" OR " +
-                "conflict OR " +
-                "war OR " +
-                "NATO OR " +
-                "United Nations"
-        );
-
-
-        // =================================================
-        // INDIA
-        // =================================================
-
-        topics.put(
-                "India",
-                "\"India\" OR " +
-                "\"Indian government\" OR " +
-                "\"Indian economy\" OR " +
-                "\"Indian politics\" OR " +
-                "\"India technology\" OR " +
-                "\"India business\" OR " +
-                "\"India sports\""
-        );
-
-
-        // =================================================
-        // POLITICS
-        // =================================================
-
-        topics.put(
-                "Politics",
-                "politics OR " +
-                "parliament OR " +
-                "government OR " +
-                "election OR " +
-                "president OR " +
-                "\"prime minister\" OR " +
-                "minister OR " +
-                "legislation OR " +
-                "\"political policy\" OR " +
-                "senate OR " +
-                "congress"
-        );
 
 
         /*
-         * URL is the unique identifier.
-         *
-         * LinkedHashMap:
-         * - removes duplicate URLs
-         * - preserves discovery order
+         * Fetch the sections that NewsAPI actually supports.
          */
 
-        Map<String, NewsApiArticleDTO> uniqueArticles =
-                new LinkedHashMap<>();
+        NewsSection[] sections = {
+
+                NewsSection.INDIA,
+                NewsSection.WORLD,
+                NewsSection.SPORTS,
+                NewsSection.BUSINESS,
+                NewsSection.TECHNOLOGY,
+                NewsSection.ENTERTAINMENT,
+                NewsSection.SCIENCE
+        };
 
 
-        // =================================================
-        // FETCH EACH CATEGORY
-        // =================================================
-
-        for (Map.Entry<String, String> topic :
-                topics.entrySet()) {
-
-            String discoveredCategory =
-                    topic.getKey();
-
-            String query =
-                    topic.getValue();
-
+        for (NewsSection section :
+                sections) {
 
             try {
 
-                System.out.println();
-                System.out.println(
-                        "Fetching "
-                                + discoveredCategory
-                                + " news..."
-                );
+                List<NewsApiArticleDTO> articles =
+                        getNewsForSection(
+                                section
+                        );
 
-
-                NewsApiResponseDTO response =
-                        searchNews(query);
-
-
-                if (response == null ||
-                        response.getArticles() == null) {
-
-                    System.out.println(
-                            "No articles received for "
-                                    + discoveredCategory
-                    );
-
-                    continue;
-                }
-
-
-                // =========================================
-                // PROCESS ARTICLES
-                // =========================================
 
                 for (NewsApiArticleDTO article :
-                        response.getArticles()) {
+                        articles) {
 
-                    if (article == null) {
-                        continue;
-                    }
-
-
-                    if (article.getUrl() == null ||
+                    if (article == null ||
+                            article.getUrl() == null ||
                             article.getUrl().isBlank()) {
 
                         continue;
                     }
 
-
-                    /*
-                     * We no longer blindly trust the category
-                     * of the query that discovered the article.
-                     */
-
-                    String actualCategory =
-                            classifyCategory(
-                                    article,
-                                    discoveredCategory
-                            );
-
-
-                    article.setCategory(
-                            actualCategory
-                    );
-
-
-                    /*
-                     * Add only once by URL.
-                     */
 
                     uniqueArticles.putIfAbsent(
                             article.getUrl(),
@@ -355,9 +569,8 @@ public class NewsApiService {
             } catch (Exception e) {
 
                 System.out.println(
-                        "Failed to fetch "
-                                + discoveredCategory
-                                + " news."
+                        "Failed to fetch section: "
+                                + section.getDisplayName()
                 );
 
                 System.out.println(
@@ -376,7 +589,7 @@ public class NewsApiService {
 
         System.out.println();
         System.out.println(
-                "Total unique articles fetched: "
+                "Total unique section-aware articles: "
                         + articles.size()
         );
 
@@ -386,413 +599,16 @@ public class NewsApiService {
 
 
     // =====================================================
-    // CATEGORY CLASSIFICATION
+    // OLD CATEGORY CLASSIFIER
     // =====================================================
 
-    private String classifyCategory(
-            NewsApiArticleDTO article,
-            String discoveredCategory) {
-
-        String text =
-                buildArticleText(article);
-
-
-        String lower =
-                text.toLowerCase(Locale.ENGLISH);
-
-
-        Map<String, Integer> scores =
-                new LinkedHashMap<>();
-
-
-        scores.put("Technology", 0);
-        scores.put("Business", 0);
-        scores.put("Sports", 0);
-        scores.put("Entertainment", 0);
-        scores.put("Science", 0);
-        scores.put("World", 0);
-        scores.put("India", 0);
-        scores.put("Politics", 0);
-
-
-        // =================================================
-        // TECHNOLOGY
-        // =================================================
-
-        addScore(
-                scores,
-                "Technology",
-                lower,
-                4,
-                "artificial intelligence",
-                "cybersecurity",
-                "semiconductor",
-                "cloud computing",
-                "machine learning",
-                "smartphone",
-                "software",
-                "robotics",
-                "nvidia",
-                "microsoft",
-                "google",
-                "apple"
-        );
-
-
-        // =================================================
-        // BUSINESS
-        // =================================================
-
-        addScore(
-                scores,
-                "Business",
-                lower,
-                4,
-                "stock market",
-                "stocks",
-                "earnings",
-                "share price",
-                "financial markets",
-                "banking",
-                "investment",
-                "investors",
-                "economy",
-                "inflation",
-                "revenue",
-                "profit",
-                "merger",
-                "acquisition"
-        );
-
-
-        // =================================================
-        // SPORTS
-        // =================================================
-
-        addScore(
-                scores,
-                "Sports",
-                lower,
-                4,
-                "cricket",
-                "football",
-                "soccer",
-                "tennis",
-                "basketball",
-                "formula 1",
-                "olympics",
-                "championship",
-                "athlete",
-                "match",
-                "tournament",
-                "league"
-        );
-
-
-        // =================================================
-        // ENTERTAINMENT
-        // =================================================
-
-        addScore(
-                scores,
-                "Entertainment",
-                lower,
-                4,
-                "movie",
-                "film",
-                "television",
-                "tv series",
-                "music",
-                "actor",
-                "actress",
-                "celebrity",
-                "hollywood",
-                "netflix",
-                "streaming",
-                "box office"
-        );
-
-
-        // =================================================
-        // SCIENCE
-        // =================================================
-
-        addScore(
-                scores,
-                "Science",
-                lower,
-                4,
-                "scientific discovery",
-                "scientific research",
-                "space",
-                "nasa",
-                "astronomy",
-                "physics",
-                "biology",
-                "genetics",
-                "researchers",
-                "research study",
-                "climate science"
-        );
-
-
-        // =================================================
-        // WORLD
-        // =================================================
-
-        addScore(
-                scores,
-                "World",
-                lower,
-                4,
-                "geopolitics",
-                "diplomacy",
-                "international relations",
-                "united nations",
-                "nato",
-                "international conflict",
-                "foreign affairs",
-                "war",
-                "ceasefire",
-                "sanctions"
-        );
-
-
-        // =================================================
-        // INDIA
-        // =================================================
-
-        addScore(
-                scores,
-                "India",
-                lower,
-                4,
-                "india",
-                "indian government",
-                "indian economy",
-                "indian politics",
-                "new delhi",
-                "mumbai",
-                "bengaluru",
-                "bangalore",
-                "kolkata",
-                "hyderabad",
-                "chennai"
-        );
-
-
-        // =================================================
-        // POLITICS
-        // =================================================
-
-        addScore(
-                scores,
-                "Politics",
-                lower,
-                5,
-                "politics",
-                "political",
-                "parliament",
-                "government",
-                "election",
-                "president",
-                "prime minister",
-                "minister",
-                "legislation",
-                "senate",
-                "congress",
-                "political party",
-                "opposition",
-                "lawmakers"
-        );
-
-
-        /*
-         * Give the discovered category a small bonus.
-         *
-         * This prevents random category changes when
-         * two categories have similar scores.
-         */
-
-        if (scores.containsKey(discoveredCategory)) {
-
-            scores.put(
-                    discoveredCategory,
-                    scores.get(discoveredCategory) + 2
-            );
-        }
-
-
-        // =================================================
-        // FIND HIGHEST SCORE
-        // =================================================
-
-        String bestCategory =
-                discoveredCategory;
-
-        int bestScore =
-                scores.getOrDefault(
-                        discoveredCategory,
-                        0
-                );
-
-
-        for (Map.Entry<String, Integer> entry :
-                scores.entrySet()) {
-
-            if (entry.getValue() > bestScore) {
-
-                bestCategory =
-                        entry.getKey();
-
-                bestScore =
-                        entry.getValue();
-            }
-        }
-
-
-        /*
-         * If there is almost no evidence for the category,
-         * keep the original discovery category.
-         */
-
-        if (bestScore < 4) {
-
-            return discoveredCategory;
-        }
-
-
-        if (!bestCategory.equals(
-                discoveredCategory)) {
-
-            System.out.println(
-                    "CATEGORY CORRECTED: "
-                            + discoveredCategory
-                            + " -> "
-                            + bestCategory
-                            + " | "
-                            + article.getTitle()
-            );
-        }
-
-
-        return bestCategory;
-    }
-
-
-    // =====================================================
-    // BUILD ARTICLE TEXT
-    // =====================================================
-
-    private String buildArticleText(
-            NewsApiArticleDTO article) {
-
-        StringBuilder text =
-                new StringBuilder();
-
-
-        if (article.getTitle() != null) {
-
-            text.append(
-                    article.getTitle()
-            ).append(" ");
-        }
-
-
-        if (article.getDescription() != null) {
-
-            text.append(
-                    article.getDescription()
-            ).append(" ");
-        }
-
-
-        if (article.getContent() != null) {
-
-            text.append(
-                    article.getContent()
-            ).append(" ");
-        }
-
-
-        if (article.getSource() != null &&
-                article.getSource().getName() != null) {
-
-            text.append(
-                    article.getSource().getName()
-            );
-        }
-
-
-        return text.toString();
-    }
-
-
-    // =====================================================
-    // ADD CATEGORY SCORE
-    // =====================================================
-
-    private void addScore(
-            Map<String, Integer> scores,
-            String category,
-            String text,
-            int points,
-            String... keywords) {
-
-        for (String keyword : keywords) {
-
-            if (containsKeyword(
-                    text,
-                    keyword
-            )) {
-
-                scores.put(
-                        category,
-                        scores.get(category)
-                                + points
-                );
-            }
-        }
-    }
-
-
-    // =====================================================
-    // KEYWORD MATCH
-    // =====================================================
-
-    private boolean containsKeyword(
-            String text,
-            String keyword) {
-
-        String normalized =
-                keyword
-                        .toLowerCase(Locale.ENGLISH)
-                        .trim();
-
-
-        /*
-         * Multi-word phrases can simply use contains().
-         */
-
-        if (normalized.contains(" ")) {
-
-            return text.contains(
-                    normalized
-            );
-        }
-
-
-        /*
-         * Single words use word boundaries so we don't
-         * accidentally match pieces of other words.
-         */
-
-        return text.matches(
-                "(?s).*\\b"
-                        + java.util.regex.Pattern.quote(
-                                normalized
-                        )
-                        + "\\b.*"
-        );
-    }
+    /*
+     * We intentionally leave the old classifier out of
+     * the new architecture.
+     *
+     * The SectionRouter is now responsible for determining
+     * the AgniPress section.
+     *
+     * This avoids having two competing category systems.
+     */
 }
