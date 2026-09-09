@@ -36,13 +36,11 @@ public class RssNewsImportService {
 
     private final ObjectMapper objectMapper;
 
-
     // =====================================================
     // QUALITY THRESHOLD
     // =====================================================
 
-    private static final int MIN_QUALITY_SCORE = 4;
-
+    private static final int MIN_QUALITY_SCORE = 3;
 
     // =====================================================
     // CONSTRUCTOR
@@ -73,7 +71,6 @@ public class RssNewsImportService {
                 objectMapper;
     }
 
-
     // =====================================================
     // IMPORT ONE SECTION
     // =====================================================
@@ -89,7 +86,6 @@ public class RssNewsImportService {
 
             return 0;
         }
-
 
         System.out.println();
         System.out.println(
@@ -109,7 +105,6 @@ public class RssNewsImportService {
                 "========================================"
         );
 
-
         // =================================================
         // FETCH RSS ARTICLES
         // =================================================
@@ -121,7 +116,6 @@ public class RssNewsImportService {
                                 section
                         );
 
-
         int importedCount = 0;
 
         int duplicateCount = 0;
@@ -132,14 +126,12 @@ public class RssNewsImportService {
 
         int fallbackImageCount = 0;
 
-
         System.out.println();
 
         System.out.println(
                 "RSS articles received: "
                         + articles.size()
         );
-
 
         // =================================================
         // PROCESS EACH ARTICLE
@@ -152,10 +144,8 @@ public class RssNewsImportService {
             RssNewsFetcherService.RssArticle article =
                     articles.get(index);
 
-
             int articleNumber =
                     index + 1;
-
 
             System.out.println();
 
@@ -174,8 +164,11 @@ public class RssNewsImportService {
                     "========================================"
             );
 
-
             try {
+
+                // =================================================
+                // NULL CHECK
+                // =================================================
 
                 if (article == null) {
 
@@ -192,22 +185,19 @@ public class RssNewsImportService {
                     continue;
                 }
 
-
-                // =========================================
+                // =================================================
                 // BASIC VALIDATION
-                // =========================================
+                // =================================================
 
                 String title =
                         clean(
                                 article.getTitle()
                         );
 
-
                 String sourceUrl =
                         clean(
                                 article.getUrl()
                         );
-
 
                 System.out.println(
                         "Title: "
@@ -218,7 +208,6 @@ public class RssNewsImportService {
                         "URL: "
                                 + sourceUrl
                 );
-
 
                 if (title == null ||
                         title.isBlank()) {
@@ -236,7 +225,6 @@ public class RssNewsImportService {
                     continue;
                 }
 
-
                 if (sourceUrl == null ||
                         sourceUrl.isBlank()) {
 
@@ -253,16 +241,14 @@ public class RssNewsImportService {
                     continue;
                 }
 
-
-                // =========================================
+                // =================================================
                 // DUPLICATE CHECK
-                // =========================================
+                // =================================================
 
                 Optional<News> existingArticle =
                         newsRepository.findBySourceUrl(
                                 sourceUrl
                         );
-
 
                 if (existingArticle.isPresent()) {
 
@@ -275,15 +261,15 @@ public class RssNewsImportService {
                     System.out.println(
                             "Existing database ID: "
                                     + existingArticle
-                                            .get()
-                                            .getId()
+                                    .get()
+                                    .getId()
                     );
 
                     System.out.println(
                             "Existing source name: "
                                     + existingArticle
-                                            .get()
-                                            .getSourceName()
+                                    .get()
+                                    .getSourceName()
                     );
 
                     System.out.println(
@@ -293,21 +279,18 @@ public class RssNewsImportService {
                     continue;
                 }
 
-
                 System.out.println(
                         "Duplicate check: NOT FOUND"
                 );
 
-
-                // =========================================
+                // =================================================
                 // INITIAL VALUES
-                // =========================================
+                // =================================================
 
                 String sourceName =
                         clean(
                                 article.getSourceName()
                         );
-
 
                 if (sourceName == null ||
                         sourceName.isBlank()) {
@@ -316,12 +299,10 @@ public class RssNewsImportService {
                             "Unknown RSS Source";
                 }
 
-
                 String author =
                         clean(
                                 article.getAuthor()
                         );
-
 
                 if (author == null ||
                         author.isBlank()) {
@@ -330,12 +311,10 @@ public class RssNewsImportService {
                             "Unknown";
                 }
 
-
                 String rawContent =
                         clean(
                                 article.getDescription()
                         );
-
 
                 if (rawContent == null ||
                         rawContent.isBlank()) {
@@ -344,19 +323,37 @@ public class RssNewsImportService {
                             "Article content is being prepared.";
                 }
 
-
                 String category =
                         section.getDisplayName();
 
+                // =================================================
+                // RSS IMAGE
+                // =================================================
 
-                // =========================================
+                String rssImageUrl =
+                        clean(
+                                article.getImageUrl()
+                        );
+
+                System.out.println();
+
+                System.out.println(
+                        "RSS IMAGE URL: "
+                                + (
+                                rssImageUrl != null &&
+                                        !rssImageUrl.isBlank()
+                                        ? rssImageUrl
+                                        : "NOT PROVIDED"
+                        )
+                );
+
+                // =================================================
                 // ASHNA ANALYSIS
-                // =========================================
+                // =================================================
 
                 AshnaArticleAnalyzerService.ArticleAnalysis
                         analysis =
                         null;
-
 
                 try {
 
@@ -365,7 +362,6 @@ public class RssNewsImportService {
                     System.out.println(
                             "ASHNA ANALYSIS STARTED"
                     );
-
 
                     analysis =
                             ashnaArticleAnalyzerService
@@ -378,11 +374,9 @@ public class RssNewsImportService {
                                             rawContent
                                     );
 
-
                     System.out.println(
                             "ASHNA ANALYSIS COMPLETED"
                     );
-
 
                 } catch (Exception ashnaException) {
 
@@ -393,7 +387,7 @@ public class RssNewsImportService {
                     System.out.println(
                             "Reason: "
                                     + ashnaException
-                                            .getMessage()
+                                    .getMessage()
                     );
 
                     /*
@@ -406,10 +400,9 @@ public class RssNewsImportService {
                      */
                 }
 
-
-                // =========================================
+                // =================================================
                 // APPLY ASHNA RESULT
-                // =========================================
+                // =================================================
 
                 if (analysis != null) {
 
@@ -418,7 +411,6 @@ public class RssNewsImportService {
                                     analysis
                             );
 
-
                     boolean newsworthy =
                             getBoolean(
                                     analysisNode,
@@ -426,14 +418,12 @@ public class RssNewsImportService {
                                     true
                             );
 
-
                     int qualityScore =
                             getInt(
                                     analysisNode,
                                     "qualityScore",
                                     5
                             );
-
 
                     System.out.println();
 
@@ -451,10 +441,9 @@ public class RssNewsImportService {
                                     + qualityScore
                     );
 
-
-                    // =====================================
+                    // =================================================
                     // NEWSWORTHINESS CHECK
-                    // =====================================
+                    // =================================================
 
                     if (!newsworthy) {
 
@@ -471,10 +460,9 @@ public class RssNewsImportService {
                         continue;
                     }
 
-
-                    // =====================================
+                    // =================================================
                     // QUALITY CHECK
-                    // =====================================
+                    // =================================================
 
                     if (qualityScore <
                             MIN_QUALITY_SCORE) {
@@ -495,17 +483,15 @@ public class RssNewsImportService {
                         continue;
                     }
 
-
-                    // =====================================
+                    // =================================================
                     // ASHNA HEADLINE
-                    // =====================================
+                    // =================================================
 
                     String ashnaHeadline =
                             getText(
                                     analysisNode,
                                     "headline"
                             );
-
 
                     if (ashnaHeadline != null &&
                             !ashnaHeadline.isBlank()) {
@@ -514,17 +500,15 @@ public class RssNewsImportService {
                                 ashnaHeadline.trim();
                     }
 
-
-                    // =====================================
+                    // =================================================
                     // ASHNA CONTENT
-                    // =====================================
+                    // =================================================
 
                     String ashnaContent =
                             getText(
                                     analysisNode,
                                     "content"
                             );
-
 
                     if (ashnaContent != null &&
                             !ashnaContent.isBlank()) {
@@ -540,7 +524,6 @@ public class RssNewsImportService {
                                         "summary"
                                 );
 
-
                         if (summary != null &&
                                 !summary.isBlank()) {
 
@@ -549,17 +532,15 @@ public class RssNewsImportService {
                         }
                     }
 
-
-                    // =====================================
+                    // =================================================
                     // ASHNA AUTHOR
-                    // =====================================
+                    // =================================================
 
                     String ashnaAuthor =
                             getText(
                                     analysisNode,
                                     "author"
                             );
-
 
                     if (ashnaAuthor != null &&
                             !ashnaAuthor.isBlank()) {
@@ -568,10 +549,9 @@ public class RssNewsImportService {
                                 ashnaAuthor.trim();
                     }
 
-
-                    // =====================================
+                    // =================================================
                     // ASHNA SECTION
-                    // =====================================
+                    // =================================================
 
                     String ashnaSection =
                             getText(
@@ -579,18 +559,15 @@ public class RssNewsImportService {
                                     "section"
                             );
 
-
                     NewsSection resolvedSection =
                             resolveSection(
                                     ashnaSection,
                                     section
                             );
 
-
                     category =
                             resolvedSection
                                     .getDisplayName();
-
 
                     System.out.println(
                             "Final section: "
@@ -603,10 +580,9 @@ public class RssNewsImportService {
                     );
                 }
 
-
-                // =========================================
+                // =================================================
                 // IMAGE RESOLUTION
-                // =========================================
+                // =================================================
 
                 System.out.println();
 
@@ -614,15 +590,31 @@ public class RssNewsImportService {
                         "IMAGE RESOLUTION STARTED"
                 );
 
+                /*
+                 * IMPORTANT:
+                 *
+                 * We now pass the actual image extracted
+                 * from the RSS feed.
+                 *
+                 * Previously this was:
+                 *
+                 * resolveImage(null, sourceUrl, category)
+                 *
+                 * which meant the RSS image was completely
+                 * ignored.
+                 */
 
                 String resolvedImage =
                         articleImageService
                                 .resolveImage(
-                                        null,
+                                        rssImageUrl,
                                         sourceUrl,
                                         category
                                 );
 
+                // =================================================
+                // FALLBACK IMAGE
+                // =================================================
 
                 if (resolvedImage == null ||
                         resolvedImage.isBlank()) {
@@ -632,12 +624,10 @@ public class RssNewsImportService {
                                     + category;
                 }
 
-
                 System.out.println(
                         "Resolved image: "
                                 + resolvedImage
                 );
-
 
                 if (resolvedImage.startsWith(
                         "/images/fallback")) {
@@ -648,6 +638,16 @@ public class RssNewsImportService {
                             "Image type: AGNIPRESS FALLBACK"
                     );
 
+                } else if (rssImageUrl != null &&
+                        !rssImageUrl.isBlank() &&
+                        resolvedImage.equals(
+                                rssImageUrl
+                        )) {
+
+                    System.out.println(
+                            "Image type: RSS SOURCE IMAGE"
+                    );
+
                 } else {
 
                     System.out.println(
@@ -655,54 +655,44 @@ public class RssNewsImportService {
                     );
                 }
 
-
-                // =========================================
+                // =================================================
                 // CREATE NEWS ENTITY
-                // =========================================
+                // =================================================
 
                 News news =
                         new News();
-
 
                 news.setTitle(
                         title
                 );
 
-
                 news.setAuthor(
                         author
                 );
-
 
                 news.setCategory(
                         category
                 );
 
-
                 news.setContent(
                         rawContent
                 );
-
 
                 news.setImageUrl(
                         resolvedImage
                 );
 
-
                 news.setSourceUrl(
                         sourceUrl
                 );
-
 
                 news.setSourceName(
                         sourceName
                 );
 
-
                 news.setSourceType(
                         NewsSourceType.EXTERNAL_API
                 );
-
 
                 news.setPublishedDate(
                         convertPublishedDate(
@@ -710,22 +700,19 @@ public class RssNewsImportService {
                         )
                 );
 
-
                 news.setViewCount(
                         0L
                 );
 
-
-                // =========================================
+                // =================================================
                 // DATABASE SAVE
-                // =========================================
+                // =================================================
 
                 System.out.println();
 
                 System.out.println(
                         "DATABASE SAVE STARTED"
                 );
-
 
                 /*
                  * saveAndFlush() forces Hibernate to execute
@@ -738,7 +725,6 @@ public class RssNewsImportService {
                                 news
                         );
 
-
                 System.out.println(
                         "DATABASE SAVE COMPLETED"
                 );
@@ -748,10 +734,9 @@ public class RssNewsImportService {
                                 + savedNews.getId()
                 );
 
-
-                // =========================================
+                // =================================================
                 // DATABASE READ-BACK VERIFICATION
-                // =========================================
+                // =================================================
 
                 System.out.println();
 
@@ -759,12 +744,10 @@ public class RssNewsImportService {
                         "DATABASE READ-BACK VERIFICATION"
                 );
 
-
                 Optional<News> persistedArticle =
                         newsRepository.findBySourceUrl(
                                 sourceUrl
                         );
-
 
                 if (persistedArticle.isEmpty()) {
 
@@ -788,17 +771,14 @@ public class RssNewsImportService {
                     continue;
                 }
 
-
                 News verifiedArticle =
                         persistedArticle.get();
 
-
-                // =========================================
+                // =================================================
                 // SUCCESS
-                // =========================================
+                // =================================================
 
                 importedCount++;
-
 
                 System.out.println();
 
@@ -846,18 +826,15 @@ public class RssNewsImportService {
                                 + verifiedArticle.getPublishedDate()
                 );
 
-
             } catch (Exception e) {
 
                 failedCount++;
-
 
                 System.out.println();
 
                 System.out.println(
                         "STATUS: FAILED"
                 );
-
 
                 System.out.println(
                         "Title: "
@@ -868,21 +845,20 @@ public class RssNewsImportService {
                         )
                 );
 
-
                 System.out.println(
                         "Error Type: "
                                 + e.getClass()
-                                        .getSimpleName()
+                                .getSimpleName()
                 );
-
 
                 System.out.println(
                         "Error Message: "
                                 + e.getMessage()
                 );
+
+                e.printStackTrace();
             }
         }
-
 
         // =================================================
         // FINAL SUMMARY
@@ -941,10 +917,8 @@ public class RssNewsImportService {
                 "========================================"
         );
 
-
         return importedCount;
     }
-
 
     // =====================================================
     // IMPORT ALL RSS SOURCES
@@ -953,7 +927,6 @@ public class RssNewsImportService {
     public int importAllRssSources() {
 
         int totalImported = 0;
-
 
         for (NewsSection section :
                 NewsSection.values()) {
@@ -976,9 +949,10 @@ public class RssNewsImportService {
                         "Error: "
                                 + e.getMessage()
                 );
+
+                e.printStackTrace();
             }
         }
-
 
         System.out.println();
 
@@ -999,10 +973,8 @@ public class RssNewsImportService {
                 "========================================"
         );
 
-
         return totalImported;
     }
-
 
     // =====================================================
     // SECTION RESOLUTION
@@ -1018,13 +990,11 @@ public class RssNewsImportService {
             return fallback;
         }
 
-
         String normalized =
                 value.trim()
                         .toUpperCase(
                                 Locale.ENGLISH
                         );
-
 
         for (NewsSection section :
                 NewsSection.values()) {
@@ -1035,7 +1005,6 @@ public class RssNewsImportService {
                 return section;
             }
 
-
             if (section.getDisplayName()
                     .equalsIgnoreCase(
                             value.trim()
@@ -1045,10 +1014,8 @@ public class RssNewsImportService {
             }
         }
 
-
         return fallback;
     }
-
 
     // =====================================================
     // JSON TEXT
@@ -1063,10 +1030,8 @@ public class RssNewsImportService {
             return null;
         }
 
-
         JsonNode value =
                 node.get(field);
-
 
         if (value == null ||
                 value.isNull()) {
@@ -1074,10 +1039,8 @@ public class RssNewsImportService {
             return null;
         }
 
-
         String text =
                 value.asText();
-
 
         if (text == null ||
                 text.isBlank()) {
@@ -1085,10 +1048,8 @@ public class RssNewsImportService {
             return null;
         }
 
-
         return text.trim();
     }
-
 
     // =====================================================
     // JSON INTEGER
@@ -1104,10 +1065,8 @@ public class RssNewsImportService {
             return defaultValue;
         }
 
-
         JsonNode value =
                 node.get(field);
-
 
         if (value == null ||
                 !value.isNumber()) {
@@ -1115,12 +1074,10 @@ public class RssNewsImportService {
             return defaultValue;
         }
 
-
         return value.asInt(
                 defaultValue
         );
     }
-
 
     // =====================================================
     // JSON BOOLEAN
@@ -1136,10 +1093,8 @@ public class RssNewsImportService {
             return defaultValue;
         }
 
-
         JsonNode value =
                 node.get(field);
-
 
         if (value == null ||
                 !value.isBoolean()) {
@@ -1147,12 +1102,10 @@ public class RssNewsImportService {
             return defaultValue;
         }
 
-
         return value.asBoolean(
                 defaultValue
         );
     }
-
 
     // =====================================================
     // CLEAN STRING
@@ -1166,20 +1119,16 @@ public class RssNewsImportService {
             return null;
         }
 
-
         String cleaned =
                 value.trim();
-
 
         if (cleaned.isBlank()) {
 
             return null;
         }
 
-
         return cleaned;
     }
-
 
     // =====================================================
     // DATE CONVERSION
@@ -1194,10 +1143,8 @@ public class RssNewsImportService {
             return LocalDate.now();
         }
 
-
         String value =
                 publishedDate.trim();
-
 
         // =================================================
         // ISO OFFSET DATE
@@ -1212,7 +1159,6 @@ public class RssNewsImportService {
         } catch (Exception ignored) {
         }
 
-
         // =================================================
         // ISO ZONED DATE
         // =================================================
@@ -1225,7 +1171,6 @@ public class RssNewsImportService {
 
         } catch (Exception ignored) {
         }
-
 
         // =================================================
         // RFC 1123
@@ -1242,7 +1187,6 @@ public class RssNewsImportService {
 
         } catch (Exception ignored) {
         }
-
 
         // =================================================
         // COMMON RSS FORMATS
@@ -1272,7 +1216,6 @@ public class RssNewsImportService {
                         )
                 );
 
-
         for (DateTimeFormatter formatter :
                 formatters) {
 
@@ -1287,7 +1230,6 @@ public class RssNewsImportService {
                     );
                 }
 
-
                 return ZonedDateTime
                         .parse(
                                 value,
@@ -1299,12 +1241,10 @@ public class RssNewsImportService {
             }
         }
 
-
         System.out.println(
                 "Could not parse RSS published date: "
                         + publishedDate
         );
-
 
         return LocalDate.now();
     }

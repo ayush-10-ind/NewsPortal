@@ -1,154 +1,87 @@
 package com.newsportal.scheduler;
 
-import com.newsportal.service.NewsCleanupService;
-import com.newsportal.service.NewsImportService;
+import com.newsportal.service.RssNewsImportService;
 
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NewsScheduler {
 
-    private final NewsImportService newsImportService;
-
-    private final NewsCleanupService newsCleanupService;
-
-
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
+    private final RssNewsImportService rssNewsImportService;
 
     public NewsScheduler(
-            NewsImportService newsImportService,
-            NewsCleanupService newsCleanupService) {
-
-        this.newsImportService =
-                newsImportService;
-
-        this.newsCleanupService =
-                newsCleanupService;
+            RssNewsImportService rssNewsImportService) {
+        this.rssNewsImportService = rssNewsImportService;
     }
 
+    // ============================================================
+    // AUTOMATIC RSS NEWS IMPORT
+    // ============================================================
+    //
+    // Runs once after application startup and then every 30 minutes.
+    //
+    // Flow:
+    //
+    // RSS Sources
+    //      ↓
+    // MultiSourceNewsFetcherService
+    //      ↓
+    // Duplicate Check
+    //      ↓
+    // Ashna AI Analysis
+    //      ↓
+    // Image Resolution
+    //      ↓
+    // MySQL
+    //
+    // IMPORTANT:
+    // This intentionally does NOT call the old NewsAPI importer.
+    // This avoids the NewsAPI 429/quota problem.
+    //
+    // ============================================================
 
-    // =====================================================
-    // AUTOMATIC DAILY NEWS UPDATE
-    // =====================================================
-    //
-    // TEMPORARILY DISABLED
-    //
-    // The automatic scheduler was repeatedly calling
-    // NewsAPI on Railway and receiving HTTP 429
-    // "Too Many Requests" responses.
-    //
-    // We are keeping this method so the import logic
-    // is not deleted. Automatic execution can be
-    // re-enabled after the NewsAPI rate-limit handling
-    // is fixed.
-    //
-    // =====================================================
-
-    public void automaticallyUpdateNews() {
+    @Scheduled(
+            initialDelay = 60000,
+            fixedDelay = 1800000
+    )
+    public void automaticallyImportRssNews() {
 
         System.out.println();
-        System.out.println(
-                "========================================"
-        );
+        System.out.println("================================================");
+        System.out.println("AGNIPRESS AUTOMATIC RSS NEWS IMPORT STARTED");
+        System.out.println("================================================");
 
-        System.out.println(
-                "AUTOMATIC NEWS UPDATE STARTED"
-        );
-
-        System.out.println(
-                "========================================"
-        );
-
-
-        // =================================================
-        // STEP 1 — IMPORT NEW NEWS
-        // =================================================
+        long startTime = System.currentTimeMillis();
 
         try {
-
-            System.out.println(
-                    "Fetching latest news..."
-            );
-
 
             int imported =
-                    newsImportService.importNews();
+                    rssNewsImportService.importAllRssSources();
 
+            long duration =
+                    System.currentTimeMillis() - startTime;
 
-            System.out.println(
-                    "New articles imported: "
-                            + imported
-            );
-
-
-        } catch (Exception e) {
-
-            System.out.println(
-                    "Automatic news import failed."
-            );
-
-            System.out.println(
-                    "Error: "
-                            + e.getMessage()
-            );
-
-            e.printStackTrace();
-        }
-
-
-        // =================================================
-        // STEP 2 — DELETE NEWS OLDER THAN 7 DAYS
-        // =================================================
-
-        try {
-
-            System.out.println(
-                    "Starting 7-day cleanup..."
-            );
-
-
-            int deleted =
-                    newsCleanupService.deleteOldNews();
-
-
-            System.out.println(
-                    "Old articles deleted: "
-                            + deleted
-            );
-
+            System.out.println();
+            System.out.println("================================================");
+            System.out.println("AGNIPRESS AUTOMATIC RSS IMPORT COMPLETED");
+            System.out.println("New articles imported: " + imported);
+            System.out.println("Execution time: " + duration + " ms");
+            System.out.println("================================================");
 
         } catch (Exception e) {
 
-            System.out.println(
-                    "Automatic news cleanup failed."
-            );
+            long duration =
+                    System.currentTimeMillis() - startTime;
 
-            System.out.println(
-                    "Error: "
-                            + e.getMessage()
-            );
+            System.err.println();
+            System.err.println("================================================");
+            System.err.println("AGNIPRESS AUTOMATIC RSS IMPORT FAILED");
+            System.err.println("Execution time: " + duration + " ms");
+            System.err.println("Error: " + e.getMessage());
+            System.err.println("================================================");
 
             e.printStackTrace();
         }
-
-
-        // =================================================
-        // COMPLETE
-        // =================================================
-
-        System.out.println();
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "AUTOMATIC NEWS UPDATE COMPLETED"
-        );
-
-        System.out.println(
-                "========================================"
-        );
     }
 }

@@ -29,7 +29,6 @@ public class RssNewsFetcherService {
     private static final int MAX_FEED_SIZE =
             1_000_000;
 
-
     // =====================================================
     // CONSTRUCTOR
     // =====================================================
@@ -59,7 +58,6 @@ public class RssNewsFetcherService {
         List<RssArticle> articles =
                 new ArrayList<>();
 
-
         if (source == null) {
 
             System.out.println(
@@ -68,7 +66,6 @@ public class RssNewsFetcherService {
 
             return articles;
         }
-
 
         if (!source.isUsable()) {
 
@@ -79,7 +76,6 @@ public class RssNewsFetcherService {
 
             return articles;
         }
-
 
         if (source.getProviderType() == null ||
                 !source.getProviderType()
@@ -93,10 +89,8 @@ public class RssNewsFetcherService {
             return articles;
         }
 
-
         String endpoint =
                 source.getEndpoint();
-
 
         if (endpoint == null ||
                 endpoint.isBlank()) {
@@ -108,7 +102,6 @@ public class RssNewsFetcherService {
 
             return articles;
         }
-
 
         System.out.println();
         System.out.println(
@@ -128,7 +121,6 @@ public class RssNewsFetcherService {
                 "Feed: "
                         + endpoint
         );
-
 
         try {
 
@@ -153,7 +145,6 @@ public class RssNewsFetcherService {
                             )
                             .block();
 
-
             if (xml == null ||
                     xml.isBlank()) {
 
@@ -163,7 +154,6 @@ public class RssNewsFetcherService {
 
                 return articles;
             }
-
 
             if (xml.length() >
                     MAX_FEED_SIZE) {
@@ -179,13 +169,11 @@ public class RssNewsFetcherService {
                         );
             }
 
-
             articles =
                     parseFeed(
                             xml,
                             source
                     );
-
 
             System.out.println(
                     "RSS ARTICLES FOUND: "
@@ -195,7 +183,6 @@ public class RssNewsFetcherService {
             System.out.println(
                     "========================================"
             );
-
 
             return articles;
 
@@ -217,7 +204,6 @@ public class RssNewsFetcherService {
         }
     }
 
-
     // =====================================================
     // PARSE XML FEED
     // =====================================================
@@ -229,12 +215,10 @@ public class RssNewsFetcherService {
         List<RssArticle> articles =
                 new ArrayList<>();
 
-
         try {
 
             DocumentBuilderFactory factory =
                     DocumentBuilderFactory.newInstance();
-
 
             // =================================================
             // SECURITY
@@ -270,10 +254,8 @@ public class RssNewsFetcherService {
                     true
             );
 
-
             DocumentBuilder builder =
                     factory.newDocumentBuilder();
-
 
             Document document =
                     builder.parse(
@@ -284,11 +266,9 @@ public class RssNewsFetcherService {
                             )
                     );
 
-
             document
                     .getDocumentElement()
                     .normalize();
-
 
             // =================================================
             // RSS
@@ -299,13 +279,11 @@ public class RssNewsFetcherService {
                             "item"
                     );
 
-
             if (rssItems.getLength() > 0) {
 
                 System.out.println(
                         "RSS FORMAT DETECTED"
                 );
-
 
                 for (int i = 0;
                      i < rssItems.getLength();
@@ -314,24 +292,20 @@ public class RssNewsFetcherService {
                     Node node =
                             rssItems.item(i);
 
-
                     if (node.getNodeType()
                             != Node.ELEMENT_NODE) {
 
                         continue;
                     }
 
-
                     Element item =
                             (Element) node;
-
 
                     RssArticle article =
                             parseRssItem(
                                     item,
                                     source
                             );
-
 
                     if (article != null) {
 
@@ -341,10 +315,8 @@ public class RssNewsFetcherService {
                     }
                 }
 
-
                 return articles;
             }
-
 
             // =================================================
             // ATOM
@@ -355,13 +327,11 @@ public class RssNewsFetcherService {
                             "entry"
                     );
 
-
             if (atomEntries.getLength() > 0) {
 
                 System.out.println(
                         "ATOM FORMAT DETECTED"
                 );
-
 
                 for (int i = 0;
                      i < atomEntries.getLength();
@@ -370,24 +340,20 @@ public class RssNewsFetcherService {
                     Node node =
                             atomEntries.item(i);
 
-
                     if (node.getNodeType()
                             != Node.ELEMENT_NODE) {
 
                         continue;
                     }
 
-
                     Element entry =
                             (Element) node;
-
 
                     RssArticle article =
                             parseAtomEntry(
                                     entry,
                                     source
                             );
-
 
                     if (article != null) {
 
@@ -397,15 +363,12 @@ public class RssNewsFetcherService {
                     }
                 }
 
-
                 return articles;
             }
-
 
             System.out.println(
                     "RSS PARSE FAILED: No <item> or <entry> elements found."
             );
-
 
         } catch (Exception e) {
 
@@ -417,10 +380,8 @@ public class RssNewsFetcherService {
             );
         }
 
-
         return articles;
     }
-
 
     // =====================================================
     // PARSE RSS ITEM
@@ -436,20 +397,17 @@ public class RssNewsFetcherService {
                         "title"
                 );
 
-
         String link =
                 getChildText(
                         item,
                         "link"
                 );
 
-
         String description =
                 getChildText(
                         item,
                         "description"
                 );
-
 
         if (description == null ||
                 description.isBlank()) {
@@ -461,13 +419,11 @@ public class RssNewsFetcherService {
                     );
         }
 
-
         String publishedDate =
                 getChildText(
                         item,
                         "pubDate"
                 );
-
 
         if (publishedDate == null ||
                 publishedDate.isBlank()) {
@@ -479,13 +435,11 @@ public class RssNewsFetcherService {
                     );
         }
 
-
         String author =
                 getChildText(
                         item,
                         "author"
                 );
-
 
         if (author == null ||
                 author.isBlank()) {
@@ -497,6 +451,12 @@ public class RssNewsFetcherService {
                     );
         }
 
+        // =====================================================
+        // IMAGE EXTRACTION
+        // =====================================================
+
+        String imageUrl =
+                extractRssImage(item);
 
         if (title == null ||
                 title.isBlank() ||
@@ -506,6 +466,14 @@ public class RssNewsFetcherService {
             return null;
         }
 
+        System.out.println(
+                "RSS ARTICLE IMAGE: "
+                        + (
+                        imageUrl != null
+                                ? imageUrl
+                                : "NOT FOUND"
+                )
+        );
 
         return new RssArticle(
                 cleanText(title),
@@ -514,10 +482,10 @@ public class RssNewsFetcherService {
                 cleanText(author),
                 cleanText(publishedDate),
                 source.getName(),
-                source.getSection()
+                source.getSection(),
+                cleanUrl(imageUrl)
         );
     }
-
 
     // =====================================================
     // PARSE ATOM ENTRY
@@ -533,19 +501,16 @@ public class RssNewsFetcherService {
                         "title"
                 );
 
-
         String link =
                 extractAtomLink(
                         entry
                 );
-
 
         String description =
                 getChildText(
                         entry,
                         "summary"
                 );
-
 
         if (description == null ||
                 description.isBlank()) {
@@ -557,13 +522,11 @@ public class RssNewsFetcherService {
                     );
         }
 
-
         String publishedDate =
                 getChildText(
                         entry,
                         "published"
                 );
-
 
         if (publishedDate == null ||
                 publishedDate.isBlank()) {
@@ -575,12 +538,17 @@ public class RssNewsFetcherService {
                     );
         }
 
-
         String author =
                 extractAtomAuthor(
                         entry
                 );
 
+        // =====================================================
+        // IMAGE EXTRACTION
+        // =====================================================
+
+        String imageUrl =
+                extractAtomImage(entry);
 
         if (title == null ||
                 title.isBlank() ||
@@ -590,6 +558,14 @@ public class RssNewsFetcherService {
             return null;
         }
 
+        System.out.println(
+                "ATOM ARTICLE IMAGE: "
+                        + (
+                        imageUrl != null
+                                ? imageUrl
+                                : "NOT FOUND"
+                )
+        );
 
         return new RssArticle(
                 cleanText(title),
@@ -598,10 +574,435 @@ public class RssNewsFetcherService {
                 cleanText(author),
                 cleanText(publishedDate),
                 source.getName(),
-                source.getSection()
+                source.getSection(),
+                cleanUrl(imageUrl)
         );
     }
 
+    // =====================================================
+    // RSS IMAGE EXTRACTION
+    // =====================================================
+
+    private String extractRssImage(
+            Element item) {
+
+        // -----------------------------------------------------
+        // 1. media:content
+        // -----------------------------------------------------
+
+        String image =
+                extractImageFromTag(
+                        item,
+                        "media:content"
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        // -----------------------------------------------------
+        // 2. media:thumbnail
+        // -----------------------------------------------------
+
+        image =
+                extractImageFromTag(
+                        item,
+                        "media:thumbnail"
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        // -----------------------------------------------------
+        // 3. enclosure
+        // -----------------------------------------------------
+
+        NodeList children =
+                item.getChildNodes();
+
+        for (int i = 0;
+             i < children.getLength();
+             i++) {
+
+            Node node =
+                    children.item(i);
+
+            if (node.getNodeType()
+                    != Node.ELEMENT_NODE) {
+
+                continue;
+            }
+
+            Element element =
+                    (Element) node;
+
+            String nodeName =
+                    element.getNodeName();
+
+            String localName =
+                    element.getLocalName();
+
+            if (!"enclosure".equalsIgnoreCase(nodeName) &&
+                    !"enclosure".equalsIgnoreCase(localName)) {
+
+                continue;
+            }
+
+            String url =
+                    element.getAttribute("url");
+
+            String type =
+                    element.getAttribute("type");
+
+            if (isValidImageUrl(url) ||
+                    (type != null &&
+                            type.toLowerCase()
+                                    .startsWith("image/") &&
+                            url != null &&
+                            !url.isBlank())) {
+
+                return cleanUrl(url);
+            }
+        }
+
+        // -----------------------------------------------------
+        // 4. image element
+        // -----------------------------------------------------
+
+        image =
+                extractImageFromTag(
+                        item,
+                        "image"
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        // -----------------------------------------------------
+        // 5. content:encoded HTML <img>
+        // -----------------------------------------------------
+
+        String encodedContent =
+                getChildText(
+                        item,
+                        "content:encoded"
+                );
+
+        image =
+                extractImageFromHtml(
+                        encodedContent
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        // -----------------------------------------------------
+        // 6. description HTML <img>
+        // -----------------------------------------------------
+
+        String description =
+                getChildText(
+                        item,
+                        "description"
+                );
+
+        image =
+                extractImageFromHtml(
+                        description
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        return null;
+    }
+
+    // =====================================================
+    // ATOM IMAGE EXTRACTION
+    // =====================================================
+
+    private String extractAtomImage(
+            Element entry) {
+
+        // -----------------------------------------------------
+        // 1. media:content
+        // -----------------------------------------------------
+
+        String image =
+                extractImageFromTag(
+                        entry,
+                        "media:content"
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        // -----------------------------------------------------
+        // 2. media:thumbnail
+        // -----------------------------------------------------
+
+        image =
+                extractImageFromTag(
+                        entry,
+                        "media:thumbnail"
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        // -----------------------------------------------------
+        // 3. Atom enclosure link
+        // -----------------------------------------------------
+
+        NodeList children =
+                entry.getChildNodes();
+
+        for (int i = 0;
+             i < children.getLength();
+             i++) {
+
+            Node node =
+                    children.item(i);
+
+            if (node.getNodeType()
+                    != Node.ELEMENT_NODE) {
+
+                continue;
+            }
+
+            Element element =
+                    (Element) node;
+
+            String nodeName =
+                    element.getNodeName();
+
+            String localName =
+                    element.getLocalName();
+
+            if (!"link".equalsIgnoreCase(nodeName) &&
+                    !"link".equalsIgnoreCase(localName)) {
+
+                continue;
+            }
+
+            String rel =
+                    element.getAttribute("rel");
+
+            String type =
+                    element.getAttribute("type");
+
+            String href =
+                    element.getAttribute("href");
+
+            if ("enclosure".equalsIgnoreCase(rel) &&
+                    href != null &&
+                    !href.isBlank()) {
+
+                if (isValidImageUrl(href) ||
+                        (type != null &&
+                                type.toLowerCase()
+                                        .startsWith("image/"))) {
+
+                    return cleanUrl(href);
+                }
+            }
+        }
+
+        // -----------------------------------------------------
+        // 4. content HTML <img>
+        // -----------------------------------------------------
+
+        String content =
+                getChildText(
+                        entry,
+                        "content"
+                );
+
+        image =
+                extractImageFromHtml(
+                        content
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        // -----------------------------------------------------
+        // 5. summary HTML <img>
+        // -----------------------------------------------------
+
+        String summary =
+                getChildText(
+                        entry,
+                        "summary"
+                );
+
+        image =
+                extractImageFromHtml(
+                        summary
+                );
+
+        if (isValidImageUrl(image)) {
+            return image;
+        }
+
+        return null;
+    }
+
+    // =====================================================
+    // IMAGE FROM XML TAG
+    // =====================================================
+
+    private String extractImageFromTag(
+            Element parent,
+            String tagName) {
+
+        NodeList descendants =
+                parent.getElementsByTagName(
+                        tagName
+                );
+
+        for (int i = 0;
+             i < descendants.getLength();
+             i++) {
+
+            Node node =
+                    descendants.item(i);
+
+            if (node.getNodeType()
+                    != Node.ELEMENT_NODE) {
+
+                continue;
+            }
+
+            Element element =
+                    (Element) node;
+
+            String url =
+                    element.getAttribute("url");
+
+            if (url == null ||
+                    url.isBlank()) {
+
+                url =
+                        element.getAttribute("href");
+            }
+
+            if (url == null ||
+                    url.isBlank()) {
+
+                url =
+                        element.getTextContent();
+            }
+
+            if (isValidImageUrl(url)) {
+
+                return cleanUrl(url);
+            }
+        }
+
+        return null;
+    }
+
+    // =====================================================
+    // IMAGE FROM HTML
+    // =====================================================
+
+    private String extractImageFromHtml(
+            String html) {
+
+        if (html == null ||
+                html.isBlank()) {
+
+            return null;
+        }
+
+        // -----------------------------------------------------
+        // src
+        // -----------------------------------------------------
+
+        java.util.regex.Pattern srcPattern =
+                java.util.regex.Pattern.compile(
+                        "<img[^>]+src\\s*=\\s*[\"']([^\"']+)[\"']",
+                        java.util.regex.Pattern.CASE_INSENSITIVE
+                );
+
+        java.util.regex.Matcher matcher =
+                srcPattern.matcher(html);
+
+        if (matcher.find()) {
+
+            String image =
+                    matcher.group(1);
+
+            if (isValidImageUrl(image)) {
+                return cleanUrl(image);
+            }
+        }
+
+        // -----------------------------------------------------
+        // data-src
+        // -----------------------------------------------------
+
+        java.util.regex.Pattern dataSrcPattern =
+                java.util.regex.Pattern.compile(
+                        "<img[^>]+data-src\\s*=\\s*[\"']([^\"']+)[\"']",
+                        java.util.regex.Pattern.CASE_INSENSITIVE
+                );
+
+        matcher =
+                dataSrcPattern.matcher(html);
+
+        if (matcher.find()) {
+
+            String image =
+                    matcher.group(1);
+
+            if (isValidImageUrl(image)) {
+                return cleanUrl(image);
+            }
+        }
+
+        return null;
+    }
+
+    // =====================================================
+    // IMAGE URL VALIDATION
+    // =====================================================
+
+    private boolean isValidImageUrl(
+            String url) {
+
+        if (url == null ||
+                url.isBlank()) {
+
+            return false;
+        }
+
+        String cleaned =
+                url.trim();
+
+        if (!(cleaned.startsWith("http://") ||
+                cleaned.startsWith("https://"))) {
+
+            return false;
+        }
+
+        String lower =
+                cleaned.toLowerCase();
+
+        if (lower.contains("data:image")) {
+            return false;
+        }
+
+        return true;
+    }
 
     // =====================================================
     // GET CHILD TEXT
@@ -614,7 +1015,6 @@ public class RssNewsFetcherService {
         NodeList children =
                 parent.getChildNodes();
 
-
         for (int i = 0;
              i < children.getLength();
              i++) {
@@ -622,25 +1022,20 @@ public class RssNewsFetcherService {
             Node node =
                     children.item(i);
 
-
             if (node.getNodeType()
                     != Node.ELEMENT_NODE) {
 
                 continue;
             }
 
-
             Element element =
                     (Element) node;
-
 
             String nodeName =
                     element.getNodeName();
 
-
             String localName =
                     element.getLocalName();
-
 
             if (tagName.equalsIgnoreCase(nodeName) ||
                     (localName != null &&
@@ -650,10 +1045,8 @@ public class RssNewsFetcherService {
             }
         }
 
-
         return null;
     }
-
 
     // =====================================================
     // ATOM LINK
@@ -665,10 +1058,8 @@ public class RssNewsFetcherService {
         NodeList children =
                 entry.getChildNodes();
 
-
         String alternateLink =
                 null;
-
 
         for (int i = 0;
              i < children.getLength();
@@ -677,25 +1068,20 @@ public class RssNewsFetcherService {
             Node node =
                     children.item(i);
 
-
             if (node.getNodeType()
                     != Node.ELEMENT_NODE) {
 
                 continue;
             }
 
-
             Element link =
                     (Element) node;
-
 
             String nodeName =
                     link.getNodeName();
 
-
             String localName =
                     link.getLocalName();
-
 
             if (!"link".equalsIgnoreCase(nodeName) &&
                     !"link".equalsIgnoreCase(localName)) {
@@ -703,10 +1089,8 @@ public class RssNewsFetcherService {
                 continue;
             }
 
-
             String href =
                     link.getAttribute("href");
-
 
             if (href == null ||
                     href.isBlank()) {
@@ -714,10 +1098,8 @@ public class RssNewsFetcherService {
                 continue;
             }
 
-
             String rel =
                     link.getAttribute("rel");
-
 
             if (rel == null ||
                     rel.isBlank() ||
@@ -726,17 +1108,14 @@ public class RssNewsFetcherService {
                 return href;
             }
 
-
             if (alternateLink == null) {
 
                 alternateLink = href;
             }
         }
 
-
         return alternateLink;
     }
-
 
     // =====================================================
     // ATOM AUTHOR
@@ -748,7 +1127,6 @@ public class RssNewsFetcherService {
         NodeList children =
                 entry.getChildNodes();
 
-
         for (int i = 0;
              i < children.getLength();
              i++) {
@@ -756,25 +1134,20 @@ public class RssNewsFetcherService {
             Node node =
                     children.item(i);
 
-
             if (node.getNodeType()
                     != Node.ELEMENT_NODE) {
 
                 continue;
             }
 
-
             Element element =
                     (Element) node;
-
 
             String nodeName =
                     element.getNodeName();
 
-
             String localName =
                     element.getLocalName();
-
 
             if (!"author".equalsIgnoreCase(nodeName) &&
                     !"author".equalsIgnoreCase(localName)) {
@@ -782,13 +1155,11 @@ public class RssNewsFetcherService {
                 continue;
             }
 
-
             String name =
                     getChildText(
                             element,
                             "name"
                     );
-
 
             if (name != null &&
                     !name.isBlank()) {
@@ -796,14 +1167,11 @@ public class RssNewsFetcherService {
                 return name;
             }
 
-
             return element.getTextContent();
         }
 
-
         return null;
     }
-
 
     // =====================================================
     // CLEAN TEXT
@@ -813,60 +1181,47 @@ public class RssNewsFetcherService {
             String value) {
 
         if (value == null) {
-
             return null;
         }
 
-
         String cleaned =
                 value
-
                         .replaceAll(
                                 "<[^>]+>",
                                 " "
                         )
-
                         .replace(
                                 "&amp;",
                                 "&"
                         )
-
                         .replace(
                                 "&quot;",
                                 "\""
                         )
-
                         .replace(
                                 "&#39;",
                                 "'"
                         )
-
                         .replace(
                                 "&apos;",
                                 "'"
                         )
-
                         .replace(
                                 "&lt;",
                                 "<"
                         )
-
                         .replace(
                                 "&gt;",
                                 ">"
                         )
-
                         .replaceAll(
                                 "\\s+",
                                 " "
                         )
-
                         .trim();
-
 
         return cleaned;
     }
-
 
     // =====================================================
     // CLEAN URL
@@ -876,10 +1231,8 @@ public class RssNewsFetcherService {
             String value) {
 
         if (value == null) {
-
             return null;
         }
-
 
         return value
                 .replace(
@@ -888,7 +1241,6 @@ public class RssNewsFetcherService {
                 )
                 .trim();
     }
-
 
     // =====================================================
     // RSS ARTICLE DTO
@@ -910,6 +1262,7 @@ public class RssNewsFetcherService {
 
         private final NewsSection section;
 
+        private final String imageUrl;
 
         public RssArticle(
                 String title,
@@ -918,7 +1271,8 @@ public class RssNewsFetcherService {
                 String author,
                 String publishedDate,
                 String sourceName,
-                NewsSection section) {
+                NewsSection section,
+                String imageUrl) {
 
             this.title = title;
 
@@ -933,48 +1287,40 @@ public class RssNewsFetcherService {
             this.sourceName = sourceName;
 
             this.section = section;
+
+            this.imageUrl = imageUrl;
         }
 
-
         public String getTitle() {
-
             return title;
         }
 
-
         public String getUrl() {
-
             return url;
         }
 
-
         public String getDescription() {
-
             return description;
         }
 
-
         public String getAuthor() {
-
             return author;
         }
 
-
         public String getPublishedDate() {
-
             return publishedDate;
         }
 
-
         public String getSourceName() {
-
             return sourceName;
         }
 
-
         public NewsSection getSection() {
-
             return section;
+        }
+
+        public String getImageUrl() {
+            return imageUrl;
         }
     }
 }
