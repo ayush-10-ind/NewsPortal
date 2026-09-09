@@ -1,5 +1,7 @@
 package com.newsportal.source;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -21,7 +23,8 @@ import java.util.List;
 @Service
 public class RssNewsFetcherService {
 
-    private final WebClient webClient;
+    private static final Logger logger =
+            LoggerFactory.getLogger(RssNewsFetcherService.class);
 
     private static final Duration RSS_TIMEOUT =
             Duration.ofSeconds(8);
@@ -29,9 +32,7 @@ public class RssNewsFetcherService {
     private static final int MAX_FEED_SIZE =
             1_000_000;
 
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
+    private final WebClient webClient;
 
     public RssNewsFetcherService(
             WebClient.Builder webClientBuilder) {
@@ -41,9 +42,7 @@ public class RssNewsFetcherService {
                         .codecs(configurer ->
                                 configurer
                                         .defaultCodecs()
-                                        .maxInMemorySize(
-                                                MAX_FEED_SIZE
-                                        )
+                                        .maxInMemorySize(MAX_FEED_SIZE)
                         )
                         .build();
     }
@@ -59,21 +58,15 @@ public class RssNewsFetcherService {
                 new ArrayList<>();
 
         if (source == null) {
-
-            System.out.println(
-                    "RSS FETCH SKIPPED: Source is null."
-            );
-
+            logger.warn("RSS fetch skipped: source is null");
             return articles;
         }
 
         if (!source.isUsable()) {
-
-            System.out.println(
-                    "RSS FETCH SKIPPED: Source is not usable: "
-                            + source.getName()
+            logger.warn(
+                    "RSS fetch skipped: source is not usable: {}",
+                    source.getName()
             );
-
             return articles;
         }
 
@@ -81,11 +74,10 @@ public class RssNewsFetcherService {
                 !source.getProviderType()
                         .equalsIgnoreCase("RSS")) {
 
-            System.out.println(
-                    "RSS FETCH SKIPPED: Provider is not RSS: "
-                            + source.getName()
+            logger.warn(
+                    "RSS fetch skipped: provider is not RSS: {}",
+                    source.getName()
             );
-
             return articles;
         }
 
@@ -95,31 +87,17 @@ public class RssNewsFetcherService {
         if (endpoint == null ||
                 endpoint.isBlank()) {
 
-            System.out.println(
-                    "RSS FETCH SKIPPED: Empty endpoint for "
-                            + source.getName()
+            logger.warn(
+                    "RSS fetch skipped: empty endpoint for {}",
+                    source.getName()
             );
-
             return articles;
         }
 
-        System.out.println();
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "RSS FETCH STARTED"
-        );
-
-        System.out.println(
-                "Source: "
-                        + source.getName()
-        );
-
-        System.out.println(
-                "Feed: "
-                        + endpoint
+        logger.info(
+                "Fetching RSS feed: source={}, endpoint={}",
+                source.getName(),
+                endpoint
         );
 
         try {
@@ -137,19 +115,16 @@ public class RssNewsFetcherService {
                                     "application/rss+xml, application/atom+xml, application/xml, text/xml"
                             )
                             .retrieve()
-                            .bodyToMono(
-                                    String.class
-                            )
-                            .timeout(
-                                    RSS_TIMEOUT
-                            )
+                            .bodyToMono(String.class)
+                            .timeout(RSS_TIMEOUT)
                             .block();
 
             if (xml == null ||
                     xml.isBlank()) {
 
-                System.out.println(
-                        "RSS FETCH FAILED: Empty response."
+                logger.warn(
+                        "RSS fetch returned empty response: {}",
+                        source.getName()
                 );
 
                 return articles;
@@ -158,8 +133,10 @@ public class RssNewsFetcherService {
             if (xml.length() >
                     MAX_FEED_SIZE) {
 
-                System.out.println(
-                        "RSS FEED TOO LARGE. Truncating."
+                logger.warn(
+                        "RSS feed exceeded {} bytes and will be truncated: {}",
+                        MAX_FEED_SIZE,
+                        source.getName()
                 );
 
                 xml =
@@ -175,29 +152,21 @@ public class RssNewsFetcherService {
                             source
                     );
 
-            System.out.println(
-                    "RSS ARTICLES FOUND: "
-                            + articles.size()
-            );
-
-            System.out.println(
-                    "========================================"
+            logger.info(
+                    "RSS feed fetched: source={}, articles={}",
+                    source.getName(),
+                    articles.size()
             );
 
             return articles;
 
         } catch (Exception e) {
 
-            System.out.println(
-                    "RSS FETCH FAILED: "
-                            + source.getName()
-            );
-
-            System.out.println(
-                    "Error: "
-                            + e.getClass().getSimpleName()
-                            + " - "
-                            + e.getMessage()
+            logger.error(
+                    "RSS fetch failed: source={}, errorType={}, message={}",
+                    source.getName(),
+                    e.getClass().getSimpleName(),
+                    e.getMessage()
             );
 
             return articles;
@@ -220,11 +189,7 @@ public class RssNewsFetcherService {
             DocumentBuilderFactory factory =
                     DocumentBuilderFactory.newInstance();
 
-            // =================================================
-            // SECURITY
             // Prevent XXE / external entity attacks
-            // =================================================
-
             factory.setFeature(
                     "http://apache.org/xml/features/disallow-doctype-decl",
                     true
@@ -275,15 +240,9 @@ public class RssNewsFetcherService {
             // =================================================
 
             NodeList rssItems =
-                    document.getElementsByTagName(
-                            "item"
-                    );
+                    document.getElementsByTagName("item");
 
             if (rssItems.getLength() > 0) {
-
-                System.out.println(
-                        "RSS FORMAT DETECTED"
-                );
 
                 for (int i = 0;
                      i < rssItems.getLength();
@@ -308,10 +267,7 @@ public class RssNewsFetcherService {
                             );
 
                     if (article != null) {
-
-                        articles.add(
-                                article
-                        );
+                        articles.add(article);
                     }
                 }
 
@@ -323,15 +279,9 @@ public class RssNewsFetcherService {
             // =================================================
 
             NodeList atomEntries =
-                    document.getElementsByTagName(
-                            "entry"
-                    );
+                    document.getElementsByTagName("entry");
 
             if (atomEntries.getLength() > 0) {
-
-                System.out.println(
-                        "ATOM FORMAT DETECTED"
-                );
 
                 for (int i = 0;
                      i < atomEntries.getLength();
@@ -356,27 +306,25 @@ public class RssNewsFetcherService {
                             );
 
                     if (article != null) {
-
-                        articles.add(
-                                article
-                        );
+                        articles.add(article);
                     }
                 }
 
                 return articles;
             }
 
-            System.out.println(
-                    "RSS PARSE FAILED: No <item> or <entry> elements found."
+            logger.warn(
+                    "RSS parse found no <item> or <entry> elements: {}",
+                    source.getName()
             );
 
         } catch (Exception e) {
 
-            System.out.println(
-                    "RSS XML PARSE FAILED: "
-                            + e.getClass().getSimpleName()
-                            + " - "
-                            + e.getMessage()
+            logger.error(
+                    "RSS XML parse failed: source={}, errorType={}, message={}",
+                    source.getName(),
+                    e.getClass().getSimpleName(),
+                    e.getMessage()
             );
         }
 
@@ -451,10 +399,6 @@ public class RssNewsFetcherService {
                     );
         }
 
-        // =====================================================
-        // IMAGE EXTRACTION
-        // =====================================================
-
         String imageUrl =
                 extractRssImage(item);
 
@@ -465,15 +409,6 @@ public class RssNewsFetcherService {
 
             return null;
         }
-
-        System.out.println(
-                "RSS ARTICLE IMAGE: "
-                        + (
-                        imageUrl != null
-                                ? imageUrl
-                                : "NOT FOUND"
-                )
-        );
 
         return new RssArticle(
                 cleanText(title),
@@ -502,9 +437,7 @@ public class RssNewsFetcherService {
                 );
 
         String link =
-                extractAtomLink(
-                        entry
-                );
+                extractAtomLink(entry);
 
         String description =
                 getChildText(
@@ -539,13 +472,7 @@ public class RssNewsFetcherService {
         }
 
         String author =
-                extractAtomAuthor(
-                        entry
-                );
-
-        // =====================================================
-        // IMAGE EXTRACTION
-        // =====================================================
+                extractAtomAuthor(entry);
 
         String imageUrl =
                 extractAtomImage(entry);
@@ -557,15 +484,6 @@ public class RssNewsFetcherService {
 
             return null;
         }
-
-        System.out.println(
-                "ATOM ARTICLE IMAGE: "
-                        + (
-                        imageUrl != null
-                                ? imageUrl
-                                : "NOT FOUND"
-                )
-        );
 
         return new RssArticle(
                 cleanText(title),
@@ -586,10 +504,6 @@ public class RssNewsFetcherService {
     private String extractRssImage(
             Element item) {
 
-        // -----------------------------------------------------
-        // 1. media:content
-        // -----------------------------------------------------
-
         String image =
                 extractImageFromTag(
                         item,
@@ -600,10 +514,6 @@ public class RssNewsFetcherService {
             return image;
         }
 
-        // -----------------------------------------------------
-        // 2. media:thumbnail
-        // -----------------------------------------------------
-
         image =
                 extractImageFromTag(
                         item,
@@ -613,10 +523,6 @@ public class RssNewsFetcherService {
         if (isValidImageUrl(image)) {
             return image;
         }
-
-        // -----------------------------------------------------
-        // 3. enclosure
-        // -----------------------------------------------------
 
         NodeList children =
                 item.getChildNodes();
@@ -666,10 +572,6 @@ public class RssNewsFetcherService {
             }
         }
 
-        // -----------------------------------------------------
-        // 4. image element
-        // -----------------------------------------------------
-
         image =
                 extractImageFromTag(
                         item,
@@ -679,10 +581,6 @@ public class RssNewsFetcherService {
         if (isValidImageUrl(image)) {
             return image;
         }
-
-        // -----------------------------------------------------
-        // 5. content:encoded HTML <img>
-        // -----------------------------------------------------
 
         String encodedContent =
                 getChildText(
@@ -698,10 +596,6 @@ public class RssNewsFetcherService {
         if (isValidImageUrl(image)) {
             return image;
         }
-
-        // -----------------------------------------------------
-        // 6. description HTML <img>
-        // -----------------------------------------------------
 
         String description =
                 getChildText(
@@ -728,10 +622,6 @@ public class RssNewsFetcherService {
     private String extractAtomImage(
             Element entry) {
 
-        // -----------------------------------------------------
-        // 1. media:content
-        // -----------------------------------------------------
-
         String image =
                 extractImageFromTag(
                         entry,
@@ -742,10 +632,6 @@ public class RssNewsFetcherService {
             return image;
         }
 
-        // -----------------------------------------------------
-        // 2. media:thumbnail
-        // -----------------------------------------------------
-
         image =
                 extractImageFromTag(
                         entry,
@@ -755,10 +641,6 @@ public class RssNewsFetcherService {
         if (isValidImageUrl(image)) {
             return image;
         }
-
-        // -----------------------------------------------------
-        // 3. Atom enclosure link
-        // -----------------------------------------------------
 
         NodeList children =
                 entry.getChildNodes();
@@ -814,10 +696,6 @@ public class RssNewsFetcherService {
             }
         }
 
-        // -----------------------------------------------------
-        // 4. content HTML <img>
-        // -----------------------------------------------------
-
         String content =
                 getChildText(
                         entry,
@@ -825,17 +703,11 @@ public class RssNewsFetcherService {
                 );
 
         image =
-                extractImageFromHtml(
-                        content
-                );
+                extractImageFromHtml(content);
 
         if (isValidImageUrl(image)) {
             return image;
         }
-
-        // -----------------------------------------------------
-        // 5. summary HTML <img>
-        // -----------------------------------------------------
 
         String summary =
                 getChildText(
@@ -844,9 +716,7 @@ public class RssNewsFetcherService {
                 );
 
         image =
-                extractImageFromHtml(
-                        summary
-                );
+                extractImageFromHtml(summary);
 
         if (isValidImageUrl(image)) {
             return image;
@@ -864,9 +734,7 @@ public class RssNewsFetcherService {
             String tagName) {
 
         NodeList descendants =
-                parent.getElementsByTagName(
-                        tagName
-                );
+                parent.getElementsByTagName(tagName);
 
         for (int i = 0;
              i < descendants.getLength();
@@ -902,7 +770,6 @@ public class RssNewsFetcherService {
             }
 
             if (isValidImageUrl(url)) {
-
                 return cleanUrl(url);
             }
         }
@@ -923,10 +790,6 @@ public class RssNewsFetcherService {
             return null;
         }
 
-        // -----------------------------------------------------
-        // src
-        // -----------------------------------------------------
-
         java.util.regex.Pattern srcPattern =
                 java.util.regex.Pattern.compile(
                         "<img[^>]+src\\s*=\\s*[\"']([^\"']+)[\"']",
@@ -945,10 +808,6 @@ public class RssNewsFetcherService {
                 return cleanUrl(image);
             }
         }
-
-        // -----------------------------------------------------
-        // data-src
-        // -----------------------------------------------------
 
         java.util.regex.Pattern dataSrcPattern =
                 java.util.regex.Pattern.compile(
@@ -997,11 +856,7 @@ public class RssNewsFetcherService {
         String lower =
                 cleaned.toLowerCase();
 
-        if (lower.contains("data:image")) {
-            return false;
-        }
-
-        return true;
+        return !lower.contains("data:image");
     }
 
     // =====================================================
@@ -1109,7 +964,6 @@ public class RssNewsFetcherService {
             }
 
             if (alternateLink == null) {
-
                 alternateLink = href;
             }
         }
@@ -1184,43 +1038,40 @@ public class RssNewsFetcherService {
             return null;
         }
 
-        String cleaned =
-                value
-                        .replaceAll(
-                                "<[^>]+>",
-                                " "
-                        )
-                        .replace(
-                                "&amp;",
-                                "&"
-                        )
-                        .replace(
-                                "&quot;",
-                                "\""
-                        )
-                        .replace(
-                                "&#39;",
-                                "'"
-                        )
-                        .replace(
-                                "&apos;",
-                                "'"
-                        )
-                        .replace(
-                                "&lt;",
-                                "<"
-                        )
-                        .replace(
-                                "&gt;",
-                                ">"
-                        )
-                        .replaceAll(
-                                "\\s+",
-                                " "
-                        )
-                        .trim();
-
-        return cleaned;
+        return value
+                .replaceAll(
+                        "<[^>]+>",
+                        " "
+                )
+                .replace(
+                        "&amp;",
+                        "&"
+                )
+                .replace(
+                        "&quot;",
+                        "\""
+                )
+                .replace(
+                        "&#39;",
+                        "'"
+                )
+                .replace(
+                        "&apos;",
+                        "'"
+                )
+                .replace(
+                        "&lt;",
+                        "<"
+                )
+                .replace(
+                        "&gt;",
+                        ">"
+                )
+                .replaceAll(
+                        "\\s+",
+                        " "
+                )
+                .trim();
     }
 
     // =====================================================
@@ -1249,19 +1100,12 @@ public class RssNewsFetcherService {
     public static class RssArticle {
 
         private final String title;
-
         private final String url;
-
         private final String description;
-
         private final String author;
-
         private final String publishedDate;
-
         private final String sourceName;
-
         private final NewsSection section;
-
         private final String imageUrl;
 
         public RssArticle(
@@ -1275,19 +1119,12 @@ public class RssNewsFetcherService {
                 String imageUrl) {
 
             this.title = title;
-
             this.url = url;
-
             this.description = description;
-
             this.author = author;
-
             this.publishedDate = publishedDate;
-
             this.sourceName = sourceName;
-
             this.section = section;
-
             this.imageUrl = imageUrl;
         }
 
