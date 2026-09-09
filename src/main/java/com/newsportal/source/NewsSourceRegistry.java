@@ -498,4 +498,152 @@ public class NewsSourceRegistry {
                 )
                 .toList();
     }
+    // =============================================================
+    // PROVIDER-SPECIFIC SOURCES
+    // =============================================================
+
+    public List<NewsSource> getUsableSources(
+            NewsSection section,
+            String providerType) {
+
+        if (providerType == null || providerType.isBlank()) {
+            return List.of();
+        }
+
+        String requestedProvider =
+                providerType.trim().toUpperCase();
+
+        return getUsableSources(section)
+                .stream()
+                .filter(source -> {
+
+                    String actualProvider =
+                            source.getProviderType();
+
+                    return actualProvider != null
+                            && actualProvider
+                                .trim()
+                                .toUpperCase()
+                                .equals(requestedProvider);
+                })
+                .toList();
+    }
+
+
+    // =============================================================
+    // NEWS API SOURCES
+    // =============================================================
+
+    public List<NewsSource> getUsableNewsApiSources(
+            NewsSection section) {
+
+        return getUsableSources(
+                section,
+                "NEWS_API"
+        );
+    }
+
+
+    // =============================================================
+    // IMAGE-CAPABLE SOURCES
+    // =============================================================
+
+    public List<NewsSource> getImageCapableSources(
+            NewsSection section) {
+
+        return getSources(section)
+                .stream()
+                .filter(
+                    NewsSource::supportsNewsAndImages
+                )
+                .toList();
+    }
+
+
+    // =============================================================
+    // PRIMARY SOURCE
+    // =============================================================
+
+    public NewsSource getPrimarySource(
+            NewsSection section) {
+
+        return getUsableSources(section)
+                .stream()
+                .findFirst()
+                .orElse(null);
+    }
+
+
+    // =============================================================
+    // CHECK USABLE SOURCE
+    // =============================================================
+
+    public boolean hasUsableSource(
+            NewsSection section) {
+
+        return !getUsableSources(section)
+                .isEmpty();
+    }
+
+
+    // =============================================================
+    // CHECK IMAGE SOURCE
+    // =============================================================
+
+    public boolean hasImageCapableSource(
+            NewsSection section) {
+
+        return !getImageCapableSources(section)
+                .isEmpty();
+    }
+
+
+    // =============================================================
+    // ALL USABLE SOURCES
+    // =============================================================
+
+    public List<NewsSource> getAllUsableSources() {
+
+        return getAllSources()
+                .stream()
+                .filter(
+                    NewsSource::isUsable
+                )
+                .toList();
+    }
+
+
+    // =============================================================
+    // SOURCE COUNTS
+    // =============================================================
+
+    public int getSourceCount(
+            NewsSection section) {
+
+        return getSources(section)
+                .size();
+    }
+
+
+    public int getUsableSourceCount(
+            NewsSection section) {
+
+        return getUsableSources(section)
+                .size();
+    }
+
+
+    // =============================================================
+    // PROVIDER COUNT
+    // =============================================================
+
+    public int getUsableSourceCount(
+            NewsSection section,
+            String providerType) {
+
+        return getUsableSources(
+                section,
+                providerType
+        ).size();
+    }
 }
