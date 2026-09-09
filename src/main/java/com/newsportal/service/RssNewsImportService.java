@@ -9,6 +9,8 @@ import com.newsportal.source.MultiSourceNewsFetcherService;
 import com.newsportal.source.NewsSection;
 import com.newsportal.source.RssNewsFetcherService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -22,6 +24,9 @@ import java.util.Optional;
 
 @Service
 public class RssNewsImportService {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(RssNewsImportService.class);
 
     private final MultiSourceNewsFetcherService
             multiSourceNewsFetcherService;
@@ -80,29 +85,19 @@ public class RssNewsImportService {
 
         if (section == null) {
 
-            System.out.println(
-                    "RSS IMPORT SKIPPED: Section is null."
+            logger.warn(
+                    "RSS import skipped: section is null."
             );
 
             return 0;
         }
 
-        System.out.println();
-        System.out.println(
-                "========================================"
-        );
+        String sectionName =
+                section.getDisplayName();
 
-        System.out.println(
-                "AGNIPRESS RSS IMPORT"
-        );
-
-        System.out.println(
-                "Section: "
-                        + section.getDisplayName()
-        );
-
-        System.out.println(
-                "========================================"
+        logger.info(
+                "AgniPress RSS import started: {}",
+                sectionName
         );
 
         // =================================================
@@ -116,53 +111,28 @@ public class RssNewsImportService {
                                 section
                         );
 
+        if (articles == null) {
+
+            logger.warn(
+                    "RSS fetch returned null for section: {}",
+                    sectionName
+            );
+
+            return 0;
+        }
+
         int importedCount = 0;
-
         int duplicateCount = 0;
-
         int rejectedCount = 0;
-
         int failedCount = 0;
-
         int fallbackImageCount = 0;
-
-        System.out.println();
-
-        System.out.println(
-                "RSS articles received: "
-                        + articles.size()
-        );
 
         // =================================================
         // PROCESS EACH ARTICLE
         // =================================================
 
-        for (int index = 0;
-             index < articles.size();
-             index++) {
-
-            RssNewsFetcherService.RssArticle article =
-                    articles.get(index);
-
-            int articleNumber =
-                    index + 1;
-
-            System.out.println();
-
-            System.out.println(
-                    "========================================"
-            );
-
-            System.out.println(
-                    "PROCESSING RSS ARTICLE "
-                            + articleNumber
-                            + " / "
-                            + articles.size()
-            );
-
-            System.out.println(
-                    "========================================"
-            );
+        for (RssNewsFetcherService.RssArticle article :
+                articles) {
 
             try {
 
@@ -174,12 +144,9 @@ public class RssNewsImportService {
 
                     failedCount++;
 
-                    System.out.println(
-                            "STATUS: FAILED"
-                    );
-
-                    System.out.println(
-                            "Reason: RSS article object is null."
+                    logger.warn(
+                            "RSS article failed: article object is null. Section={}",
+                            sectionName
                     );
 
                     continue;
@@ -199,27 +166,14 @@ public class RssNewsImportService {
                                 article.getUrl()
                         );
 
-                System.out.println(
-                        "Title: "
-                                + title
-                );
-
-                System.out.println(
-                        "URL: "
-                                + sourceUrl
-                );
-
                 if (title == null ||
                         title.isBlank()) {
 
                     rejectedCount++;
 
-                    System.out.println(
-                            "STATUS: REJECTED"
-                    );
-
-                    System.out.println(
-                            "Reason: Missing title."
+                    logger.warn(
+                            "RSS article rejected: missing title. Section={}",
+                            sectionName
                     );
 
                     continue;
@@ -230,12 +184,9 @@ public class RssNewsImportService {
 
                     rejectedCount++;
 
-                    System.out.println(
-                            "STATUS: REJECTED"
-                    );
-
-                    System.out.println(
-                            "Reason: Missing source URL."
+                    logger.warn(
+                            "RSS article rejected: missing source URL. Title={}",
+                            title
                     );
 
                     continue;
@@ -254,34 +205,8 @@ public class RssNewsImportService {
 
                     duplicateCount++;
 
-                    System.out.println(
-                            "STATUS: DUPLICATE"
-                    );
-
-                    System.out.println(
-                            "Existing database ID: "
-                                    + existingArticle
-                                    .get()
-                                    .getId()
-                    );
-
-                    System.out.println(
-                            "Existing source name: "
-                                    + existingArticle
-                                    .get()
-                                    .getSourceName()
-                    );
-
-                    System.out.println(
-                            "Reason: source_url already exists."
-                    );
-
                     continue;
                 }
-
-                System.out.println(
-                        "Duplicate check: NOT FOUND"
-                );
 
                 // =================================================
                 // INITIAL VALUES
@@ -324,7 +249,7 @@ public class RssNewsImportService {
                 }
 
                 String category =
-                        section.getDisplayName();
+                        sectionName;
 
                 // =================================================
                 // RSS IMAGE
@@ -335,33 +260,14 @@ public class RssNewsImportService {
                                 article.getImageUrl()
                         );
 
-                System.out.println();
-
-                System.out.println(
-                        "RSS IMAGE URL: "
-                                + (
-                                rssImageUrl != null &&
-                                        !rssImageUrl.isBlank()
-                                        ? rssImageUrl
-                                        : "NOT PROVIDED"
-                        )
-                );
-
                 // =================================================
                 // ASHNA ANALYSIS
                 // =================================================
 
                 AshnaArticleAnalyzerService.ArticleAnalysis
-                        analysis =
-                        null;
+                        analysis = null;
 
                 try {
-
-                    System.out.println();
-
-                    System.out.println(
-                            "ASHNA ANALYSIS STARTED"
-                    );
 
                     analysis =
                             ashnaArticleAnalyzerService
@@ -374,30 +280,20 @@ public class RssNewsImportService {
                                             rawContent
                                     );
 
-                    System.out.println(
-                            "ASHNA ANALYSIS COMPLETED"
-                    );
-
                 } catch (Exception ashnaException) {
 
-                    System.out.println(
-                            "ASHNA ANALYSIS FAILED"
-                    );
-
-                    System.out.println(
-                            "Reason: "
-                                    + ashnaException
-                                    .getMessage()
-                    );
-
                     /*
-                     * We do not automatically reject the
-                     * article when Ashna is temporarily
-                     * unavailable.
+                     * Ashna is an enhancement layer.
                      *
-                     * The original RSS data can still
-                     * be imported safely.
+                     * If Ashna is temporarily unavailable,
+                     * the original RSS article is still allowed
+                     * to continue through the import pipeline.
                      */
+
+                    logger.warn(
+                            "Ashna analysis unavailable. Continuing RSS import. Title={}",
+                            title
+                    );
                 }
 
                 // =================================================
@@ -425,22 +321,6 @@ public class RssNewsImportService {
                                     5
                             );
 
-                    System.out.println();
-
-                    System.out.println(
-                            "ASHNA RESULT"
-                    );
-
-                    System.out.println(
-                            "Newsworthy: "
-                                    + newsworthy
-                    );
-
-                    System.out.println(
-                            "Quality Score: "
-                                    + qualityScore
-                    );
-
                     // =================================================
                     // NEWSWORTHINESS CHECK
                     // =================================================
@@ -448,14 +328,6 @@ public class RssNewsImportService {
                     if (!newsworthy) {
 
                         rejectedCount++;
-
-                        System.out.println(
-                                "STATUS: REJECTED"
-                        );
-
-                        System.out.println(
-                                "Reason: Ashna marked article as not newsworthy."
-                        );
 
                         continue;
                     }
@@ -468,17 +340,6 @@ public class RssNewsImportService {
                             MIN_QUALITY_SCORE) {
 
                         rejectedCount++;
-
-                        System.out.println(
-                                "STATUS: REJECTED"
-                        );
-
-                        System.out.println(
-                                "Reason: Ashna quality score "
-                                        + qualityScore
-                                        + " is below minimum "
-                                        + MIN_QUALITY_SCORE
-                        );
 
                         continue;
                     }
@@ -568,41 +429,11 @@ public class RssNewsImportService {
                     category =
                             resolvedSection
                                     .getDisplayName();
-
-                    System.out.println(
-                            "Final section: "
-                                    + category
-                    );
-
-                    System.out.println(
-                            "Final headline: "
-                                    + title
-                    );
                 }
 
                 // =================================================
                 // IMAGE RESOLUTION
                 // =================================================
-
-                System.out.println();
-
-                System.out.println(
-                        "IMAGE RESOLUTION STARTED"
-                );
-
-                /*
-                 * IMPORTANT:
-                 *
-                 * We now pass the actual image extracted
-                 * from the RSS feed.
-                 *
-                 * Previously this was:
-                 *
-                 * resolveImage(null, sourceUrl, category)
-                 *
-                 * which meant the RSS image was completely
-                 * ignored.
-                 */
 
                 String resolvedImage =
                         articleImageService
@@ -622,37 +453,8 @@ public class RssNewsImportService {
                     resolvedImage =
                             "/images/fallback?category="
                                     + category;
-                }
-
-                System.out.println(
-                        "Resolved image: "
-                                + resolvedImage
-                );
-
-                if (resolvedImage.startsWith(
-                        "/images/fallback")) {
 
                     fallbackImageCount++;
-
-                    System.out.println(
-                            "Image type: AGNIPRESS FALLBACK"
-                    );
-
-                } else if (rssImageUrl != null &&
-                        !rssImageUrl.isBlank() &&
-                        resolvedImage.equals(
-                                rssImageUrl
-                        )) {
-
-                    System.out.println(
-                            "Image type: RSS SOURCE IMAGE"
-                    );
-
-                } else {
-
-                    System.out.println(
-                            "Image type: EXTERNAL IMAGE"
-                    );
                 }
 
                 // =================================================
@@ -708,41 +510,14 @@ public class RssNewsImportService {
                 // DATABASE SAVE
                 // =================================================
 
-                System.out.println();
-
-                System.out.println(
-                        "DATABASE SAVE STARTED"
-                );
-
-                /*
-                 * saveAndFlush() forces Hibernate to execute
-                 * the INSERT immediately instead of waiting
-                 * for the surrounding transaction.
-                 */
-
                 News savedNews =
                         newsRepository.saveAndFlush(
                                 news
                         );
 
-                System.out.println(
-                        "DATABASE SAVE COMPLETED"
-                );
-
-                System.out.println(
-                        "Generated database ID: "
-                                + savedNews.getId()
-                );
-
                 // =================================================
                 // DATABASE READ-BACK VERIFICATION
                 // =================================================
-
-                System.out.println();
-
-                System.out.println(
-                        "DATABASE READ-BACK VERIFICATION"
-                );
 
                 Optional<News> persistedArticle =
                         newsRepository.findBySourceUrl(
@@ -753,26 +528,13 @@ public class RssNewsImportService {
 
                     failedCount++;
 
-                    System.out.println(
-                            "STATUS: FAILED"
-                    );
-
-                    System.out.println(
-                            "Reason: Article was saved but "
-                                    + "could not be read back "
-                                    + "using source_url."
-                    );
-
-                    System.out.println(
-                            "URL checked: "
-                                    + sourceUrl
+                    logger.error(
+                            "RSS article save verification failed. Database ID={}",
+                            savedNews.getId()
                     );
 
                     continue;
                 }
-
-                News verifiedArticle =
-                        persistedArticle.get();
 
                 // =================================================
                 // SUCCESS
@@ -780,83 +542,20 @@ public class RssNewsImportService {
 
                 importedCount++;
 
-                System.out.println();
-
-                System.out.println(
-                        "STATUS: IMPORTED"
-                );
-
-                System.out.println(
-                        "Database ID: "
-                                + verifiedArticle.getId()
-                );
-
-                System.out.println(
-                        "Title: "
-                                + verifiedArticle.getTitle()
-                );
-
-                System.out.println(
-                        "Category: "
-                                + verifiedArticle.getCategory()
-                );
-
-                System.out.println(
-                        "Source Name: "
-                                + verifiedArticle.getSourceName()
-                );
-
-                System.out.println(
-                        "Source Type: "
-                                + verifiedArticle.getSourceType()
-                );
-
-                System.out.println(
-                        "Source URL: "
-                                + verifiedArticle.getSourceUrl()
-                );
-
-                System.out.println(
-                        "Image URL: "
-                                + verifiedArticle.getImageUrl()
-                );
-
-                System.out.println(
-                        "Published Date: "
-                                + verifiedArticle.getPublishedDate()
-                );
-
             } catch (Exception e) {
 
                 failedCount++;
 
-                System.out.println();
+                String failedTitle =
+                        article != null
+                                ? clean(article.getTitle())
+                                : "Unknown";
 
-                System.out.println(
-                        "STATUS: FAILED"
+                logger.error(
+                        "RSS article import failed. Title={}, Error={}",
+                        failedTitle,
+                        e.getMessage()
                 );
-
-                System.out.println(
-                        "Title: "
-                                + (
-                                article != null
-                                        ? article.getTitle()
-                                        : "Unknown"
-                        )
-                );
-
-                System.out.println(
-                        "Error Type: "
-                                + e.getClass()
-                                .getSimpleName()
-                );
-
-                System.out.println(
-                        "Error Message: "
-                                + e.getMessage()
-                );
-
-                e.printStackTrace();
             }
         }
 
@@ -864,57 +563,15 @@ public class RssNewsImportService {
         // FINAL SUMMARY
         // =================================================
 
-        System.out.println();
-
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "RSS IMPORT COMPLETED"
-        );
-
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "Section: "
-                        + section.getDisplayName()
-        );
-
-        System.out.println(
-                "Articles received: "
-                        + articles.size()
-        );
-
-        System.out.println(
-                "New articles imported: "
-                        + importedCount
-        );
-
-        System.out.println(
-                "Duplicates skipped: "
-                        + duplicateCount
-        );
-
-        System.out.println(
-                "Rejected by validation/Ashna: "
-                        + rejectedCount
-        );
-
-        System.out.println(
-                "Failed articles: "
-                        + failedCount
-        );
-
-        System.out.println(
-                "Fallback images: "
-                        + fallbackImageCount
-        );
-
-        System.out.println(
-                "========================================"
+        logger.info(
+                "RSS import completed: section={}, received={}, imported={}, duplicates={}, rejected={}, failed={}, fallbackImages={}",
+                sectionName,
+                articles.size(),
+                importedCount,
+                duplicateCount,
+                rejectedCount,
+                failedCount,
+                fallbackImageCount
         );
 
         return importedCount;
@@ -928,6 +585,14 @@ public class RssNewsImportService {
 
         int totalImported = 0;
 
+        int totalDuplicates = 0;
+        int totalRejected = 0;
+        int totalFailed = 0;
+
+        logger.info(
+                "AgniPress RSS import started for all sections."
+        );
+
         for (NewsSection section :
                 NewsSection.values()) {
 
@@ -940,37 +605,20 @@ public class RssNewsImportService {
 
             } catch (Exception e) {
 
-                System.out.println(
-                        "RSS SECTION FAILED: "
-                                + section.getDisplayName()
-                );
+                totalFailed++;
 
-                System.out.println(
-                        "Error: "
-                                + e.getMessage()
+                logger.error(
+                        "RSS section failed: section={}, error={}",
+                        section.getDisplayName(),
+                        e.getMessage()
                 );
-
-                e.printStackTrace();
             }
         }
 
-        System.out.println();
-
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "AGNIPRESS RSS IMPORT ALL COMPLETED"
-        );
-
-        System.out.println(
-                "Total imported: "
-                        + totalImported
-        );
-
-        System.out.println(
-                "========================================"
+        logger.info(
+                "AgniPress RSS import all completed: imported={}, sectionFailures={}",
+                totalImported,
+                totalFailed
         );
 
         return totalImported;
@@ -1241,9 +889,9 @@ public class RssNewsImportService {
             }
         }
 
-        System.out.println(
-                "Could not parse RSS published date: "
-                        + publishedDate
+        logger.warn(
+                "Could not parse RSS published date: {}",
+                value
         );
 
         return LocalDate.now();
