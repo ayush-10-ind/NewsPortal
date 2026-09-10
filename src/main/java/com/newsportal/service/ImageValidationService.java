@@ -1,5 +1,7 @@
 package com.newsportal.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,9 @@ import java.time.Duration;
 @Service
 public class ImageValidationService {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(ImageValidationService.class);
+
     private final WebClient webClient;
 
     public ImageValidationService() {
@@ -18,7 +23,6 @@ public class ImageValidationService {
         this.webClient = WebClient.builder()
                 .build();
     }
-
 
     // =====================================================
     // VALIDATE IMAGE URL
@@ -32,23 +36,15 @@ public class ImageValidationService {
             return false;
         }
 
-
         if (!imageUrl.startsWith("http://") &&
                 !imageUrl.startsWith("https://")) {
 
             return false;
         }
 
-
         try {
 
             URI uri = URI.create(imageUrl);
-
-            System.out.println();
-            System.out.println(
-                    "Checking image: " + imageUrl
-            );
-
 
             return webClient
                     .get()
@@ -88,33 +84,15 @@ public class ImageValidationService {
                                         .map(Object::toString)
                                         .orElse("UNKNOWN");
 
-
-                        System.out.println(
-                                "Image status: " + status
-                        );
-
-                        System.out.println(
-                                "Image content-type: "
-                                        + contentType
-                        );
-
-
                         // -------------------------------------
                         // HTTP must be successful
                         // -------------------------------------
 
                         if (!status.is2xxSuccessful()) {
-
-                            System.out.println(
-                                    "IMAGE REJECTED: HTTP "
-                                            + status.value()
-                            );
-
                             return response
                                     .releaseBody()
                                     .thenReturn(false);
                         }
-
 
                         // -------------------------------------
                         // Must actually be an image
@@ -124,20 +102,10 @@ public class ImageValidationService {
                                 .toLowerCase()
                                 .startsWith("image/")) {
 
-                            System.out.println(
-                                    "IMAGE REJECTED: Not an image"
-                            );
-
                             return response
                                     .releaseBody()
                                     .thenReturn(false);
                         }
-
-
-                        System.out.println(
-                                "IMAGE ACCEPTED"
-                        );
-
 
                         return response
                                 .releaseBody()
@@ -158,12 +126,12 @@ public class ImageValidationService {
                     .blockOptional()
                     .orElse(false);
 
-
         } catch (Exception e) {
 
-            System.out.println(
-                    "IMAGE VALIDATION FAILED: "
-                            + e.getMessage()
+            logger.debug(
+                    "Image validation failed: errorType={}, message={}",
+                    e.getClass().getSimpleName(),
+                    e.getMessage()
             );
 
             return false;
