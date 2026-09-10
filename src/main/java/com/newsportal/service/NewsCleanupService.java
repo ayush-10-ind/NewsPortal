@@ -3,6 +3,8 @@ package com.newsportal.service;
 import com.newsportal.entity.News;
 import com.newsportal.repository.NewsRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,187 +14,49 @@ import java.util.List;
 @Service
 public class NewsCleanupService {
 
+    private static final Logger logger = LoggerFactory.getLogger(NewsCleanupService.class);
+
     private final NewsRepository newsRepository;
 
-
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
-
-    public NewsCleanupService(
-            NewsRepository newsRepository) {
-
-        this.newsRepository =
-                newsRepository;
+    public NewsCleanupService(NewsRepository newsRepository) {
+        this.newsRepository = newsRepository;
     }
-
-
-    // =====================================================
-    // DELETE NEWS OLDER THAN 7 DAYS
-    // =====================================================
 
     @Transactional
     public int deleteOldNews() {
+        LocalDate cutoffDate = LocalDate.now().minusDays(7);
 
-        LocalDate cutoffDate =
-                LocalDate.now().minusDays(7);
+        logger.info("AgniPress old news cleanup started: cutoffDate={}", cutoffDate);
 
+        List<News> oldNews = newsRepository.findByPublishedDateBefore(cutoffDate);
 
-        System.out.println();
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "OLD NEWS CLEANUP STARTED"
-        );
-
-        System.out.println(
-                "Cutoff date: "
-                        + cutoffDate
-        );
-
-        System.out.println(
-                "========================================"
-        );
-
-
-        // =================================================
-        // FIND OLD ARTICLES
-        // =================================================
-
-        List<News> oldNews =
-                newsRepository
-                        .findByPublishedDateBefore(
-                                cutoffDate
-                        );
-
-
-        if (oldNews == null ||
-                oldNews.isEmpty()) {
-
-            System.out.println(
-                    "No articles older than 7 days."
-            );
-
-            System.out.println(
-                    "OLD NEWS CLEANUP COMPLETED"
-            );
-
-            System.out.println(
-                    "========================================"
-            );
-
+        if (oldNews == null || oldNews.isEmpty()) {
+            logger.info("AgniPress old news cleanup completed: deleted=0");
             return 0;
         }
 
-
         int deletedCount = 0;
 
-
-        // =================================================
-        // DELETE OLD ARTICLES
-        // =================================================
-
         for (News news : oldNews) {
-
             try {
-
-                System.out.println();
-                System.out.println(
-                        "Removing old article:"
-                );
-
-                System.out.println(
-                        "ID: "
-                                + news.getId()
-                );
-
-                System.out.println(
-                        "Title: "
-                                + news.getTitle()
-                );
-
-                System.out.println(
-                        "Published: "
-                                + news.getPublishedDate()
-                );
-
-
-                // =================================================
-                // IMPORTANT
-                // =================================================
-                //
-                // Images are no longer stored locally.
-                //
-                // We only store external image URLs in the
-                // database. Therefore there is NO image file
-                // to delete here.
-                //
-                // =================================================
-
-
-                // =========================================
-                // DELETE DATABASE ARTICLE
-                // =========================================
-
                 newsRepository.delete(news);
-
                 deletedCount++;
-
-
-                System.out.println(
-                        "Article deleted successfully."
-                );
-
-
             } catch (Exception e) {
-
-                System.out.println(
-                        "Failed to delete article: "
-                                + news.getTitle()
+                logger.warn(
+                        "Old news deletion failed: id={}, errorType={}, message={}",
+                        news.getId(),
+                        e.getClass().getSimpleName(),
+                        e.getMessage()
                 );
-
-                System.out.println(
-                        "Error: "
-                                + e.getMessage()
-                );
-
-                e.printStackTrace();
             }
         }
 
-
-        // =================================================
-        // SUMMARY
-        // =================================================
-
-        System.out.println();
-        System.out.println(
-                "========================================"
+        logger.info(
+                "AgniPress old news cleanup completed: found={}, deleted={}, failed={}",
+                oldNews.size(),
+                deletedCount,
+                oldNews.size() - deletedCount
         );
-
-        System.out.println(
-                "OLD NEWS CLEANUP COMPLETED"
-        );
-
-        System.out.println(
-                "Articles deleted: "
-                        + deletedCount
-        );
-
-        System.out.println(
-                "Images deleted: 0"
-        );
-
-        System.out.println(
-                "Reason: AgniPress does not store news images locally."
-        );
-
-        System.out.println(
-                "========================================"
-        );
-
 
         return deletedCount;
     }
