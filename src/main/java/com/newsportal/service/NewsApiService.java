@@ -6,6 +6,8 @@ import com.newsportal.source.NewsSection;
 import com.newsportal.source.NewsSource;
 import com.newsportal.source.SectionRouterService;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -21,37 +23,25 @@ import java.util.Map;
 @Service
 public class NewsApiService {
 
-    private final WebClient webClient;
+    private static final Logger logger =
+            LoggerFactory.getLogger(NewsApiService.class);
 
+    private final WebClient webClient;
     private final SectionRouterService sectionRouterService;
 
     @Value("${newsapi.api-key}")
     private String apiKey;
 
-
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
-
     public NewsApiService(
             @Value("${newsapi.base-url}") String baseUrl,
             SectionRouterService sectionRouterService) {
-
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .build();
-
-        this.sectionRouterService =
-                sectionRouterService;
+        this.sectionRouterService = sectionRouterService;
     }
 
-
-    // =====================================================
-    // OLD TEST METHOD
-    // =====================================================
-
     public NewsApiResponseDTO getTopHeadlines() {
-
         return webClient
                 .get()
                 .uri(uriBuilder -> uriBuilder
@@ -66,296 +56,120 @@ public class NewsApiService {
                 .block();
     }
 
-
-    // =====================================================
-    // SECTION-AWARE NEWS FETCH
-    // =====================================================
-
     public List<NewsApiArticleDTO> getNewsForSection(
             NewsSection section) {
 
         if (section == null) {
-
+            logger.warn("NewsAPI fetch skipped: section is null");
             return List.of();
         }
 
-
-        System.out.println();
-        System.out.println(
-                "========================================"
-        );
-
-        System.out.println(
-                "FETCHING SECTION: "
-                        + section.getDisplayName()
-        );
-
-        System.out.println(
-                "========================================"
-        );
-
-
-        /*
-         * Ask the SectionRouter which sources are
-         * currently usable for this section.
-         */
+        logger.info("Fetching NewsAPI section: {}", section.getDisplayName());
 
         List<NewsSource> usableSources =
-                sectionRouterService
-                        .getUsableSources(section);
-
+                sectionRouterService.getUsableSources(section);
 
         if (usableSources.isEmpty()) {
-
-            System.out.println(
-                    "No usable sources configured for: "
-                            + section.getDisplayName()
+            logger.warn(
+                    "No usable NewsAPI sources configured: section={}",
+                    section.getDisplayName()
             );
-
             return List.of();
         }
 
-
-        Map<String, NewsApiArticleDTO>
-                uniqueArticles =
+        Map<String, NewsApiArticleDTO> uniqueArticles =
                 new LinkedHashMap<>();
 
+        for (NewsSource source : usableSources) {
 
-        /*
-         * Currently only NEWS_API sources are handled here.
-         *
-         * RSS and dedicated Anime/Gaming providers will
-         * be implemented as separate services later.
-         */
-
-        for (NewsSource source :
-                usableSources) {
-
-            if (!"NEWS_API".equalsIgnoreCase(
-                    source.getProviderType())) {
-
+            if (!"NEWS_API".equalsIgnoreCase(source.getProviderType())) {
                 continue;
             }
 
-
             try {
-
                 List<NewsApiArticleDTO> fetched =
-                        fetchFromNewsApi(
-                                section,
-                                source
-                        );
+                        fetchFromNewsApi(section, source);
 
-
-                for (NewsApiArticleDTO article :
-                        fetched) {
-
+                for (NewsApiArticleDTO article : fetched) {
                     if (article == null ||
                             article.getUrl() == null ||
                             article.getUrl().isBlank()) {
-
                         continue;
                     }
 
-
-                    /*
-                     * Always use the AgniPress section,
-                     * not the provider's category.
-                     */
-
-                    article.setCategory(
-                            section.getDisplayName()
-                    );
-
-
-                    uniqueArticles.putIfAbsent(
-                            article.getUrl(),
-                            article
-                    );
+                    article.setCategory(section.getDisplayName());
+                    uniqueArticles.putIfAbsent(article.getUrl(), article);
                 }
 
-
             } catch (Exception e) {
-
-                System.out.println(
-                        "Failed source: "
-                                + source.getName()
-                );
-
-                System.out.println(
-                        "Error: "
-                                + e.getMessage()
+                logger.warn(
+                        "NewsAPI source failed: source={}, errorType={}, message={}",
+                        source.getName(),
+                        e.getClass().getSimpleName(),
+                        e.getMessage()
                 );
             }
         }
 
-
         List<NewsApiArticleDTO> result =
-                new ArrayList<>(
-                        uniqueArticles.values()
-                );
+                new ArrayList<>(uniqueArticles.values());
 
-
-        System.out.println(
-                "Section "
-                        + section.getDisplayName()
-                        + " returned "
-                        + result.size()
-                        + " unique articles."
+        logger.info(
+                "NewsAPI section fetched: section={}, uniqueArticles={}",
+                section.getDisplayName(),
+                result.size()
         );
-
 
         return result;
     }
-
-
-    // =====================================================
-    // FETCH FROM NEWS API
-    // =====================================================
 
     private List<NewsApiArticleDTO> fetchFromNewsApi(
             NewsSection section,
             NewsSource source) {
 
-        String sourceId =
-                source.getSourceId();
-
-
-        /*
-         * INDIA
-         *
-         * NewsAPI supports India through country=in.
-         */
+        String sourceId = source.getSourceId();
 
         if (section == NewsSection.INDIA) {
-
-            return fetchTopHeadlines(
-                    "in",
-                    null,
-                    null,
-                    20
-            );
+            return fetchTopHeadlines("in", null, null, 20);
         }
-
-
-        /*
-         * NewsAPI has dedicated categories for these
-         * AgniPress sections.
-         */
 
         switch (section) {
-
             case SPORTS:
-
-                return fetchTopHeadlines(
-                        null,
-                        "sports",
-                        null,
-                        20
-                );
-
+                return fetchTopHeadlines(null, "sports", null, 20);
 
             case BUSINESS:
-
-                return fetchTopHeadlines(
-                        null,
-                        "business",
-                        null,
-                        20
-                );
-
+                return fetchTopHeadlines(null, "business", null, 20);
 
             case TECHNOLOGY:
-
-                return fetchTopHeadlines(
-                        null,
-                        "technology",
-                        null,
-                        20
-                );
-
+                return fetchTopHeadlines(null, "technology", null, 20);
 
             case ENTERTAINMENT:
-
-                return fetchTopHeadlines(
-                        null,
-                        "entertainment",
-                        null,
-                        20
-                );
-
+                return fetchTopHeadlines(null, "entertainment", null, 20);
 
             case SCIENCE:
-
-                return fetchTopHeadlines(
-                        null,
-                        "science",
-                        null,
-                        20
-                );
-
-
-            /*
-             * NewsAPI does not provide a dedicated
-             * Anime category.
-             *
-             * Anime will be handled by an Anime-specific
-             * provider later.
-             */
+                return fetchTopHeadlines(null, "science", null, 20);
 
             case ANIME:
-
-                System.out.println(
-                        "Anime requires a dedicated provider."
-                );
-
+                logger.debug("Anime requires a dedicated provider");
                 return List.of();
-
-
-            /*
-             * NewsAPI does not provide a dedicated
-             * Gaming category.
-             */
 
             case GAMING:
-
-                System.out.println(
-                        "Gaming requires a dedicated provider."
-                );
-
+                logger.debug("Gaming requires a dedicated provider");
                 return List.of();
 
-
-            /*
-             * WORLD
-             *
-             * NewsAPI doesn't have a "world" category.
-             * Use /everything with international topics.
-             */
-
             case WORLD:
-
                 return searchNews(
-                        "international OR "
-                                + "geopolitics OR "
-                                + "diplomacy OR "
-                                + "\"United Nations\" OR "
-                                + "NATO"
+                        "international OR " +
+                                "geopolitics OR " +
+                                "diplomacy OR " +
+                                "\"United Nations\" OR " +
+                                "NATO"
                 );
-
 
             default:
-
-                return searchNews(
-                        "latest news"
-                );
+                return searchNews("latest news");
         }
     }
-
-
-    // =====================================================
-    // TOP HEADLINES
-    // =====================================================
 
     private List<NewsApiArticleDTO> fetchTopHeadlines(
             String country,
@@ -367,76 +181,36 @@ public class NewsApiService {
                 webClient
                         .get()
                         .uri(uriBuilder -> {
+                            uriBuilder.path("/top-headlines");
 
-                            uriBuilder
-                                    .path("/top-headlines");
-
-                            if (country != null &&
-                                    !country.isBlank()) {
-
-                                uriBuilder.queryParam(
-                                        "country",
-                                        country
-                                );
+                            if (country != null && !country.isBlank()) {
+                                uriBuilder.queryParam("country", country);
                             }
 
-
-                            if (category != null &&
-                                    !category.isBlank()) {
-
-                                uriBuilder.queryParam(
-                                        "category",
-                                        category
-                                );
+                            if (category != null && !category.isBlank()) {
+                                uriBuilder.queryParam("category", category);
                             }
 
-
-                            if (sources != null &&
-                                    !sources.isBlank()) {
-
-                                uriBuilder.queryParam(
-                                        "sources",
-                                        sources
-                                );
+                            if (sources != null && !sources.isBlank()) {
+                                uriBuilder.queryParam("sources", sources);
                             }
 
-
-                            uriBuilder.queryParam(
-                                    "pageSize",
-                                    pageSize
-                            );
-
-
+                            uriBuilder.queryParam("pageSize", pageSize);
                             return uriBuilder.build();
                         })
-                        .header(
-                                "X-Api-Key",
-                                apiKey
-                        )
+                        .header("X-Api-Key", apiKey)
                         .retrieve()
-                        .bodyToMono(
-                                NewsApiResponseDTO.class
-                        )
+                        .bodyToMono(NewsApiResponseDTO.class)
                         .block();
 
-
-        if (response == null ||
-                response.getArticles() == null) {
-
+        if (response == null || response.getArticles() == null) {
             return List.of();
         }
-
 
         return response.getArticles();
     }
 
-
-    // =====================================================
-    // RECENT NEWS SEARCH
-    // =====================================================
-
-    private List<NewsApiArticleDTO> searchNews(
-            String query) {
+    private List<NewsApiArticleDTO> searchNews(String query) {
 
         String fromDate =
                 OffsetDateTime.now(ZoneOffset.UTC)
@@ -447,86 +221,36 @@ public class NewsApiService {
                 OffsetDateTime.now(ZoneOffset.UTC)
                         .toString();
 
-
         NewsApiResponseDTO response =
                 webClient
                         .get()
                         .uri(uriBuilder -> uriBuilder
                                 .path("/everything")
-                                .queryParam(
-                                        "q",
-                                        query
-                                )
-                                .queryParam(
-                                        "from",
-                                        fromDate
-                                )
-                                .queryParam(
-                                        "to",
-                                        toDate
-                                )
-                                .queryParam(
-                                        "language",
-                                        "en"
-                                )
-                                .queryParam(
-                                        "sortBy",
-                                        "publishedAt"
-                                )
-                                .queryParam(
-                                        "pageSize",
-                                        20
-                                )
+                                .queryParam("q", query)
+                                .queryParam("from", fromDate)
+                                .queryParam("to", toDate)
+                                .queryParam("language", "en")
+                                .queryParam("sortBy", "publishedAt")
+                                .queryParam("pageSize", 20)
                                 .build())
-                        .header(
-                                "X-Api-Key",
-                                apiKey
-                        )
+                        .header("X-Api-Key", apiKey)
                         .retrieve()
-                        .bodyToMono(
-                                NewsApiResponseDTO.class
-                        )
+                        .bodyToMono(NewsApiResponseDTO.class)
                         .block();
 
-
-        if (response == null ||
-                response.getArticles() == null) {
-
+        if (response == null || response.getArticles() == null) {
             return List.of();
         }
-
 
         return response.getArticles();
     }
 
-
-    // =====================================================
-    // BACKWARD COMPATIBILITY
-    // =====================================================
-
-    /*
-     * Your existing NewsImportService currently calls:
-     *
-     *     getAllTopHeadlines()
-     *
-     * Keep this method so the project remains compatible
-     * while we transition the importer to section-aware
-     * fetching.
-     */
-
     public List<NewsApiArticleDTO> getAllTopHeadlines() {
 
-        Map<String, NewsApiArticleDTO>
-                uniqueArticles =
+        Map<String, NewsApiArticleDTO> uniqueArticles =
                 new LinkedHashMap<>();
 
-
-        /*
-         * Fetch the sections that NewsAPI actually supports.
-         */
-
         NewsSection[] sections = {
-
                 NewsSection.INDIA,
                 NewsSection.WORLD,
                 NewsSection.SPORTS,
@@ -536,79 +260,41 @@ public class NewsApiService {
                 NewsSection.SCIENCE
         };
 
-
-        for (NewsSection section :
-                sections) {
-
+        for (NewsSection section : sections) {
             try {
-
                 List<NewsApiArticleDTO> articles =
-                        getNewsForSection(
-                                section
-                        );
+                        getNewsForSection(section);
 
-
-                for (NewsApiArticleDTO article :
-                        articles) {
-
+                for (NewsApiArticleDTO article : articles) {
                     if (article == null ||
                             article.getUrl() == null ||
                             article.getUrl().isBlank()) {
-
                         continue;
                     }
 
-
-                    uniqueArticles.putIfAbsent(
-                            article.getUrl(),
-                            article
-                    );
+                    uniqueArticles.putIfAbsent(article.getUrl(), article);
                 }
 
-
             } catch (Exception e) {
-
-                System.out.println(
-                        "Failed to fetch section: "
-                                + section.getDisplayName()
-                );
-
-                System.out.println(
-                        "Error: "
-                                + e.getMessage()
+                logger.warn(
+                        "NewsAPI section fetch failed: section={}, errorType={}, message={}",
+                        section.getDisplayName(),
+                        e.getClass().getSimpleName(),
+                        e.getMessage()
                 );
             }
         }
 
-
         List<NewsApiArticleDTO> articles =
-                new ArrayList<>(
-                        uniqueArticles.values()
-                );
+                new ArrayList<>(uniqueArticles.values());
 
-
-        System.out.println();
-        System.out.println(
-                "Total unique section-aware articles: "
-                        + articles.size()
+        logger.info(
+                "NewsAPI section-aware fetch completed: uniqueArticles={}",
+                articles.size()
         );
-
 
         return articles;
     }
 
-
-    // =====================================================
-    // OLD CATEGORY CLASSIFIER
-    // =====================================================
-
-    /*
-     * We intentionally leave the old classifier out of
-     * the new architecture.
-     *
-     * The SectionRouter is now responsible for determining
-     * the AgniPress section.
-     *
-     * This avoids having two competing category systems.
-     */
+    // The SectionRouter is responsible for AgniPress section classification.
 }
