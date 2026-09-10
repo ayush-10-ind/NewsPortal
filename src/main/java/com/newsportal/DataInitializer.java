@@ -8,6 +8,8 @@ import com.newsportal.repository.CategoryRepository;
 import com.newsportal.repository.RoleRepository;
 import com.newsportal.repository.UserRepository;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,15 +18,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class DataInitializer implements CommandLineRunner {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(DataInitializer.class);
+
     private final RoleRepository roleRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-
-    // =====================================================
-    // ADMIN CONFIGURATION
-    // =====================================================
 
     @Value("${app.admin.email}")
     private String adminEmail;
@@ -32,19 +32,8 @@ public class DataInitializer implements CommandLineRunner {
     @Value("${app.admin.password}")
     private String adminPassword;
 
-    /*
-     * Set this to true ONLY when you intentionally want
-     * to reset the configured admin password.
-     *
-     * After logging in successfully, change it back to false.
-     */
     @Value("${app.admin.reset-password:false}")
     private boolean resetAdminPassword;
-
-
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
 
     public DataInitializer(
             RoleRepository roleRepository,
@@ -58,26 +47,12 @@ public class DataInitializer implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
-
-    // =====================================================
-    // STARTUP
-    // =====================================================
-
     @Override
     public void run(String... args) {
-
-        // =================================================
-        // ROLES
-        // =================================================
 
         createRoleIfNotExists("ROLE_ADMIN");
         createRoleIfNotExists("ROLE_EDITOR");
         createRoleIfNotExists("ROLE_USER");
-
-
-        // =================================================
-        // CATEGORIES
-        // =================================================
 
         createCategoryIfNotExists(
                 "Technology",
@@ -114,25 +89,9 @@ public class DataInitializer implements CommandLineRunner {
                 "International news and global events."
         );
 
-
-        // =================================================
-        // EXISTING USERS
-        // =================================================
-
         markExistingUsersAsVerified();
-
-
-        // =================================================
-        // ADMIN
-        // =================================================
-
         createOrUpdateAdmin();
     }
-
-
-    // =====================================================
-    // CREATE ROLE
-    // =====================================================
 
     private void createRoleIfNotExists(
             String roleName) {
@@ -142,19 +101,11 @@ public class DataInitializer implements CommandLineRunner {
                 .isEmpty()) {
 
             Role role = new Role(roleName);
-
             roleRepository.save(role);
 
-            System.out.println(
-                    "Created role: " + roleName
-            );
+            logger.info("Created role: {}", roleName);
         }
     }
-
-
-    // =====================================================
-    // CREATE CATEGORY
-    // =====================================================
 
     private void createCategoryIfNotExists(
             String name,
@@ -171,41 +122,28 @@ public class DataInitializer implements CommandLineRunner {
 
             categoryRepository.save(category);
 
-            System.out.println(
-                    "Created category: " + name
-            );
+            logger.info("Created category: {}", name);
         }
     }
 
-
-    // =====================================================
-    // VERIFY EXISTING USERS
-    // =====================================================
-
     private void markExistingUsersAsVerified() {
 
-        for (User user : userRepository.findAll()) {
+        int verifiedCount = 0;
 
-            /*
-             * Existing accounts were created before
-             * email verification existed.
-             *
-             * Keep them working.
-             */
+        for (User user : userRepository.findAll()) {
 
             if (!user.isEmailVerified()) {
 
                 user.setEmailVerified(true);
-
                 userRepository.save(user);
+                verifiedCount++;
             }
         }
+
+        if (verifiedCount > 0) {
+            logger.info("Marked {} existing users as verified", verifiedCount);
+        }
     }
-
-
-    // =====================================================
-    // CREATE / UPDATE ADMIN
-    // =====================================================
 
     private void createOrUpdateAdmin() {
 
@@ -217,16 +155,10 @@ public class DataInitializer implements CommandLineRunner {
             );
         }
 
-
         String normalizedAdminEmail =
                 adminEmail
                         .trim()
                         .toLowerCase();
-
-
-        // =================================================
-        // FIND ADMIN ROLE
-        // =================================================
 
         Role adminRole =
                 roleRepository
@@ -237,11 +169,6 @@ public class DataInitializer implements CommandLineRunner {
                                 )
                         );
 
-
-        // =================================================
-        // FIRST: FIND THE CONFIGURED ADMIN EMAIL
-        // =================================================
-
         User configuredAdmin =
                 userRepository
                         .findByEmail(
@@ -249,35 +176,11 @@ public class DataInitializer implements CommandLineRunner {
                         )
                         .orElse(null);
 
-
-        // =================================================
-        // REAL ADMIN ACCOUNT ALREADY EXISTS
-        // =================================================
-
         if (configuredAdmin != null) {
 
-            /*
-             * This is the important part.
-             *
-             * If the real admin email already belongs
-             * to a normal USER/EDITOR account, promote
-             * that existing account instead of creating
-             * another account.
-             */
-
             configuredAdmin.addRole(adminRole);
-
             configuredAdmin.setEnabled(true);
-
             configuredAdmin.setEmailVerified(true);
-
-
-            /*
-             * Password is reset ONLY when explicitly
-             * requested through:
-             *
-             * app.admin.reset-password=true
-             */
 
             if (resetAdminPassword) {
 
@@ -295,24 +198,15 @@ public class DataInitializer implements CommandLineRunner {
                         )
                 );
 
-                System.out.println(
-                        "Admin password was reset."
-                );
+                logger.info("Admin password was reset");
             }
-
 
             userRepository.save(configuredAdmin);
 
-
-            System.out.println(
-                    "Configured admin account found: "
-                            + normalizedAdminEmail
+            logger.info(
+                    "Configured admin account found: {}",
+                    normalizedAdminEmail
             );
-
-
-            // ---------------------------------------------
-            // DISABLE OLD ADMIN ACCOUNTS
-            // ---------------------------------------------
 
             disableOtherAdminAccounts(
                     configuredAdmin.getId(),
@@ -321,11 +215,6 @@ public class DataInitializer implements CommandLineRunner {
 
             return;
         }
-
-
-        // =================================================
-        // CONFIGURED ADMIN DOES NOT EXIST
-        // =================================================
 
         User admin = new User();
 
@@ -337,7 +226,6 @@ public class DataInitializer implements CommandLineRunner {
                 normalizedAdminEmail
         );
 
-
         if (adminPassword == null
                 || adminPassword.isBlank()) {
 
@@ -346,12 +234,6 @@ public class DataInitializer implements CommandLineRunner {
             );
         }
 
-
-        /*
-         * Password comes from application configuration
-         * and is never hard-coded in Java.
-         */
-
         admin.setPassword(
                 passwordEncoder.encode(
                         adminPassword
@@ -359,24 +241,15 @@ public class DataInitializer implements CommandLineRunner {
         );
 
         admin.setEnabled(true);
-
         admin.setEmailVerified(true);
-
         admin.addRole(adminRole);
-
 
         userRepository.save(admin);
 
-
-        System.out.println(
-                "Created admin account: "
-                        + normalizedAdminEmail
+        logger.info(
+                "Created admin account: {}",
+                normalizedAdminEmail
         );
-
-
-        // ---------------------------------------------
-        // DISABLE OLD ADMIN ACCOUNTS
-        // ---------------------------------------------
 
         disableOtherAdminAccounts(
                 admin.getId(),
@@ -384,14 +257,11 @@ public class DataInitializer implements CommandLineRunner {
         );
     }
 
-
-    // =====================================================
-    // DISABLE OLD ADMIN ACCOUNTS
-    // =====================================================
-
     private void disableOtherAdminAccounts(
             Long activeAdminId,
             Role adminRole) {
+
+        int disabledCount = 0;
 
         for (User user : userRepository.findAll()) {
 
@@ -403,7 +273,6 @@ public class DataInitializer implements CommandLineRunner {
                 continue;
             }
 
-
             boolean isAdmin =
                     user.getRoles()
                             .stream()
@@ -413,24 +282,19 @@ public class DataInitializer implements CommandLineRunner {
                                     )
                             );
 
-
             if (isAdmin && user.isEnabled()) {
 
-                /*
-                 * Disable old admin accounts so that
-                 * the old credentials cannot be used.
-                 */
-
                 user.setEnabled(false);
-
                 userRepository.save(user);
-
-
-                System.out.println(
-                        "Disabled old admin account: "
-                                + user.getEmail()
-                );
+                disabledCount++;
             }
+        }
+
+        if (disabledCount > 0) {
+            logger.info(
+                    "Disabled {} old admin account(s)",
+                    disabledCount
+            );
         }
     }
 }
