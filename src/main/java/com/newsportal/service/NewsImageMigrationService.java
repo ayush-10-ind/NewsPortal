@@ -5,6 +5,8 @@ import com.newsportal.repository.NewsRepository;
 
 import jakarta.annotation.PostConstruct;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
@@ -18,79 +20,39 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class NewsImageMigrationService {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(NewsImageMigrationService.class);
+
     private static final String OLD_IMAGE_PREFIX =
             "/uploads/news/";
 
-
-    /*
-     * We intentionally process only 5 records per cycle.
-     *
-     * This reduces memory usage and prevents Railway from
-     * being overloaded by many external HTTP requests.
-     */
     private static final int BATCH_SIZE = 5;
-
-
-    /*
-     * Wait 30 seconds between migration batches.
-     *
-     * This is deliberately conservative because each article
-     * can require external HTTP requests.
-     */
     private static final long DELAY_SECONDS = 30;
 
-
     private final NewsRepository newsRepository;
-
     private final ArticleImageService articleImageService;
-
     private final TransactionTemplate transactionTemplate;
 
-
-    /*
-     * Prevents two migration cycles from running at the
-     * same time.
-     */
     private final AtomicBoolean migrationRunning =
             new AtomicBoolean(false);
 
-
-    /*
-     * These counters are only runtime statistics.
-     *
-     * IMPORTANT:
-     * They reset if Railway restarts the application.
-     *
-     * The database "remaining" count is the real source
-     * of truth.
-     */
     private final AtomicInteger totalMigrated =
             new AtomicInteger(0);
 
     private final AtomicInteger totalFailed =
             new AtomicInteger(0);
 
-
     private final ScheduledExecutorService scheduler =
             Executors.newSingleThreadScheduledExecutor(
                     runnable -> {
-
-                        Thread thread =
-                                new Thread(
-                                        runnable,
-                                        "news-image-migration-scheduler"
-                                );
-
+                        Thread thread = new Thread(
+                                runnable,
+                                "news-image-migration-scheduler"
+                        );
                         thread.setDaemon(true);
-
                         return thread;
                     }
             );
-
-
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
 
     public NewsImageMigrationService(
             NewsRepository newsRepository,
@@ -98,25 +60,12 @@ public class NewsImageMigrationService {
             TransactionTemplate transactionTemplate) {
 
         this.newsRepository = newsRepository;
-
         this.articleImageService = articleImageService;
-
         this.transactionTemplate = transactionTemplate;
     }
 
-
-    // =====================================================
-    // STARTUP
-    //
-    // After every Railway restart, check the database.
-    //
-    // If old /uploads/news/ records remain, migration
-    // automatically resumes.
-    // =====================================================
-
     @PostConstruct
     public void initializeMigrationMonitor() {
-
         scheduler.scheduleWithFixedDelay(
                 this::automaticMigrationCycle,
                 15,
@@ -124,54 +73,24 @@ public class NewsImageMigrationService {
                 TimeUnit.SECONDS
         );
 
-
-        System.out.println(
-                "News image migration monitor initialized."
-        );
+        logger.info("News image migration monitor initialized");
     }
-
-
-    // =====================================================
-    // AUTOMATIC MIGRATION CYCLE
-    // =====================================================
 
     private void automaticMigrationCycle() {
 
-        /*
-         * Prevent overlapping cycles.
-         */
-        if (!migrationRunning.compareAndSet(
-                false,
-                true)) {
-
+        if (!migrationRunning.compareAndSet(false, true)) {
             return;
         }
 
-
         try {
-
             long remaining =
-                    newsRepository
-                            .countByImageUrlStartingWith(
-                                    OLD_IMAGE_PREFIX
-                            );
+                    newsRepository.countByImageUrlStartingWith(
+                            OLD_IMAGE_PREFIX
+                    );
 
-
-            /*
-             * Nothing left to migrate.
-             */
             if (remaining == 0) {
-
                 return;
             }
-
-
-            System.out.println(
-                    "Automatic image migration cycle started. "
-                            + "Remaining="
-                            + remaining
-            );
-
 
             List<News> candidates =
                     newsRepository
@@ -179,213 +98,110 @@ public class NewsImageMigrationService {
                                     OLD_IMAGE_PREFIX
                             );
 
-
             if (candidates.isEmpty()) {
-
-                System.out.println(
-                        "Migration monitor found no candidates."
-                );
-
+                logger.debug("Image migration found no candidates");
                 return;
             }
-
 
             int migratedThisCycle = 0;
             int failedThisCycle = 0;
 
-
-            /*
-             * Process one article at a time.
-             */
             for (News news : candidates) {
-
                 try {
-
                     boolean migrated =
-                            migrateSingleArticle(
-                                    news.getId()
-                            );
-
+                            migrateSingleArticle(news.getId());
 
                     if (migrated) {
-
                         migratedThisCycle++;
-
                         totalMigrated.incrementAndGet();
-
                     } else {
-
                         failedThisCycle++;
-
                         totalFailed.incrementAndGet();
                     }
 
-
                 } catch (Exception ex) {
-
                     failedThisCycle++;
-
                     totalFailed.incrementAndGet();
 
-
-                    System.err.println(
-                            "Image migration failed for article ID "
-                                    + news.getId()
-                                    + ": "
-                                    + ex.getMessage()
+                    logger.warn(
+                            "Image migration failed: articleId={}, errorType={}, message={}",
+                            news.getId(),
+                            ex.getClass().getSimpleName(),
+                            ex.getMessage()
                     );
 
-
-                    /*
-                     * If an article cannot obtain an external
-                     * image, give it the AgniPress fallback.
-                     *
-                     * This prevents one problematic publisher
-                     * from blocking migration forever.
-                     */
                     try {
-
                         saveFallbackImage(
                                 news.getId(),
                                 news.getCategory()
                         );
-
                     } catch (Exception fallbackException) {
-
-                        System.err.println(
-                                "Fallback failed for article ID "
-                                        + news.getId()
-                                        + ": "
-                                        + fallbackException.getMessage()
+                        logger.error(
+                                "Fallback image save failed: articleId={}, errorType={}, message={}",
+                                news.getId(),
+                                fallbackException.getClass().getSimpleName(),
+                                fallbackException.getMessage()
                         );
                     }
                 }
             }
 
-
             long remainingAfter =
-                    newsRepository
-                            .countByImageUrlStartingWith(
-                                    OLD_IMAGE_PREFIX
-                            );
+                    newsRepository.countByImageUrlStartingWith(
+                            OLD_IMAGE_PREFIX
+                    );
 
-
-            System.out.println(
-                    "Image migration cycle completed. "
-                            + "Migrated="
-                            + migratedThisCycle
-                            + ", Failed="
-                            + failedThisCycle
-                            + ", Remaining="
-                            + remainingAfter
+            logger.info(
+                    "Image migration cycle completed: migrated={}, failed={}, remaining={}",
+                    migratedThisCycle,
+                    failedThisCycle,
+                    remainingAfter
             );
 
-
             if (remainingAfter == 0) {
-
-                System.out.println(
-                        "========================================"
-                );
-
-                System.out.println(
-                        "ALL OLD NEWS IMAGES HAVE BEEN MIGRATED."
-                );
-
-                System.out.println(
-                        "Total migrated since current startup: "
-                                + totalMigrated.get()
-                );
-
-                System.out.println(
-                        "Total failed since current startup: "
-                                + totalFailed.get()
-                );
-
-                System.out.println(
-                        "========================================"
+                logger.info(
+                        "All old news images migrated: totalMigrated={}, totalFailed={}",
+                        totalMigrated.get(),
+                        totalFailed.get()
                 );
             }
 
-
         } catch (Exception ex) {
-
-            /*
-             * IMPORTANT:
-             *
-             * Never allow an exception in one migration cycle
-             * to kill the scheduler.
-             */
-            System.err.println(
-                    "Image migration monitor error: "
-                            + ex.getMessage()
+            logger.error(
+                    "Image migration monitor error: errorType={}, message={}",
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage()
             );
 
-
         } finally {
-
             migrationRunning.set(false);
         }
     }
 
-
-    // =====================================================
-    // MANUAL START
-    //
-    // Kept for compatibility with the existing endpoint.
-    //
-    // /api-integration/images/migrate?batchSize=5
-    //
-    // This triggers ONE immediate cycle.
-    // The automatic monitor will continue afterward.
-    // =====================================================
-
     public String startMigration(int requestedBatchSize) {
 
         if (migrationRunning.get()) {
-
             return "Image migration is already running.";
         }
 
-
-        scheduler.execute(
-                this::automaticMigrationCycle
-        );
-
+        scheduler.execute(this::automaticMigrationCycle);
 
         return "Image migration batch started. "
                 + "Automatic migration monitor is active.";
     }
 
-
-    // =====================================================
-    // MANUAL FULL MIGRATION
-    //
-    // /api-integration/images/migrate/all
-    //
-    // We no longer create a long-running migration thread.
-    //
-    // Instead, the permanent monitor handles small batches.
-    // =====================================================
-
     public String startFullMigration() {
 
         if (migrationRunning.get()) {
-
             return "Image migration is already running.";
         }
 
-
-        scheduler.execute(
-                this::automaticMigrationCycle
-        );
-
+        scheduler.execute(this::automaticMigrationCycle);
 
         long remaining =
-                newsRepository
-                        .countByImageUrlStartingWith(
-                                OLD_IMAGE_PREFIX
-                        );
-
+                newsRepository.countByImageUrlStartingWith(
+                        OLD_IMAGE_PREFIX
+                );
 
         return "Full image migration activated. "
                 + "Remaining old images: "
@@ -393,211 +209,90 @@ public class NewsImageMigrationService {
                 + ". Migration will continue automatically.";
     }
 
-
-    // =====================================================
-    // MIGRATE ONE ARTICLE
-    // =====================================================
-
-    private boolean migrateSingleArticle(
-            Long newsId) {
+    private boolean migrateSingleArticle(Long newsId) {
 
         News news =
-                newsRepository
-                        .findById(newsId)
-                        .orElse(null);
-
+                newsRepository.findById(newsId).orElse(null);
 
         if (news == null) {
-
             return false;
         }
 
+        String currentImageUrl = news.getImageUrl();
 
-        String currentImageUrl =
-                news.getImageUrl();
-
-
-        /*
-         * Article may already have been migrated.
-         */
         if (!isOldLocalImage(currentImageUrl)) {
-
             return false;
         }
 
-
-        String sourceUrl =
-                news.getSourceUrl();
-
-
+        String sourceUrl = news.getSourceUrl();
         String newImageUrl;
 
-
-        // =================================================
-        // NO SOURCE URL
-        // =================================================
-
-        if (sourceUrl == null
-                || sourceUrl.isBlank()) {
-
-            newImageUrl =
-                    buildFallbackUrl(
-                            news.getCategory()
-                    );
-
+        if (sourceUrl == null || sourceUrl.isBlank()) {
+            newImageUrl = buildFallbackUrl(news.getCategory());
         } else {
-
-            /*
-             * Existing image-resolution architecture:
-             *
-             * Level 1 → NewsAPI image
-             * Level 2 → publisher article image
-             * Level 3 → AgniPress fallback
-             */
-            newImageUrl =
-                    articleImageService.resolveImage(
-                            null,
-                            sourceUrl,
-                            news.getCategory()
-                    );
+            newImageUrl = articleImageService.resolveImage(
+                    null,
+                    sourceUrl,
+                    news.getCategory()
+            );
         }
 
-
-        /*
-         * Never save a null/blank image URL.
-         */
-        if (newImageUrl == null
-                || newImageUrl.isBlank()) {
-
-            newImageUrl =
-                    buildFallbackUrl(
-                            news.getCategory()
-                    );
+        if (newImageUrl == null || newImageUrl.isBlank()) {
+            newImageUrl = buildFallbackUrl(news.getCategory());
         }
 
-
-        final String resolvedImageUrl =
-                newImageUrl;
-
-
-        // =================================================
-        // SAVE ONLY THE URL
-        // =================================================
+        final String resolvedImageUrl = newImageUrl;
 
         Boolean saved =
-                transactionTemplate.execute(
-                        status -> {
+                transactionTemplate.execute(status -> {
+                    News current =
+                            newsRepository.findById(newsId).orElse(null);
 
-                            News current =
-                                    newsRepository
-                                            .findById(newsId)
-                                            .orElse(null);
+                    if (current == null) {
+                        return false;
+                    }
 
+                    if (!isOldLocalImage(current.getImageUrl())) {
+                        return false;
+                    }
 
-                            if (current == null) {
-
-                                return false;
-                            }
-
-
-                            /*
-                             * Another process may have migrated
-                             * this record already.
-                             */
-                            if (!isOldLocalImage(
-                                    current.getImageUrl()
-                            )) {
-
-                                return false;
-                            }
-
-
-                            /*
-                             * IMPORTANT:
-                             *
-                             * We store only the external URL
-                             * or AgniPress fallback URL.
-                             *
-                             * No image binary is stored.
-                             */
-                            current.setImageUrl(
-                                    resolvedImageUrl
-                            );
-
-
-                            newsRepository.save(current);
-
-
-                            return true;
-                        }
-                );
-
+                    current.setImageUrl(resolvedImageUrl);
+                    newsRepository.save(current);
+                    return true;
+                });
 
         return Boolean.TRUE.equals(saved);
     }
-
-
-    // =====================================================
-    // SAVE FALLBACK
-    // =====================================================
 
     private void saveFallbackImage(
             Long newsId,
             String category) {
 
-        String fallbackUrl =
-                buildFallbackUrl(category);
+        String fallbackUrl = buildFallbackUrl(category);
 
+        transactionTemplate.executeWithoutResult(status -> {
+            News current =
+                    newsRepository.findById(newsId).orElse(null);
 
-        transactionTemplate.executeWithoutResult(
-                status -> {
+            if (current == null) {
+                return;
+            }
 
-                    News current =
-                            newsRepository
-                                    .findById(newsId)
-                                    .orElse(null);
+            if (!isOldLocalImage(current.getImageUrl())) {
+                return;
+            }
 
-
-                    if (current == null) {
-
-                        return;
-                    }
-
-
-                    /*
-                     * Only replace old local URLs.
-                     */
-                    if (!isOldLocalImage(
-                            current.getImageUrl()
-                    )) {
-
-                        return;
-                    }
-
-
-                    current.setImageUrl(
-                            fallbackUrl
-                    );
-
-
-                    newsRepository.save(current);
-                }
-        );
+            current.setImageUrl(fallbackUrl);
+            newsRepository.save(current);
+        });
     }
-
-
-    // =====================================================
-    // MIGRATION STATUS
-    // =====================================================
 
     public String getStatus() {
 
         long remaining =
-                newsRepository
-                        .countByImageUrlStartingWith(
-                                OLD_IMAGE_PREFIX
-                        );
-
+                newsRepository.countByImageUrlStartingWith(
+                        OLD_IMAGE_PREFIX
+                );
 
         return "Image migration status: "
                 + "remaining="
@@ -610,36 +305,18 @@ public class NewsImageMigrationService {
                 + migrationRunning.get();
     }
 
-
-    // =====================================================
-    // OLD LOCAL IMAGE CHECK
-    // =====================================================
-
-    private boolean isOldLocalImage(
-            String imageUrl) {
-
+    private boolean isOldLocalImage(String imageUrl) {
         return imageUrl != null
-                && imageUrl.startsWith(
-                        OLD_IMAGE_PREFIX
-                );
+                && imageUrl.startsWith(OLD_IMAGE_PREFIX);
     }
 
-
-    // =====================================================
-    // FALLBACK URL
-    // =====================================================
-
-    private String buildFallbackUrl(
-            String category) {
+    private String buildFallbackUrl(String category) {
 
         String safeCategory =
-                category == null
-                        || category.isBlank()
+                category == null || category.isBlank()
                         ? "general"
                         : category.trim();
 
-
-        return "/images/fallback?category="
-                + safeCategory;
+        return "/images/fallback?category=" + safeCategory;
     }
 }
