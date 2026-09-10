@@ -1,5 +1,7 @@
 package com.newsportal.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,9 @@ import java.util.regex.Pattern;
 
 @Service
 public class ArticleImageService {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(ArticleImageService.class);
 
     private final WebClient webClient;
 
@@ -258,43 +263,14 @@ public class ArticleImageService {
             String articleUrl,
             String category) {
 
-        System.out.println();
-        System.out.println(
-                "========================================"
-        );
-        System.out.println(
-                "IMAGE RESOLUTION STARTED"
-        );
-        System.out.println(
-                "Article URL: " + articleUrl
-        );
-        System.out.println(
-                "NewsAPI image: " + newsApiImageUrl
-        );
-        System.out.println(
-                "========================================"
-        );
-
-
         // =====================================================
         // LEVEL 1
         // NEWSAPI
         // =====================================================
 
         if (isUsableImageUrl(newsApiImageUrl)) {
-
-            System.out.println(
-                    "IMAGE LEVEL 1 SUCCESS: NewsAPI"
-            );
-
             return newsApiImageUrl.trim();
         }
-
-
-        System.out.println(
-                "IMAGE LEVEL 1 FAILED"
-        );
-
 
         // =====================================================
         // LEVEL 2
@@ -304,46 +280,17 @@ public class ArticleImageService {
         String articleImage =
                 extractArticleImage(articleUrl);
 
-
         if (articleImage != null &&
                 !articleImage.isBlank()) {
-
-            System.out.println(
-                    "IMAGE LEVEL 2 SUCCESS: Publisher page"
-            );
-
-            System.out.println(
-                    "Image: " + articleImage
-            );
-
             return articleImage.trim();
         }
-
-
-        System.out.println(
-                "IMAGE LEVEL 2 FAILED"
-        );
-
 
         // =====================================================
         // LEVEL 3
         // AGNIPRESS FALLBACK
         // =====================================================
 
-        String fallback =
-                buildFallbackImageUrl(category);
-
-
-        System.out.println(
-                "IMAGE LEVEL 3 USED"
-        );
-
-        System.out.println(
-                "Fallback: " + fallback
-        );
-
-
-        return fallback;
+        return buildFallbackImageUrl(category);
     }
 
 
@@ -356,10 +303,8 @@ public class ArticleImageService {
 
         if (imageUrl == null ||
                 imageUrl.isBlank()) {
-
             return false;
         }
-
 
         String url =
                 normalizeCandidateUrl(
@@ -367,25 +312,18 @@ public class ArticleImageService {
                         null
                 );
 
-
         if (url == null) {
-
             return false;
         }
 
-
         try {
-
             URI uri =
                     URI.create(url);
 
-
             if (uri.getHost() == null ||
                     uri.getHost().isBlank()) {
-
                 return false;
             }
-
 
             MediaType contentType =
                     webClient
@@ -398,21 +336,17 @@ public class ArticleImageService {
                                     )
                             )
                             .exchangeToMono(response -> {
-
                                 if (!response.statusCode()
                                         .is2xxSuccessful()) {
-
                                     return response
                                             .releaseBody()
                                             .then(Mono.empty());
                                 }
 
-
                                 MediaType type =
                                         response.headers()
                                                 .contentType()
                                                 .orElse(null);
-
 
                                 return response
                                         .releaseBody()
@@ -426,33 +360,18 @@ public class ArticleImageService {
                             )
                             .block();
 
-
             if (contentType == null) {
-
                 return false;
             }
 
-
-            /*
-             * Normal image response.
-             */
             if ("image".equalsIgnoreCase(
                     contentType.getType())) {
-
                 return true;
             }
 
-
-            /*
-             * Some CDNs don't send a correct content type.
-             *
-             * If the URL strongly looks like an image, allow it.
-             * The browser will perform the final rendering check.
-             */
             return looksLikeImageUrl(url);
 
         } catch (Exception e) {
-
             return false;
         }
     }
@@ -467,18 +386,14 @@ public class ArticleImageService {
 
         if (articleUrl == null ||
                 articleUrl.isBlank()) {
-
             return null;
         }
 
-
         try {
-
             URI articleUri =
                     URI.create(
                             articleUrl.trim()
                     );
-
 
             String html =
                     webClient
@@ -502,36 +417,13 @@ public class ArticleImageService {
                             )
                             .block();
 
-
             if (html == null ||
                     html.isBlank()) {
-
-                System.out.println(
-                        "Publisher HTML unavailable."
-                );
-
                 return null;
             }
 
-
-            System.out.println(
-                    "Publisher HTML received: "
-                            + html.length()
-                            + " characters"
-            );
-
-
-            /*
-             * Keep candidates in insertion order and prevent
-             * the same URL from being tested repeatedly.
-             */
             Set<String> candidates =
                     new LinkedHashSet<>();
-
-
-            // =================================================
-            // 1. OPEN GRAPH
-            // =================================================
 
             collectPatternCandidates(
                     html,
@@ -540,18 +432,12 @@ public class ArticleImageService {
                     candidates
             );
 
-
             collectPatternCandidates(
                     html,
                     articleUri,
                     OG_IMAGE_REVERSE_PATTERN,
                     candidates
             );
-
-
-            // =================================================
-            // 2. TWITTER
-            // =================================================
 
             collectPatternCandidates(
                     html,
@@ -560,18 +446,12 @@ public class ArticleImageService {
                     candidates
             );
 
-
             collectPatternCandidates(
                     html,
                     articleUri,
                     TWITTER_IMAGE_REVERSE_PATTERN,
                     candidates
             );
-
-
-            // =================================================
-            // 3. IMAGE_SRC
-            // =================================================
 
             collectPatternCandidates(
                     html,
@@ -580,18 +460,12 @@ public class ArticleImageService {
                     candidates
             );
 
-
             collectPatternCandidates(
                     html,
                     articleUri,
                     IMAGE_SRC_LINK_REVERSE_PATTERN,
                     candidates
             );
-
-
-            // =================================================
-            // 4. THUMBNAIL / IMAGE META
-            // =================================================
 
             collectPatternCandidates(
                     html,
@@ -600,18 +474,12 @@ public class ArticleImageService {
                     candidates
             );
 
-
             collectPatternCandidates(
                     html,
                     articleUri,
                     THUMBNAIL_META_REVERSE_PATTERN,
                     candidates
             );
-
-
-            // =================================================
-            // 5. JSON-LD
-            // =================================================
 
             collectPatternCandidates(
                     html,
@@ -620,7 +488,6 @@ public class ArticleImageService {
                     candidates
             );
 
-
             collectPatternCandidates(
                     html,
                     articleUri,
@@ -628,83 +495,43 @@ public class ArticleImageService {
                     candidates
             );
 
-
-            // =================================================
-            // 6. ARTICLE HERO / FEATURED IMAGE
-            // =================================================
-
             collectArticleImageTagCandidates(
                     html,
                     articleUri,
                     candidates
             );
 
-
-            System.out.println(
-                    "Image candidates found: "
-                            + candidates.size()
-            );
-
-
-            // =================================================
-            // VALIDATE CANDIDATES
-            // =================================================
-
             int checked =
                     0;
 
-
-            /*
-             * Don't hammer a publisher page forever.
-             * Eight carefully ordered candidates is enough.
-             */
             for (String candidate :
                     candidates) {
 
                 if (candidate == null ||
                         candidate.isBlank()) {
-
                     continue;
                 }
 
-
                 if (checked >= 8) {
-
                     break;
                 }
 
-
                 checked++;
-
-
-                System.out.println(
-                        "Checking image candidate #"
-                                + checked
-                                + ": "
-                                + candidate
-                );
-
 
                 if (isUsableImageUrl(
                         candidate
                 )) {
-
-                    System.out.println(
-                            "VALID IMAGE FOUND"
-                    );
-
                     return candidate;
                 }
             }
 
         } catch (Exception e) {
-
-            System.out.println(
-                    "Article image extraction failed: "
-                            + e.getMessage()
+            logger.warn(
+                    "Article image extraction failed: errorType={}, message={}",
+                    e.getClass().getSimpleName(),
+                    e.getMessage()
             );
         }
-
 
         return null;
     }
@@ -723,18 +550,14 @@ public class ArticleImageService {
         Matcher matcher =
                 pattern.matcher(html);
 
-
         while (matcher.find()) {
 
             if (matcher.groupCount() < 1) {
-
                 continue;
             }
 
-
             String raw =
                     matcher.group(1);
-
 
             String resolved =
                     normalizeCandidateUrl(
@@ -742,9 +565,7 @@ public class ArticleImageService {
                             articleUri
                     );
 
-
             if (resolved != null) {
-
                 candidates.add(
                         resolved
                 );
@@ -766,23 +587,19 @@ public class ArticleImageService {
                 ARTICLE_IMAGE_TAG_PATTERN
                         .matcher(html);
 
-
         while (imageTagMatcher.find()) {
 
             String imageTag =
                     imageTagMatcher.group();
 
-
             Matcher attributeMatcher =
                     IMAGE_ATTRIBUTE_PATTERN
                             .matcher(imageTag);
-
 
             while (attributeMatcher.find()) {
 
                 String raw =
                         attributeMatcher.group(1);
-
 
                 String resolved =
                         normalizeCandidateUrl(
@@ -790,19 +607,13 @@ public class ArticleImageService {
                                 articleUri
                         );
 
-
                 if (resolved != null) {
-
                     candidates.add(
                             resolved
                     );
                 }
             }
 
-
-            /*
-             * srcset can contain multiple image URLs.
-             */
             collectSrcsetCandidates(
                     imageTag,
                     articleUri,
@@ -830,27 +641,19 @@ public class ArticleImageService {
                         Pattern.CASE_INSENSITIVE
                 );
 
-
         Matcher matcher =
                 srcsetPattern.matcher(
                         htmlFragment
                 );
-
 
         while (matcher.find()) {
 
             String srcset =
                     matcher.group(1);
 
-
             String[] entries =
                     srcset.split(",");
 
-
-            /*
-             * Usually the last/highest-resolution candidate
-             * is the best one.
-             */
             for (int i =
                     entries.length - 1;
                  i >= 0;
@@ -859,22 +662,16 @@ public class ArticleImageService {
                 String entry =
                         entries[i].trim();
 
-
                 if (entry.isBlank()) {
-
                     continue;
                 }
-
 
                 String[] parts =
                         entry.split("\\s+");
 
-
                 if (parts.length == 0) {
-
                     continue;
                 }
-
 
                 String resolved =
                         normalizeCandidateUrl(
@@ -882,9 +679,7 @@ public class ArticleImageService {
                                 articleUri
                         );
 
-
                 if (resolved != null) {
-
                     candidates.add(
                             resolved
                     );
@@ -904,24 +699,17 @@ public class ArticleImageService {
 
         if (rawUrl == null ||
                 rawUrl.isBlank()) {
-
             return null;
         }
-
 
         String url =
                 rawUrl.trim();
 
-
-        /*
-         * Remove HTML escaping commonly found in JSON-LD.
-         */
         url =
                 url.replace(
                         "\\/",
                         "/"
                 );
-
 
         url =
                 url.replace(
@@ -929,84 +717,51 @@ public class ArticleImageService {
                         "&"
                 );
 
-
-        /*
-         * JSON escaped quotes/backslashes.
-         */
         url =
                 url.replace(
                         "\\\"",
                         "\""
                 );
 
-
-        /*
-         * Ignore obvious placeholders.
-         */
         if (isPlaceholderImage(url)) {
-
             return null;
         }
 
-
         try {
-
-            /*
-             * Protocol-relative URL:
-             *
-             * //cdn.example.com/image.jpg
-             */
             if (url.startsWith("//")) {
-
                 return "https:" + url;
             }
 
-
-            /*
-             * Already absolute.
-             */
             if (url.startsWith("http://") ||
                     url.startsWith("https://")) {
 
                 URI uri =
                         URI.create(url);
 
-
                 if (uri.getHost() == null ||
                         uri.getHost().isBlank()) {
-
                     return null;
                 }
-
 
                 return uri.toString();
             }
 
-
-            /*
-             * Relative URL from publisher page.
-             */
             if (articleUri != null) {
 
                 URI resolved =
                         articleUri.resolve(url);
 
-
                 if (resolved.getHost() == null ||
                         resolved.getHost().isBlank()) {
-
                     return null;
                 }
-
 
                 return resolved.toString();
             }
 
         } catch (Exception e) {
-
             return null;
         }
-
 
         return null;
     }
@@ -1021,7 +776,6 @@ public class ArticleImageService {
 
         String lower =
                 url.toLowerCase();
-
 
         return lower.contains(
                     "placeholder"
@@ -1066,16 +820,10 @@ public class ArticleImageService {
         String lower =
                 url.toLowerCase();
 
-
-        /*
-         * Strip query string before extension checking.
-         */
         int questionMark =
                 lower.indexOf("?");
 
-
         if (questionMark >= 0) {
-
             lower =
                     lower.substring(
                             0,
@@ -1083,20 +831,16 @@ public class ArticleImageService {
                     );
         }
 
-
         int hash =
                 lower.indexOf("#");
 
-
         if (hash >= 0) {
-
             lower =
                     lower.substring(
                             0,
                             hash
                     );
         }
-
 
         return lower.endsWith(".jpg")
                 || lower.endsWith(".jpeg")
@@ -1139,21 +883,17 @@ public class ArticleImageService {
                 getBrowserUserAgent()
         );
 
-
         headers.set(
                 HttpHeaders.ACCEPT_LANGUAGE,
                 "en-US,en;q=0.9"
         );
-
 
         headers.set(
                 HttpHeaders.CONNECTION,
                 "keep-alive"
         );
 
-
         if (htmlRequest) {
-
             headers.set(
                     HttpHeaders.ACCEPT,
                     "text/html,"
@@ -1162,9 +902,7 @@ public class ArticleImageService {
                             + "image/avif,image/webp,"
                             + "*/*;q=0.8"
             );
-
         } else {
-
             headers.set(
                     HttpHeaders.ACCEPT,
                     "image/avif,image/webp,image/apng,"
@@ -1202,7 +940,6 @@ public class ArticleImageService {
                         category.isBlank()
                         ? "General"
                         : category.trim();
-
 
         return "/images/fallback?category="
                 + encodeCategory(
