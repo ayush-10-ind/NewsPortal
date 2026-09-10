@@ -1,5 +1,7 @@
 package com.newsportal.source;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -7,6 +9,9 @@ import java.util.List;
 
 @Service
 public class MultiSourceNewsFetcherService {
+
+    private static final Logger logger =
+            LoggerFactory.getLogger(MultiSourceNewsFetcherService.class);
 
     private final NewsSourceRegistry sourceRegistry;
 
@@ -16,13 +21,9 @@ public class MultiSourceNewsFetcherService {
             NewsSourceRegistry sourceRegistry,
             RssNewsFetcherService rssNewsFetcherService) {
 
-        this.sourceRegistry =
-                sourceRegistry;
-
-        this.rssNewsFetcherService =
-                rssNewsFetcherService;
+        this.sourceRegistry = sourceRegistry;
+        this.rssNewsFetcherService = rssNewsFetcherService;
     }
-
 
     // =====================================================
     // FETCH RSS SOURCES FOR SECTION
@@ -35,97 +36,50 @@ public class MultiSourceNewsFetcherService {
         List<RssNewsFetcherService.RssArticle> results =
                 new ArrayList<>();
 
-
         if (section == null) {
-
+            logger.warn("RSS fetch skipped: section is null");
             return results;
         }
 
-
         List<NewsSource> sources =
-                sourceRegistry.getUsableRssSources(
-                        section
-                );
+                sourceRegistry.getUsableRssSources(section);
 
-
-        System.out.println();
-        System.out.println(
-                "========================================"
+        logger.info(
+                "Fetching RSS sources: section={}, sources={}",
+                section.getDisplayName(),
+                sources.size()
         );
 
-        System.out.println(
-                "MULTI-SOURCE RSS FETCH"
-        );
-
-        System.out.println(
-                "Section: "
-                        + section.getDisplayName()
-        );
-
-        System.out.println(
-                "Usable RSS sources: "
-                        + sources.size()
-        );
-
-
-        for (NewsSource source :
-                sources) {
+        for (NewsSource source : sources) {
 
             try {
 
-                System.out.println();
-                System.out.println(
-                        "Processing RSS source: "
-                                + source.getName()
-                );
+                List<RssNewsFetcherService.RssArticle> articles =
+                        rssNewsFetcherService.fetchFeed(source);
 
-
-                List<RssNewsFetcherService.RssArticle>
-                        articles =
-                        rssNewsFetcherService
-                                .fetchFeed(
-                                        source
-                                );
-
-
-                if (articles != null &&
-                        !articles.isEmpty()) {
-
-                    results.addAll(
-                            articles
-                    );
+                if (articles != null && !articles.isEmpty()) {
+                    results.addAll(articles);
                 }
-
 
             } catch (Exception e) {
 
-                System.out.println(
-                        "RSS source failed: "
-                                + source.getName()
-                );
-
-                System.out.println(
-                        "Error: "
-                                + e.getMessage()
+                logger.error(
+                        "RSS source failed: source={}, errorType={}, message={}",
+                        source.getName(),
+                        e.getClass().getSimpleName(),
+                        e.getMessage()
                 );
             }
         }
 
-
-        System.out.println();
-        System.out.println(
-                "TOTAL RSS ARTICLES: "
-                        + results.size()
+        logger.info(
+                "RSS sources fetched: section={}, articles={}",
+                section.getDisplayName(),
+                results.size()
         );
-
-        System.out.println(
-                "========================================"
-        );
-
 
         return results;
     }
-
 
     // =====================================================
     // FETCH ALL USABLE RSS SOURCES
@@ -137,21 +91,12 @@ public class MultiSourceNewsFetcherService {
         List<RssNewsFetcherService.RssArticle> results =
                 new ArrayList<>();
 
-
-        for (NewsSection section :
-                NewsSection.values()) {
-
-            results.addAll(
-                    fetchRssForSection(
-                            section
-                    )
-            );
+        for (NewsSection section : NewsSection.values()) {
+            results.addAll(fetchRssForSection(section));
         }
-
 
         return results;
     }
-
 
     // =====================================================
     // GET USABLE SOURCES
@@ -160,12 +105,8 @@ public class MultiSourceNewsFetcherService {
     public List<NewsSource> getUsableSources(
             NewsSection section) {
 
-        return sourceRegistry
-                .getUsableSources(
-                        section
-                );
+        return sourceRegistry.getUsableSources(section);
     }
-
 
     // =====================================================
     // GET RSS SOURCES
@@ -174,12 +115,8 @@ public class MultiSourceNewsFetcherService {
     public List<NewsSource> getUsableRssSources(
             NewsSection section) {
 
-        return sourceRegistry
-                .getUsableRssSources(
-                        section
-                );
+        return sourceRegistry.getUsableRssSources(section);
     }
-
 
     // =====================================================
     // SOURCE STATUS
@@ -187,59 +124,37 @@ public class MultiSourceNewsFetcherService {
 
     public String getSourceStatus() {
 
-        StringBuilder result =
-                new StringBuilder();
+        StringBuilder result = new StringBuilder();
 
+        result.append("AGNIPRESS SOURCE STATUS\n");
 
-        result.append(
-                "AGNIPRESS SOURCE STATUS\n"
-        );
-
-
-        for (NewsSection section :
-                NewsSection.values()) {
+        for (NewsSection section : NewsSection.values()) {
 
             List<NewsSource> sources =
-                    sourceRegistry
-                            .getSources(
-                                    section
-                            );
+                    sourceRegistry.getSources(section);
 
-
-            result.append(
-                    "\n"
-                            + section.getDisplayName()
-                            + ":\n"
-            );
-
+            result.append("\n")
+                    .append(section.getDisplayName())
+                    .append(":\n");
 
             if (sources.isEmpty()) {
-
-                result.append(
-                        "  No sources configured.\n"
-                );
-
+                result.append("  No sources configured.\n");
                 continue;
             }
 
+            for (NewsSource source : sources) {
 
-            for (NewsSource source :
-                    sources) {
-
-                result.append(
-                        "  - "
-                                + source.getName()
-                                + " | "
-                                + source.getProviderType()
-                                + " | enabled="
-                                + source.isEnabled()
-                                + " | usable="
-                                + source.isUsable()
-                                + "\n"
-                );
+                result.append("  - ")
+                        .append(source.getName())
+                        .append(" | ")
+                        .append(source.getProviderType())
+                        .append(" | enabled=")
+                        .append(source.isEnabled())
+                        .append(" | usable=")
+                        .append(source.isUsable())
+                        .append("\n");
             }
         }
-
 
         return result.toString();
     }
