@@ -30,7 +30,7 @@ public class RssNewsFetcherService {
             Duration.ofSeconds(8);
 
     private static final int MAX_FEED_SIZE =
-            1_000_000;
+            5_000_000;
 
     private final WebClient webClient;
 
