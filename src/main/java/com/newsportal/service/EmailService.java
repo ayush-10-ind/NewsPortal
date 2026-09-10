@@ -6,6 +6,8 @@ import com.newsportal.entity.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -15,6 +17,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
 
+    private static final Logger logger =
+            LoggerFactory.getLogger(EmailService.class);
+
     private final JavaMailSender mailSender;
 
     @Value("${spring.mail.username}")
@@ -23,19 +28,9 @@ public class EmailService {
     @Value("${app.base-url:http://localhost:8082}")
     private String baseUrl;
 
-
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
-
     public EmailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
-
-
-    // =====================================================
-    // SEND VERIFICATION EMAIL
-    // =====================================================
 
     public void sendVerificationEmail(
             User user,
@@ -46,21 +41,16 @@ public class EmailService {
                         + "/verify-email?token="
                         + token.getToken();
 
-
         String subject =
                 "Verify your AgniPress account";
 
-
         String html = """
                 <!DOCTYPE html>
-
                 <html>
-
                 <head>
                     <meta charset="UTF-8">
                     <title>Verify your AgniPress account</title>
                 </head>
-
                 <body style="
                     margin:0;
                     padding:0;
@@ -68,19 +58,16 @@ public class EmailService {
                     font-family:Arial,Helvetica,sans-serif;
                     color:#111111;
                 ">
-
                     <div style="
                         max-width:600px;
                         margin:40px auto;
                         background:#ffffff;
                         border:1px solid #ddd8cf;
                     ">
-
                         <div style="
                             padding:28px 32px;
                             border-bottom:1px solid #ddd8cf;
                         ">
-
                             <div style="
                                 font-size:28px;
                                 font-weight:700;
@@ -88,7 +75,6 @@ public class EmailService {
                             ">
                                 Agni<span style="font-weight:400;">Press</span>
                             </div>
-
                             <div style="
                                 margin-top:6px;
                                 font-size:11px;
@@ -97,12 +83,8 @@ public class EmailService {
                             ">
                                 INDIA. IN THE MOMENT.
                             </div>
-
                         </div>
-
-
                         <div style="padding:40px 32px;">
-
                             <div style="
                                 font-size:11px;
                                 font-weight:bold;
@@ -112,8 +94,6 @@ public class EmailService {
                             ">
                                 WELCOME TO AGNIPRESS
                             </div>
-
-
                             <h1 style="
                                 margin:0 0 18px 0;
                                 font-family:Georgia,serif;
@@ -123,8 +103,6 @@ public class EmailService {
                             ">
                                 Verify your email.
                             </h1>
-
-
                             <p style="
                                 font-size:16px;
                                 line-height:1.7;
@@ -132,8 +110,6 @@ public class EmailService {
                             ">
                                 Hello %s,
                             </p>
-
-
                             <p style="
                                 font-size:16px;
                                 line-height:1.7;
@@ -143,12 +119,8 @@ public class EmailService {
                                 Please verify your email address to continue
                                 and create your password.
                             </p>
-
-
                             <div style="margin:32px 0;">
-
-                                <a href="%s"
-                                   style="
+                                <a href="%s" style="
                                    display:inline-block;
                                    background:#111111;
                                    color:#ffffff;
@@ -160,10 +132,7 @@ public class EmailService {
                                    ">
                                     VERIFY EMAIL
                                 </a>
-
                             </div>
-
-
                             <p style="
                                 font-size:13px;
                                 line-height:1.6;
@@ -172,8 +141,6 @@ public class EmailService {
                                 This verification link will expire after
                                 24 hours.
                             </p>
-
-
                             <p style="
                                 font-size:13px;
                                 line-height:1.6;
@@ -182,10 +149,7 @@ public class EmailService {
                                 If you did not create an AgniPress account,
                                 you can safely ignore this email.
                             </p>
-
                         </div>
-
-
                         <div style="
                             padding:20px 32px;
                             border-top:1px solid #ddd8cf;
@@ -194,11 +158,8 @@ public class EmailService {
                         ">
                             AgniPress &nbsp;·&nbsp; Independent News
                         </div>
-
                     </div>
-
                 </body>
-
                 </html>
                 """
                 .formatted(
@@ -206,16 +167,10 @@ public class EmailService {
                         verificationUrl
                 );
 
-
-        // =====================================================
-        // CREATE AND SEND MESSAGE
-        // =====================================================
-
         try {
 
             MimeMessage message =
                     mailSender.createMimeMessage();
-
 
             MimeMessageHelper helper =
                     new MimeMessageHelper(
@@ -224,73 +179,40 @@ public class EmailService {
                             "UTF-8"
                     );
 
-
             helper.setFrom(fromEmail);
-
             helper.setTo(user.getEmail());
-
             helper.setSubject(subject);
-
-            helper.setText(
-                    html,
-                    true
-            );
-
-
-            System.out.println(
-                    "================================================="
-            );
-
-            System.out.println(
-                    "AGNIPRESS VERIFICATION EMAIL"
-            );
-
-            System.out.println(
-                    "FROM: " + fromEmail
-            );
-
-            System.out.println(
-                    "TO: " + user.getEmail()
-            );
-
-            System.out.println(
-                    "VERIFICATION URL: " + verificationUrl
-            );
-
-            System.out.println(
-                    "================================================="
-            );
-
+            helper.setText(html, true);
 
             mailSender.send(message);
 
-
-            System.out.println(
-                    "VERIFICATION EMAIL SENT SUCCESSFULLY"
+            logger.info(
+                    "Verification email sent successfully: recipient={}",
+                    user.getEmail()
             );
-
 
         } catch (MessagingException e) {
 
-            System.err.println(
-                    "EMAIL MESSAGE CREATION FAILED"
+            logger.error(
+                    "Email message creation failed: recipient={}, errorType={}, message={}",
+                    user.getEmail(),
+                    e.getClass().getSimpleName(),
+                    e.getMessage()
             );
-
-            e.printStackTrace();
 
             throw new RuntimeException(
                     "Unable to create verification email.",
                     e
             );
 
-
         } catch (MailException e) {
 
-            System.err.println(
-                    "SMTP EMAIL DELIVERY FAILED"
+            logger.error(
+                    "SMTP email delivery failed: recipient={}, errorType={}, message={}",
+                    user.getEmail(),
+                    e.getClass().getSimpleName(),
+                    e.getMessage()
             );
-
-            e.printStackTrace();
 
             throw new RuntimeException(
                     "Unable to send verification email. "
@@ -298,14 +220,14 @@ public class EmailService {
                     e
             );
 
-
         } catch (Exception e) {
 
-            System.err.println(
-                    "UNKNOWN EMAIL ERROR"
+            logger.error(
+                    "Unknown email error: recipient={}, errorType={}, message={}",
+                    user.getEmail(),
+                    e.getClass().getSimpleName(),
+                    e.getMessage()
             );
-
-            e.printStackTrace();
 
             throw new RuntimeException(
                     "Unable to send verification email.",
@@ -313,11 +235,6 @@ public class EmailService {
             );
         }
     }
-
-
-    // =====================================================
-    // HTML ESCAPING
-    // =====================================================
 
     private String escapeHtml(String value) {
 
