@@ -89,6 +89,8 @@ public class SecurityConfig {
 
                     "/newsportal.css",
 
+                    "/register-guide.css",
+
 
                     // =========================================
                     // STATIC JAVASCRIPT
@@ -97,6 +99,17 @@ public class SecurityConfig {
                     "/js/**",
 
                     "/newsportal.js",
+
+                    "/register-guide.js",
+
+
+                    // =========================================
+                    // REGISTRATION GUIDE ASSETS
+                    // =========================================
+
+                    "/cat/**",
+
+                    "/audio/**",
 
 
                     // =========================================
