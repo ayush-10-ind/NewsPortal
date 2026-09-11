@@ -103,8 +103,6 @@ public class EmailVerificationController {
                 userName
         );
 
-        // Use a dedicated template name so the verification page
-        // cannot be confused with a stale/cached emailVerification template.
         return "email-verification-page";
     }
 
@@ -112,7 +110,6 @@ public class EmailVerificationController {
     // CREATE PASSWORD
     // =====================================================
 
-    @Transactional
     @PostMapping("/verify-email")
     public String completeVerification(
             @RequestParam("token") String token,
@@ -125,77 +122,57 @@ public class EmailVerificationController {
             Model model) {
 
         // =================================================
-        // VALIDATE TOKEN
-        // =================================================
-
-        EmailVerificationToken verificationToken =
-                tokenRepository
-                        .findByToken(token)
-                        .orElse(null);
-
-        // =================================================
-        // INVALID TOKEN
-        // =================================================
-
-        if (verificationToken == null) {
-
-            model.addAttribute(
-                    "error",
-                    "This verification link is invalid or has already been used."
-            );
-
-            return "email-verification-page";
-        }
-
-        // =================================================
-        // EXPIRED TOKEN
-        // =================================================
-
-        if (verificationToken.isExpired()) {
-
-            model.addAttribute(
-                    "error",
-                    "This verification link has expired."
-            );
-
-            return "email-verification-page";
-        }
-
-        // =================================================
         // FORM VALIDATION
         // =================================================
 
         if (bindingResult.hasErrors()) {
 
-            User user = verificationToken.getUser();
+            EmailVerificationToken verificationToken =
+                    tokenRepository
+                            .findByToken(token)
+                            .orElse(null);
 
             model.addAttribute(
                     "token",
                     token
             );
 
-            model.addAttribute(
-                    "userName",
-                    user.getName()
-            );
+            if (verificationToken != null) {
+
+                User user = verificationToken.getUser();
+
+                model.addAttribute(
+                        "userName",
+                        user.getName()
+                );
+            }
 
             return "email-verification-page";
         }
 
         // =================================================
-        // GET USER
+        // COMPLETE VERIFICATION
         // =================================================
 
-        User user = verificationToken.getUser();
-
-        // =================================================
-        // SET PASSWORD
-        // =================================================
-
+        /*
+         * IMPORTANT:
+         *
+         * The database transaction now lives entirely inside
+         * UserService. The controller deliberately does NOT
+         * start an outer transaction and then catch exceptions
+         * from the service transaction.
+         *
+         * This prevents Spring from attempting to commit a
+         * transaction that has already been marked rollback-only,
+         * which caused the HTTP 500:
+         *
+         * "Transaction silently rolled back because it has been
+         * marked as rollback-only."
+         */
         try {
 
-            userService.setPassword(
-                    user,
+            userService.completeEmailVerification(
+                    token,
                     request
             );
 
@@ -211,21 +188,23 @@ public class EmailVerificationController {
                     token
             );
 
-            model.addAttribute(
-                    "userName",
-                    user.getName()
-            );
+            EmailVerificationToken verificationToken =
+                    tokenRepository
+                            .findByToken(token)
+                            .orElse(null);
+
+            if (verificationToken != null) {
+
+                User user = verificationToken.getUser();
+
+                model.addAttribute(
+                        "userName",
+                        user.getName()
+                );
+            }
 
             return "email-verification-page";
         }
-
-        // =================================================
-        // DELETE USED TOKEN
-        // =================================================
-
-        tokenRepository.delete(
-                verificationToken
-        );
 
         // =================================================
         // SUCCESS
