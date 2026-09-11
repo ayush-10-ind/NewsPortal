@@ -43,7 +43,9 @@ public class AuthController {
                 new RegisterRequestDTO()
         );
 
-        return "register";
+        // Use a fresh template name so the registration page
+        // cannot be confused with a stale cached register template.
+        return "register-page";
     }
 
     // =====================================================
@@ -65,7 +67,7 @@ public class AuthController {
         // =================================================
 
         if (bindingResult.hasErrors()) {
-            return "register";
+            return "register-page";
         }
 
         // =================================================
@@ -100,7 +102,7 @@ public class AuthController {
                     e.getMessage()
             );
 
-            return "register";
+            return "register-page";
         }
     }
 
