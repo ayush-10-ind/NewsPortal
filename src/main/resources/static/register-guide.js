@@ -1,4 +1,4 @@
-import * as THREE from "three";
+/* AgniPress registration guide — live 3D cat */
 
 document.addEventListener("DOMContentLoaded", function () {
     "use strict";
@@ -6,8 +6,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const form = document.querySelector(".register-form-force");
     const guide = document.querySelector(".register-guide");
     const canvas = document.getElementById("cat-3d-canvas");
-    if (!form || !guide || !canvas) return;
+    if (!form || !guide || !canvas || !window.THREE) return;
 
+    const THREE = window.THREE;
     const bubble = guide.querySelector(".register-guide-bubble");
     const toggle = guide.querySelector(".register-guide-toggle");
     const toggleLabel = guide.querySelector(".register-guide-toggle-label");
@@ -17,7 +18,6 @@ document.addEventListener("DOMContentLoaded", function () {
         username: document.getElementById("username"),
         email: document.getElementById("email")
     };
-
     if (!fields.name || !fields.username || !fields.email) return;
 
     const TAKEN_USERNAMES = new Set([
@@ -43,13 +43,10 @@ document.addEventListener("DOMContentLoaded", function () {
     let submitLocked = false;
     let lastPlayedState = null;
 
-    /* ======================================================
-       THREE.JS CHARACTER
-       ====================================================== */
-
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(26, 1, 0.1, 30);
-    camera.position.set(0, 1.15, 5.25);
+    const camera = new THREE.PerspectiveCamera(28, 1, 0.1, 30);
+    camera.position.set(0, 1.05, 5.4);
+    camera.lookAt(0, 0.72, 0);
 
     const renderer = new THREE.WebGLRenderer({
         canvas,
@@ -63,20 +60,17 @@ document.addEventListener("DOMContentLoaded", function () {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.setClearColor(0x000000, 0);
 
-    const ambient = new THREE.HemisphereLight(0xfffbf3, 0x777067, 2.1);
-    scene.add(ambient);
-
+    scene.add(new THREE.HemisphereLight(0xfffbf3, 0x777067, 2.1));
     const key = new THREE.DirectionalLight(0xfff7e9, 3.1);
     key.position.set(-3, 5, 5);
     key.castShadow = true;
     scene.add(key);
-
     const rim = new THREE.DirectionalLight(0xd7e4ff, 1.3);
     rim.position.set(4, 2.5, -3);
     scene.add(rim);
 
     const cat = new THREE.Group();
-    cat.position.y = -0.72;
+    cat.position.y = -0.58;
     scene.add(cat);
 
     const bodyGroup = new THREE.Group();
@@ -87,7 +81,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const leftArm = new THREE.Group();
     const rightArm = new THREE.Group();
     const tailGroup = new THREE.Group();
-
     cat.add(bodyGroup, headGroup, leftArm, rightArm, tailGroup);
     headGroup.add(faceGroup, leftEar, rightEar);
 
@@ -97,6 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const dark = new THREE.MeshStandardMaterial({ color: 0x161514, roughness: 0.48 });
     const noseMat = new THREE.MeshStandardMaterial({ color: 0x9b665e, roughness: 0.58 });
     const innerEarMat = new THREE.MeshStandardMaterial({ color: 0xb47c78, roughness: 0.8 });
+    const mouthDark = new THREE.MeshStandardMaterial({ color: 0x251b1b, roughness: 0.8 });
 
     function mesh(geometry, material, scale, position, parent) {
         const m = new THREE.Mesh(geometry, material);
@@ -108,17 +102,15 @@ document.addEventListener("DOMContentLoaded", function () {
         return m;
     }
 
-    const body = mesh(new THREE.SphereGeometry(0.86, 32, 24), fur, [1.03, 1.12, 0.82], [0, 0.48, 0], bodyGroup);
-    const chest = mesh(new THREE.SphereGeometry(0.5, 28, 20), white, [0.82, 1.25, 0.35], [0, 0.35, 0.66], bodyGroup);
-
-    const head = mesh(new THREE.SphereGeometry(0.72, 40, 28), fur, [1.12, 0.98, 0.94], [0, 1.43, 0.04], headGroup);
-    const muzzle = mesh(new THREE.SphereGeometry(0.38, 28, 20), white, [1.34, 0.66, 0.62], [0, 1.22, 0.69], faceGroup);
-    const nose = mesh(new THREE.SphereGeometry(0.095, 20, 16), noseMat, [1.12, 0.82, 0.68], [0, 1.30, 1.08], faceGroup);
+    mesh(new THREE.SphereGeometry(0.86, 32, 24), fur, [1.03, 1.12, 0.82], [0, 0.48, 0], bodyGroup);
+    mesh(new THREE.SphereGeometry(0.5, 28, 20), white, [0.82, 1.25, 0.35], [0, 0.35, 0.66], bodyGroup);
+    mesh(new THREE.SphereGeometry(0.72, 40, 28), fur, [1.12, 0.98, 0.94], [0, 1.43, 0.04], headGroup);
+    mesh(new THREE.SphereGeometry(0.38, 28, 20), white, [1.34, 0.66, 0.62], [0, 1.22, 0.69], faceGroup);
+    mesh(new THREE.SphereGeometry(0.095, 20, 16), noseMat, [1.12, 0.82, 0.68], [0, 1.30, 1.08], faceGroup);
 
     const mouth = new THREE.Group();
     mouth.position.set(0, 1.14, 1.08);
     faceGroup.add(mouth);
-    const mouthDark = new THREE.MeshStandardMaterial({ color: 0x251b1b, roughness: 0.8 });
     const mouthShape = mesh(new THREE.SphereGeometry(0.105, 20, 14), mouthDark, [1.8, 0.28, 0.32], [0, 0, 0], mouth);
     const lowerJaw = mesh(new THREE.SphereGeometry(0.15, 20, 14), white, [1.25, 0.5, 0.7], [0, -0.075, -0.01], mouth);
 
@@ -130,7 +122,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const pupil = mesh(new THREE.SphereGeometry(0.06, 20, 16), dark, [0.8, 1.15, 0.35], [0, 0, 0.055], eye);
         return { eye, pupil };
     }
-
     const leftEye = makeEye(-0.285);
     const rightEye = makeEye(0.285);
 
@@ -145,7 +136,6 @@ document.addEventListener("DOMContentLoaded", function () {
         inner.rotation.y = Math.PI / 4;
         return ear;
     }
-
     const earL = makeEar(leftEar, -0.48, -1);
     const earR = makeEar(rightEar, 0.48, 1);
 
@@ -155,18 +145,15 @@ document.addEventListener("DOMContentLoaded", function () {
         const paw = mesh(new THREE.SphereGeometry(0.19, 24, 18), white, [1.1, 0.72, 1.18], [x, 0.08, 0.64], parent);
         return { arm, paw };
     }
+    makeArm(leftArm, -0.66);
+    makeArm(rightArm, 0.66);
 
-    const armL = makeArm(leftArm, -0.66);
-    const armR = makeArm(rightArm, 0.66);
-
-    /* Tail is built from individually animated segments so it can breathe and sway. */
     const tailSegments = [];
     for (let i = 0; i < 8; i++) {
         const s = mesh(new THREE.SphereGeometry(0.17 - i * 0.012, 20, 16), fur, [1.1, 1, 1], [0.72 + i * 0.17, 0.34 + i * 0.03, -0.12 - i * 0.02], tailGroup);
         tailSegments.push(s);
     }
 
-    /* Whiskers — tiny, curved-looking line pairs with real 3D depth. */
     function addWhiskers(side) {
         for (let i = 0; i < 3; i++) {
             const y = 1.19 + (i - 1) * 0.095;
@@ -174,20 +161,15 @@ document.addEventListener("DOMContentLoaded", function () {
             const start = new THREE.Vector3(side * 0.13, y, z);
             const end = new THREE.Vector3(side * (0.62 + i * 0.045), y + (i - 1) * 0.035, z + 0.025);
             const geo = new THREE.BufferGeometry().setFromPoints([start, end]);
-            const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x4b4844, transparent: true, opacity: 0.52 }));
-            faceGroup.add(line);
+            faceGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0x4b4844, transparent: true, opacity: 0.52 })));
         }
     }
     addWhiskers(-1);
     addWhiskers(1);
 
-    /* A tiny floating newsroom shadow grounds the character. */
-    const shadow = new THREE.Mesh(
-        new THREE.CircleGeometry(1.12, 48),
-        new THREE.MeshBasicMaterial({ color: 0x25231f, transparent: true, opacity: 0.10 })
-    );
+    const shadow = new THREE.Mesh(new THREE.CircleGeometry(1.12, 48), new THREE.MeshBasicMaterial({ color: 0x25231f, transparent: true, opacity: 0.10 }));
     shadow.rotation.x = -Math.PI / 2;
-    shadow.position.set(0, -0.82, 0.25);
+    shadow.position.set(0, -0.68, 0.25);
     shadow.scale.set(1.25, 0.48, 1);
     scene.add(shadow);
 
@@ -200,18 +182,15 @@ document.addEventListener("DOMContentLoaded", function () {
     let talkTimer = 0;
     let talkAmount = 0;
     let gesturePulse = 0;
-    let reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     window.addEventListener("pointermove", function (event) {
         const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
         mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
         mouse.y = -(((event.clientY - rect.top) / rect.height) * 2 - 1);
         mouse.active = true;
     }, { passive: true });
-
-    window.addEventListener("pointerleave", function () {
-        mouse.active = false;
-    });
 
     function resize() {
         const rect = canvas.getBoundingClientRect();
@@ -220,6 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
         camera.updateProjectionMatrix();
+        camera.lookAt(0, 0.72, 0);
     }
     window.addEventListener("resize", resize, { passive: true });
     resize();
@@ -228,14 +208,12 @@ document.addEventListener("DOMContentLoaded", function () {
         const t = now * 0.001;
         const cfg = states[currentState];
         const idle = reducedMotion ? 0 : 1;
-
         let headTilt = Math.sin(t * 0.75) * 0.012 * idle;
         let bodyY = Math.sin(t * 1.7) * 0.018 * idle;
         let tailWave = Math.sin(t * 1.35) * 0.13 * idle;
         let leftGesture = 0;
         let rightGesture = 0;
         let earDrop = 0;
-
         if (cfg.gesture === "point") rightGesture = 0.55 + Math.sin(t * 3.1) * 0.035 * idle;
         if (cfg.gesture === "unimpressed") { headTilt = -0.17; earDrop = 0.16; }
         if (cfg.gesture === "email") leftGesture = 0.38 + Math.sin(t * 2.8) * 0.08 * idle;
@@ -243,16 +221,13 @@ document.addEventListener("DOMContentLoaded", function () {
         if (cfg.gesture === "success") { headTilt = Math.sin(t * 2.0) * 0.055; rightGesture = 0.18 + Math.sin(t * 3) * 0.03; }
 
         bodyGroup.position.y = THREE.MathUtils.lerp(bodyGroup.position.y, bodyY, 0.08);
-        body.rotation.z = THREE.MathUtils.lerp(body.rotation.z, headTilt * 0.25, 0.08);
         headGroup.rotation.z = THREE.MathUtils.lerp(headGroup.rotation.z, headTilt, 0.075);
         headGroup.rotation.y = THREE.MathUtils.lerp(headGroup.rotation.y, targetHeadY, 0.065);
         headGroup.rotation.x = THREE.MathUtils.lerp(headGroup.rotation.x, targetHeadX, 0.065);
-
         leftArm.rotation.z = THREE.MathUtils.lerp(leftArm.rotation.z, -0.10 - leftGesture, 0.08);
         rightArm.rotation.z = THREE.MathUtils.lerp(rightArm.rotation.z, 0.10 + rightGesture, 0.08);
         leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, leftGesture * 0.22, 0.08);
         rightArm.rotation.x = THREE.MathUtils.lerp(rightArm.rotation.x, -rightGesture * 0.22, 0.08);
-
         earL.rotation.z = THREE.MathUtils.lerp(earL.rotation.z, -0.08 - earDrop, 0.08);
         earR.rotation.z = THREE.MathUtils.lerp(earR.rotation.z, 0.08 + earDrop, 0.08);
 
@@ -264,23 +239,16 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         gesturePulse *= 0.94;
-        if (gesturePulse > 0.01) {
-            rightArm.rotation.x -= gesturePulse * 0.18;
-        }
+        if (gesturePulse > 0.01) rightArm.rotation.x -= gesturePulse * 0.18;
     }
 
     function animateFace(dt) {
-        const blinkSpeed = 7;
         if (!reducedMotion) {
             blinkTimer -= dt;
             if (blinkTimer <= 0) blinkTimer = 2.8 + Math.random() * 3.4;
-            const closing = blinkTimer < 0.12;
-            const target = closing ? 1 : 0;
-            blinkAmount = THREE.MathUtils.lerp(blinkAmount, target, Math.min(1, dt * blinkSpeed));
-        } else {
-            blinkAmount = 0;
-        }
-
+            const target = blinkTimer < 0.12 ? 1 : 0;
+            blinkAmount = THREE.MathUtils.lerp(blinkAmount, target, Math.min(1, dt * 7));
+        } else blinkAmount = 0;
         leftEye.eye.scale.y = Math.max(0.12, 1 - blinkAmount * 0.88);
         rightEye.eye.scale.y = Math.max(0.12, 1 - blinkAmount * 0.88);
 
@@ -304,10 +272,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 talkTimer = 0.055 + Math.random() * 0.10;
                 talkAmount = Math.random() > 0.22 ? 0.72 + Math.random() * 0.28 : 0.08;
             }
-        } else {
-            talkAmount = THREE.MathUtils.lerp(talkAmount, 0, Math.min(1, dt * 10));
-        }
-
+        } else talkAmount = THREE.MathUtils.lerp(talkAmount, 0, Math.min(1, dt * 10));
         mouthShape.scale.y = 0.28 + talkAmount * 1.85;
         mouthShape.scale.x = 1.8 + talkAmount * 0.22;
         lowerJaw.position.y = -0.075 - talkAmount * 0.028;
@@ -323,10 +288,6 @@ document.addEventListener("DOMContentLoaded", function () {
         requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
-
-    /* ======================================================
-       VOICE + CHARACTER SYNC
-       ====================================================== */
 
     function stopAudio() {
         if (activeAudio) {
@@ -361,17 +322,8 @@ document.addEventListener("DOMContentLoaded", function () {
     function playVoice(stateName) {
         if (!soundEnabled || !audioUnlocked) return;
         const config = states[stateName];
-        const voiceMap = {
-            initial: "/audio/cat/intro.mp3",
-            name: "/audio/cat/name-success.mp3",
-            error: "/audio/cat/username-error.mp3",
-            email: "/audio/cat/email-intro.mp3",
-            ready: "/audio/cat/ready.mp3",
-            success: "/audio/cat/success.mp3"
-        };
-        const path = voiceMap[stateName];
-        if (!path) return;
-
+        const path = "/audio/cat/" + ({ initial: "intro", name: "name-success", error: "username-error", email: "email-intro", ready: "ready", success: "success" }[stateName] || "") + ".mp3";
+        if (!config || path.endsWith("/.mp3")) return;
         stopAudio();
         const audio = new Audio(path);
         activeAudio = audio;
@@ -381,9 +333,7 @@ document.addEventListener("DOMContentLoaded", function () {
         audio.addEventListener("ended", function () {
             speechActive = false;
             if (activeAudio === audio) activeAudio = null;
-            if (stateName === "name" || stateName === "ready" || stateName === "success") {
-                window.setTimeout(playMeow, 130);
-            }
+            if (stateName === "name" || stateName === "ready" || stateName === "success") window.setTimeout(playMeow, 130);
         }, { once: true });
         audio.addEventListener("error", function () {
             speechActive = false;
@@ -403,7 +353,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const changed = nextState !== currentState;
         currentState = nextState;
         if (bubble) bubble.textContent = states[nextState].message;
-
         if (changed) {
             gesturePulse = 1;
             if (options.speak !== false && soundEnabled && audioUnlocked && lastPlayedState !== nextState) {
@@ -424,59 +373,22 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     function isEmailValid() { return EMAIL_PATTERN.test(fields.email.value.trim()); }
 
-    fields.name.addEventListener("focus", function () {
-        enableAudio();
-        if (!fields.name.value.trim()) setState("initial");
-    });
-    fields.name.addEventListener("input", function () {
-        enableAudio();
-        setState(isNameValid() ? "name" : "initial", { speak: false });
-    });
-
-    fields.username.addEventListener("focus", function () {
-        enableAudio();
-        const status = getUsernameStatus();
-        if (status === "taken") setState("error");
-        else if (isNameValid()) setState("name", { speak: false });
-    });
-    fields.username.addEventListener("input", function () {
-        enableAudio();
-        const status = getUsernameStatus();
-        if (status === "taken") { setState("error"); return; }
-        if (status === "valid") { setState("email"); return; }
-        setState(isNameValid() ? "name" : "initial", { speak: false });
-    });
-
-    fields.email.addEventListener("focus", function () {
-        enableAudio();
-        if (getUsernameStatus() === "valid") setState("email");
-    });
-    fields.email.addEventListener("input", function () {
-        enableAudio();
-        if (getUsernameStatus() === "taken") { setState("error"); return; }
-        if (getUsernameStatus() === "valid" && isEmailValid()) setState("ready");
-        else if (getUsernameStatus() === "valid") setState("email", { speak: false });
-    });
-
-    fields.name.addEventListener("blur", function () {
-        if (fields.name.value.trim() && !isNameValid()) setState("error");
-    });
-    fields.username.addEventListener("blur", function () {
-        if (getUsernameStatus() === "taken") setState("error");
-    });
-    fields.email.addEventListener("blur", function () {
-        if (fields.email.value.trim() && !isEmailValid()) setState("error");
-    });
+    fields.name.addEventListener("focus", function () { enableAudio(); if (!fields.name.value.trim()) setState("initial"); });
+    fields.name.addEventListener("input", function () { enableAudio(); setState(isNameValid() ? "name" : "initial", { speak: false }); });
+    fields.username.addEventListener("focus", function () { enableAudio(); const status = getUsernameStatus(); if (status === "taken") setState("error"); else if (isNameValid()) setState("name", { speak: false }); });
+    fields.username.addEventListener("input", function () { enableAudio(); const status = getUsernameStatus(); if (status === "taken") { setState("error"); return; } if (status === "valid") { setState("email"); return; } setState(isNameValid() ? "name" : "initial", { speak: false }); });
+    fields.email.addEventListener("focus", function () { enableAudio(); if (getUsernameStatus() === "valid") setState("email"); });
+    fields.email.addEventListener("input", function () { enableAudio(); if (getUsernameStatus() === "taken") { setState("error"); return; } if (getUsernameStatus() === "valid" && isEmailValid()) setState("ready"); else if (getUsernameStatus() === "valid") setState("email", { speak: false }); });
+    fields.name.addEventListener("blur", function () { if (fields.name.value.trim() && !isNameValid()) setState("error"); });
+    fields.username.addEventListener("blur", function () { if (getUsernameStatus() === "taken") setState("error"); });
+    fields.email.addEventListener("blur", function () { if (fields.email.value.trim() && !isEmailValid()) setState("error"); });
 
     toggle.addEventListener("click", function () {
         audioUnlocked = true;
         soundEnabled = !soundEnabled;
         toggleLabel.textContent = soundEnabled ? "SOUND ON" : "SOUND OFF";
         if (!soundEnabled) stopAudio();
-        else {
-            lastPlayedState = currentState;
-            playVoice(currentState);
-        }
+        else { lastPlayedState = currentState; playVoice(currentState); }
     });
 
     form.addEventListener("submit", function (event) {
@@ -486,19 +398,14 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault();
             if (!isNameValid()) { setState("error"); fields.name.focus(); return; }
             if (getUsernameStatus() !== "valid") { setState("error"); fields.username.focus(); return; }
-            setState("error");
-            fields.email.focus();
-            return;
+            setState("error"); fields.email.focus(); return;
         }
         if (submitLocked) { event.preventDefault(); return; }
         event.preventDefault();
         submitLocked = true;
         setState("success");
         const button = form.querySelector(".auth-submit");
-        if (button) {
-            button.disabled = true;
-            button.innerHTML = '<span>CHECKING DETAILS...</span><span>→</span>';
-        }
+        if (button) { button.disabled = true; button.innerHTML = '<span>CHECKING DETAILS...</span><span>→</span>'; }
         window.setTimeout(function () { form.submit(); }, 1000);
     });
 
