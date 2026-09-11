@@ -44,14 +44,16 @@ public class EmailVerificationToken {
     // =====================================================
 
     /*
-     * Each user can have only ONE active verification token.
+     * The verification flow needs the user both while the
+     * verification transaction is active and while the controller
+     * rebuilds the form after validation errors.
      *
-     * When a new verification email is requested,
-     * the old token is deleted and replaced.
+     * EAGER loading prevents a lazy-initialization failure when a
+     * verification request is handled outside a database session.
      */
 
     @OneToOne(
-        fetch = FetchType.LAZY,
+        fetch = FetchType.EAGER,
         optional = false
     )
     @JoinColumn(
