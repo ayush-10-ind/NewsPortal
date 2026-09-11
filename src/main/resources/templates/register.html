@@ -7,7 +7,7 @@
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
     <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-12}">
-    <link rel="stylesheet" th:href="@{/register-3d.css?v=20260912-02}">
+    <link rel="stylesheet" th:href="@{/register-3d.css?v=20260912-03}">
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
@@ -33,7 +33,7 @@
                 </div>
 
                 <div class="cat-stage" aria-label="Interactive AgniPress cat guide">
-                    <canvas id="cat-3d-canvas"></canvas>
+                    <canvas id="cat-3d-canvas" aria-hidden="true"></canvas>
                     <div class="cat-stage-hint">move your cursor · the newsroom cat is watching</div>
                 </div>
             </aside>
@@ -84,7 +84,6 @@
     </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.min.js"></script>
-<script th:src="@{/register-guide.js?v=20260912-14}"></script>
+<script th:src="@{/register-guide.js?v=20260912-15}"></script>
 </body>
 </html>
