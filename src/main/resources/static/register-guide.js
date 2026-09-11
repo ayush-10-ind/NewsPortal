@@ -2,25 +2,23 @@ document.addEventListener("DOMContentLoaded", function () {
     "use strict";
 
     const form = document.querySelector(".register-form-force");
-    const formSection = document.querySelector(".register-page-form-section");
-    if (!form || !formSection) return;
-
-    const guide = formSection.querySelector(".register-guide");
-    if (!guide) return;
+    const section = document.querySelector(".register-page-form-section");
+    const guide = document.querySelector(".register-guide");
+    if (!form || !section || !guide) return;
 
     const bubble = guide.querySelector(".register-guide-bubble");
     const toggle = guide.querySelector(".register-guide-toggle");
     const toggleLabel = guide.querySelector(".register-guide-toggle-label");
+    const pointer = guide.querySelector(".register-guide-pointer");
+    const frames = Array.from(guide.querySelectorAll(".cat-frame"));
 
-    const fields = [
-        { id: "name", focus: "Hey there. Let's create your account.", success: "Good. Now your username.", error: "Hmm. Let's check that name.", state: "initial", nextState: "name" },
-        { id: "username", focus: "Pick something unique.", success: "Nice. Now your email.", error: "Hmm. That one needs another look.", state: "name", nextState: "email" },
-        { id: "email", focus: "Almost there. Add your email.", success: "Perfect. You're ready to join.", error: "Hmm. That email needs another look.", state: "email", nextState: "ready" }
-    ];
+    const fields = {
+        name: document.getElementById("name"),
+        username: document.getElementById("username"),
+        email: document.getElementById("email")
+    };
 
-    // Optional prerecorded voice pack. Add these files under /static/audio/cat/
-    // whenever you want the cat to use real voice performances instead of TTS.
-    const VOICE_PACK = {
+    const voicePack = {
         intro: "/audio/cat/intro.mp3",
         nameSuccess: "/audio/cat/name-success.mp3",
         usernameSuccess: "/audio/cat/username-success.mp3",
@@ -31,191 +29,217 @@ document.addEventListener("DOMContentLoaded", function () {
         meow: "/audio/cat/meow.mp3"
     };
 
-    let audioEnabled = false;
-    let audioContext = null;
-    let activeVoice = null;
-    let lastValidState = {};
-    let currentState = "initial";
+    const copy = {
+        initial: "Hey there. Let's create your account.",
+        name: "Good. Now your username.",
+        username: "Nice. Almost there. Add your email.",
+        error: "Hmm. Take another look at that.",
+        email: "Almost there. Add your email.",
+        ready: "Perfect. You're ready to join.",
+        success: "All set. I'll see you in the newsroom."
+    };
 
-    function getAudioContext() {
-        if (!audioContext) {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (!AudioContextClass) return null;
-            audioContext = new AudioContextClass();
+    let soundOn = false;
+    let activeAudio = null;
+    let state = "initial";
+    const spoken = {};
+
+    function stopAudio() {
+        if (activeAudio) {
+            activeAudio.pause();
+            activeAudio.currentTime = 0;
+            activeAudio = null;
         }
-        if (audioContext.state === "suspended") audioContext.resume().catch(function () {});
-        return audioContext;
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
     }
 
-    function stopVoice() {
-        if (activeVoice) {
-            activeVoice.pause();
-            activeVoice.currentTime = 0;
-            activeVoice = null;
-        }
-        if ("speechSynthesis" in window) window.speechSynthesis.cancel();
+    function fallbackSpeak(text) {
+        if (!soundOn || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.84;
+        utterance.pitch = 0.72;
+        utterance.volume = 0.78;
+        window.speechSynthesis.speak(utterance);
     }
 
     function meow() {
-        if (!audioEnabled) return;
-        const voice = new Audio(VOICE_PACK.meow);
-        activeVoice = voice;
-        voice.volume = 0.42;
-        voice.play().catch(function () {
-            const ctx = getAudioContext();
-            if (!ctx) return;
-            const now = ctx.currentTime;
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = "sine";
-            osc.frequency.setValueAtTime(540, now);
-            osc.frequency.exponentialRampToValueAtTime(820, now + 0.12);
-            osc.frequency.exponentialRampToValueAtTime(490, now + 0.34);
-            gain.gain.setValueAtTime(0.0001, now);
-            gain.gain.exponentialRampToValueAtTime(0.04, now + 0.03);
-            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.start(now);
-            osc.stop(now + 0.42);
+        if (!soundOn) return;
+        const audio = new Audio(voicePack.meow);
+        activeAudio = audio;
+        audio.volume = 0.45;
+        audio.onerror = function () {
+            try {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContextClass) return;
+                const ctx = new AudioContextClass();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const now = ctx.currentTime;
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(500, now);
+                osc.frequency.exponentialRampToValueAtTime(760, now + .13);
+                osc.frequency.exponentialRampToValueAtTime(430, now + .34);
+                gain.gain.setValueAtTime(.0001, now);
+                gain.gain.exponentialRampToValueAtTime(.045, now + .03);
+                gain.gain.exponentialRampToValueAtTime(.0001, now + .38);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start(now);
+                osc.stop(now + .4);
+            } catch (e) { /* optional sound */ }
+        };
+        audio.play().catch(function () {});
+    }
+
+    function playVoice(key, text, withMeow) {
+        if (!soundOn) return;
+        stopAudio();
+        const audio = new Audio(voicePack[key]);
+        activeAudio = audio;
+        audio.preload = "auto";
+        audio.volume = .86;
+        audio.addEventListener("ended", function () {
+            activeAudio = null;
+            if (withMeow) window.setTimeout(meow, 90);
+        }, { once: true });
+        audio.addEventListener("error", function () {
+            activeAudio = null;
+            fallbackSpeak(text);
+            if (withMeow) window.setTimeout(meow, 250);
+        }, { once: true });
+        audio.play().catch(function () {
+            fallbackSpeak(text);
+            if (withMeow) window.setTimeout(meow, 250);
         });
     }
 
-    function setState(state) {
-        currentState = state;
-        ["guide-name", "guide-error", "guide-email", "guide-ready", "guide-success"].forEach(function (className) {
-            guide.classList.remove(className);
+    function setState(next, message, voiceKey, speak, withMeow) {
+        state = next;
+        frames.forEach(function (frame) {
+            frame.classList.toggle("active", frame.dataset.cat === next);
         });
-        if (state !== "initial") guide.classList.add("guide-" + state);
+        if (message) bubble.textContent = message;
+        if (speak && soundOn && voiceKey) playVoice(voiceKey, message, !!withMeow);
+        guide.classList.toggle("guide-speaking", !!speak);
+        window.setTimeout(function () { guide.classList.remove("guide-speaking"); }, 900);
     }
 
     function pointTo(field) {
-        const pointer = guide.querySelector(".register-guide-pointer");
         if (!field || !pointer) return;
-        const sectionRect = formSection.getBoundingClientRect();
+        const guideRect = guide.getBoundingClientRect();
         const fieldRect = field.getBoundingClientRect();
-        const targetX = fieldRect.left - sectionRect.left;
-        const targetY = fieldRect.top - sectionRect.top + fieldRect.height / 2;
-        const startX = guide.offsetLeft + Math.min(111, guide.offsetWidth * 0.46);
-        const startY = guide.offsetTop + Math.min(183, guide.offsetHeight * 0.61);
-        const dx = targetX - startX;
-        const dy = targetY - startY;
-        const distance = Math.max(45, Math.sqrt(dx * dx + dy * dy));
+        const startX = guideRect.left + guideRect.width * .61;
+        const startY = guideRect.top + guideRect.height * .78;
+        const endX = fieldRect.left + fieldRect.width * .06;
+        const endY = fieldRect.top + fieldRect.height * .5;
+        const dx = endX - startX;
+        const dy = endY - startY;
+        const distance = Math.max(34, Math.sqrt(dx * dx + dy * dy));
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        const localX = startX - guideRect.left;
+        const localY = startY - guideRect.top;
+        pointer.style.left = localX + "px";
+        pointer.style.top = localY + "px";
         pointer.style.width = distance + "px";
         pointer.style.transform = "rotate(" + angle + "deg)";
         guide.classList.add("guide-pointing");
     }
 
-    function playVoice(key, fallbackText, playful) {
-        if (!audioEnabled) return;
-        stopVoice();
-        const audio = new Audio(VOICE_PACK[key]);
-        activeVoice = audio;
-        audio.preload = "auto";
-        audio.volume = 0.82;
-        audio.addEventListener("ended", function () {
-            if (playful) meow();
-            guide.classList.remove("guide-speaking");
-        }, { once: true });
-        audio.addEventListener("error", function () {
-            // Voice packs are optional. If a file is missing, fall back to browser speech.
-            if (!("speechSynthesis" in window)) {
-                if (playful) meow();
-                return;
-            }
-            const utterance = new SpeechSynthesisUtterance(fallbackText);
-            utterance.rate = 0.88;
-            utterance.pitch = 1.02;
-            utterance.volume = 0.72;
-            utterance.onend = function () {
-                guide.classList.remove("guide-speaking");
-                if (playful) meow();
-            };
-            window.speechSynthesis.speak(utterance);
-        }, { once: true });
-        audio.play().catch(function () {
-            audio.dispatchEvent(new Event("error"));
-        });
-        guide.classList.add("guide-speaking");
-    }
-
-    function say(message, state, voiceKey, playful) {
-        bubble.textContent = message;
-        setState(state);
-        if (!audioEnabled) return;
-        playVoice(voiceKey, message, !!playful);
+    function speakOnce(key, text, voiceKey, withMeow) {
+        if (spoken[key]) return;
+        spoken[key] = true;
+        setState(key, text, voiceKey, true, withMeow);
     }
 
     toggle.addEventListener("click", function () {
-        audioEnabled = !audioEnabled;
-        toggleLabel.textContent = audioEnabled ? "SOUND ON" : "SOUND OFF";
-        if (audioEnabled) {
-            getAudioContext();
-            say("Hey there. Let's create your account.", "initial", "intro", false);
+        soundOn = !soundOn;
+        toggleLabel.textContent = soundOn ? "SOUND ON" : "SOUND OFF";
+        if (soundOn) {
+            setState(state, copy[state] || copy.initial, "intro", true, false);
         } else {
-            stopVoice();
+            stopAudio();
             guide.classList.remove("guide-speaking");
         }
     });
 
-    fields.forEach(function (item, index) {
-        const field = document.getElementById(item.id);
-        if (!field) return;
-        lastValidState[item.id] = false;
+    fields.name.addEventListener("focus", function () {
+        pointTo(fields.name);
+        setState("initial", copy.initial, "intro", soundOn && !spoken.intro, false);
+        spoken.intro = true;
+    });
 
-        field.addEventListener("focus", function () {
-            pointTo(field);
-            if (item.id === "name") say(item.focus, "initial", "intro", false);
-            if (item.id === "username") say(item.focus, "name", "nameSuccess", true);
-            if (item.id === "email") say(item.focus, "email", "emailIntro", false);
-        });
+    fields.name.addEventListener("input", function () {
+        if (fields.name.value.trim().length >= 2) {
+            setState("name", copy.name, "nameSuccess", soundOn && !spoken.name, true);
+            spoken.name = true;
+            pointTo(fields.username);
+        }
+    });
 
-        field.addEventListener("input", function () {
-            const hasValue = field.value.trim().length > 0;
-            const valid = hasValue && field.checkValidity();
-            if (!hasValue) {
-                lastValidState[item.id] = false;
-                return;
-            }
-            if (valid && !lastValidState[item.id]) {
-                lastValidState[item.id] = true;
-                if (item.id === "name") say(item.success, "name", "nameSuccess", true);
-                if (item.id === "username") say(item.success, "email", "usernameSuccess", true);
-                if (item.id === "email") say(item.success, "ready", "ready", true);
-            } else if (!valid) {
-                lastValidState[item.id] = false;
-            }
-        });
+    fields.username.addEventListener("focus", function () {
+        pointTo(fields.username);
+        setState("name", copy.name, "nameSuccess", soundOn && !spoken.usernameFocus, true);
+        spoken.usernameFocus = true;
+    });
 
+    fields.username.addEventListener("input", function () {
+        if (fields.username.value.trim().length >= 3) {
+            setState("email", copy.username, "usernameSuccess", soundOn && !spoken.username, true);
+            spoken.username = true;
+            pointTo(fields.email);
+        }
+    });
+
+    fields.email.addEventListener("focus", function () {
+        pointTo(fields.email);
+        setState("email", copy.email, "emailIntro", soundOn && !spoken.emailFocus, false);
+        spoken.emailFocus = true;
+    });
+
+    fields.email.addEventListener("input", function () {
+        if (fields.email.checkValidity() && fields.email.value.trim()) {
+            setState("ready", copy.ready, "ready", soundOn && !spoken.ready, true);
+            spoken.ready = true;
+            guide.classList.remove("guide-pointing");
+        }
+    });
+
+    [fields.name, fields.username, fields.email].forEach(function (field) {
         field.addEventListener("blur", function () {
             if (!field.value.trim()) return;
-            if (field.checkValidity()) {
-                if (item.id === "name") setState("name");
-                if (item.id === "username") setState("email");
-                if (item.id === "email") setState("ready");
-            } else {
-                setState("error");
-                if (item.id === "username") say(item.error, "error", "usernameError", false);
-                else say(item.error, "error", "usernameError", false);
+            if (!field.checkValidity()) {
+                setState("error", copy.error, "usernameError", soundOn, false);
+                guide.classList.remove("guide-pointing");
             }
         });
     });
 
     form.addEventListener("submit", function (event) {
-        const valid = fields.every(function (item) {
-            const field = document.getElementById(item.id);
+        const valid = Object.values(fields).every(function (field) {
             return field && field.value.trim() && field.checkValidity();
         });
         if (valid) {
-            say("All set. I'll see you in the newsroom.", "success", "success", true);
+            setState("success", copy.success, "success", soundOn, true);
+            guide.classList.remove("guide-pointing");
         } else {
-            say("Almost. Let's finish the details first.", "error", "usernameError", false);
+            event.preventDefault();
+            setState("error", copy.error, "usernameError", soundOn, false);
+            const firstInvalid = Object.values(fields).find(function (field) {
+                return !field.value.trim() || !field.checkValidity();
+            });
+            if (firstInvalid) {
+                firstInvalid.focus();
+                pointTo(firstInvalid);
+            }
         }
     });
 
     window.addEventListener("resize", function () {
         const active = document.activeElement;
-        if (active && active.matches("#name, #username, #email")) pointTo(active);
+        if (active && (active === fields.name || active === fields.username || active === fields.email)) pointTo(active);
     });
+
+    // Initial nonchalant state. No autoplay; sound starts only after the user opts in.
+    setState("initial", copy.initial, null, false, false);
 });
