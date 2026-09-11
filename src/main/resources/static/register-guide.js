@@ -2,14 +2,13 @@ document.addEventListener("DOMContentLoaded", function () {
     "use strict";
 
     const form = document.querySelector(".register-form-force");
-    const section = document.querySelector(".register-page-form-section");
     const guide = document.querySelector(".register-guide");
-    if (!form || !section || !guide) return;
+    if (!form || !guide) return;
 
     const bubble = guide.querySelector(".register-guide-bubble");
+    const caption = guide.querySelector(".caption-text");
     const toggle = guide.querySelector(".register-guide-toggle");
     const toggleLabel = guide.querySelector(".register-guide-toggle-label");
-    const pointer = guide.querySelector(".register-guide-pointer");
     const frames = Array.from(guide.querySelectorAll(".cat-frame"));
 
     const fields = {
@@ -18,31 +17,80 @@ document.addEventListener("DOMContentLoaded", function () {
         email: document.getElementById("email")
     };
 
-    const voicePack = {
-        intro: "/audio/cat/intro.mp3",
-        nameSuccess: "/audio/cat/name-success.mp3",
-        usernameSuccess: "/audio/cat/username-success.mp3",
-        usernameError: "/audio/cat/username-error.mp3",
-        emailIntro: "/audio/cat/email-intro.mp3",
-        ready: "/audio/cat/ready.mp3",
-        success: "/audio/cat/success.mp3",
-        meow: "/audio/cat/meow.mp3"
+    if (!fields.name || !fields.username || !fields.email) return;
+
+    const TAKEN_USERNAMES = new Set([
+        "admin", "administrator", "agnipress", "ayush", "editor",
+        "editorial", "news", "newsroom", "root", "test", "user"
+    ]);
+
+    const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    const states = {
+        initial: {
+            message: "Hi there. Let's create your account.",
+            voice: "/audio/cat/intro.mp3",
+            meow: false
+        },
+        name: {
+            message: "Nice. Now a username.",
+            voice: "/audio/cat/name-success.mp3",
+            meow: true
+        },
+        error: {
+            message: "Hmm... take another look at that.",
+            voice: "/audio/cat/username-error.mp3",
+            meow: false
+        },
+        email: {
+            message: "Perfect. Now your email.",
+            voice: "/audio/cat/email-intro.mp3",
+            meow: false
+        },
+        ready: {
+            message: "All set. Let's do this.",
+            voice: "/audio/cat/ready.mp3",
+            meow: true
+        },
+        success: {
+            message: "Good things start with a verified mind.",
+            voice: "/audio/cat/success.mp3",
+            meow: true
+        }
     };
 
-    const copy = {
-        initial: "Hey there. Let's create your account.",
-        name: "Good. Now your username.",
-        username: "Nice. Almost there. Add your email.",
-        error: "Hmm. Take another look at that.",
-        email: "Almost there. Add your email.",
-        ready: "Perfect. You're ready to join.",
-        success: "All set. I'll see you in the newsroom."
-    };
-
-    let soundOn = false;
+    let currentState = "initial";
+    let soundEnabled = false;
     let activeAudio = null;
-    let state = "initial";
-    const spoken = {};
+    let audioUnlocked = false;
+    let breathingTimer = null;
+    let breathingToken = 0;
+    let lastPlayedState = null;
+    let captionTimer = null;
+    let submitLocked = false;
+
+    function clearBreathingTimer() {
+        if (breathingTimer) {
+            window.clearTimeout(breathingTimer);
+            breathingTimer = null;
+        }
+    }
+
+    function restartBreathing() {
+        clearBreathingTimer();
+        breathingToken += 1;
+        const token = breathingToken;
+
+        frames.forEach(function (frame) {
+            frame.classList.remove("breathing");
+        });
+
+        breathingTimer = window.setTimeout(function () {
+            if (token !== breathingToken) return;
+            const active = guide.querySelector(".cat-frame.active");
+            if (active) active.classList.add("breathing");
+        }, 2000);
+    }
 
     function stopAudio() {
         if (activeAudio) {
@@ -50,196 +98,329 @@ document.addEventListener("DOMContentLoaded", function () {
             activeAudio.currentTime = 0;
             activeAudio = null;
         }
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+        if (window.speechSynthesis) {
+            window.speechSynthesis.cancel();
+        }
     }
 
     function fallbackSpeak(text) {
-        if (!soundOn || !window.speechSynthesis) return;
+        if (!soundEnabled || !window.speechSynthesis) return;
+
         window.speechSynthesis.cancel();
+
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.84;
         utterance.pitch = 0.72;
-        utterance.volume = 0.78;
+        utterance.volume = 0.8;
+
         window.speechSynthesis.speak(utterance);
     }
 
-    function meow() {
-        if (!soundOn) return;
-        const audio = new Audio(voicePack.meow);
-        activeAudio = audio;
-        audio.volume = 0.45;
-        audio.onerror = function () {
-            try {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContextClass) return;
-                const ctx = new AudioContextClass();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                const now = ctx.currentTime;
-                osc.type = "sine";
-                osc.frequency.setValueAtTime(500, now);
-                osc.frequency.exponentialRampToValueAtTime(760, now + .13);
-                osc.frequency.exponentialRampToValueAtTime(430, now + .34);
-                gain.gain.setValueAtTime(.0001, now);
-                gain.gain.exponentialRampToValueAtTime(.045, now + .03);
-                gain.gain.exponentialRampToValueAtTime(.0001, now + .38);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.start(now);
-                osc.stop(now + .4);
-            } catch (e) { /* optional sound */ }
-        };
-        audio.play().catch(function () {});
+    function playMeow() {
+        if (!soundEnabled || !audioUnlocked) return;
+
+        const meow = new Audio("/audio/cat/meow.mp3");
+        meow.volume = 0.42;
+        meow.play().catch(function () {
+            // Optional asset: never allow a missing meow to break registration.
+        });
     }
 
-    function playVoice(key, text, withMeow) {
-        if (!soundOn) return;
+    function playVoice(stateName) {
+        if (!soundEnabled || !audioUnlocked) return;
+
+        const config = states[stateName];
+        if (!config || !config.voice) return;
+
         stopAudio();
-        const audio = new Audio(voicePack[key]);
+
+        const audio = new Audio(config.voice);
         activeAudio = audio;
         audio.preload = "auto";
-        audio.volume = .86;
+        audio.volume = 0.86;
+
         audio.addEventListener("ended", function () {
-            activeAudio = null;
-            if (withMeow) window.setTimeout(meow, 90);
+            if (activeAudio === audio) activeAudio = null;
+            if (config.meow) window.setTimeout(playMeow, 120);
         }, { once: true });
+
         audio.addEventListener("error", function () {
-            activeAudio = null;
-            fallbackSpeak(text);
-            if (withMeow) window.setTimeout(meow, 250);
+            if (activeAudio === audio) activeAudio = null;
+            fallbackSpeak(config.message);
+            if (config.meow) window.setTimeout(playMeow, 220);
         }, { once: true });
+
         audio.play().catch(function () {
-            fallbackSpeak(text);
-            if (withMeow) window.setTimeout(meow, 250);
+            if (activeAudio === audio) activeAudio = null;
+            fallbackSpeak(config.message);
+            if (config.meow) window.setTimeout(playMeow, 220);
         });
     }
 
-    function setState(next, message, voiceKey, speak, withMeow) {
-        state = next;
+    function animateCaption(text) {
+        if (!caption) return;
+
+        if (captionTimer) window.clearTimeout(captionTimer);
+
+        caption.classList.remove("caption-visible");
+        caption.classList.add("caption-enter");
+
+        captionTimer = window.setTimeout(function () {
+            caption.textContent = text;
+            caption.classList.remove("caption-enter");
+            caption.classList.add("caption-visible");
+        }, 100);
+    }
+
+    function setState(nextState, options) {
+        options = options || {};
+
+        if (!states[nextState]) nextState = "initial";
+
+        const changed = nextState !== currentState;
+        currentState = nextState;
+
         frames.forEach(function (frame) {
-            frame.classList.toggle("active", frame.dataset.cat === next);
+            frame.classList.toggle(
+                "active",
+                frame.dataset.cat === nextState
+            );
         });
-        if (message) bubble.textContent = message;
-        if (speak && soundOn && voiceKey) playVoice(voiceKey, message, !!withMeow);
-        guide.classList.toggle("guide-speaking", !!speak);
-        window.setTimeout(function () { guide.classList.remove("guide-speaking"); }, 900);
-    }
 
-    function pointTo(field) {
-        if (!field || !pointer) return;
-        const guideRect = guide.getBoundingClientRect();
-        const fieldRect = field.getBoundingClientRect();
-        const startX = guideRect.left + guideRect.width * .61;
-        const startY = guideRect.top + guideRect.height * .78;
-        const endX = fieldRect.left + fieldRect.width * .06;
-        const endY = fieldRect.top + fieldRect.height * .5;
-        const dx = endX - startX;
-        const dy = endY - startY;
-        const distance = Math.max(34, Math.sqrt(dx * dx + dy * dy));
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-        const localX = startX - guideRect.left;
-        const localY = startY - guideRect.top;
-        pointer.style.left = localX + "px";
-        pointer.style.top = localY + "px";
-        pointer.style.width = distance + "px";
-        pointer.style.transform = "rotate(" + angle + "deg)";
-        guide.classList.add("guide-pointing");
-    }
+        const config = states[nextState];
 
-    function speakOnce(key, text, voiceKey, withMeow) {
-        if (spoken[key]) return;
-        spoken[key] = true;
-        setState(key, text, voiceKey, true, withMeow);
-    }
+        if (bubble) bubble.textContent = config.message;
+        animateCaption(config.message);
+        restartBreathing();
 
-    toggle.addEventListener("click", function () {
-        soundOn = !soundOn;
-        toggleLabel.textContent = soundOn ? "SOUND ON" : "SOUND OFF";
-        if (soundOn) {
-            setState(state, copy[state] || copy.initial, "intro", true, false);
-        } else {
-            stopAudio();
-            guide.classList.remove("guide-speaking");
+        if (changed && options.speak !== false && soundEnabled && audioUnlocked) {
+            if (lastPlayedState !== nextState) {
+                lastPlayedState = nextState;
+                playVoice(nextState);
+            }
         }
-    });
+    }
+
+    function enableAudio() {
+        audioUnlocked = true;
+    }
+
+    function isNameValid() {
+        return fields.name.value.trim().length >= 2;
+    }
+
+    function getUsernameStatus() {
+        const value = fields.username.value.trim().toLowerCase();
+
+        if (!value) return "empty";
+        if (value.length < 3) return "short";
+        if (TAKEN_USERNAMES.has(value)) return "taken";
+
+        return "valid";
+    }
+
+    function isEmailValid() {
+        return EMAIL_PATTERN.test(fields.email.value.trim());
+    }
+
+    /* --------------------------------------------------------
+       NAME
+       -------------------------------------------------------- */
 
     fields.name.addEventListener("focus", function () {
-        pointTo(fields.name);
-        setState("initial", copy.initial, "intro", soundOn && !spoken.intro, false);
-        spoken.intro = true;
+        enableAudio();
+
+        if (!fields.name.value.trim()) {
+            setState("initial");
+        }
     });
 
     fields.name.addEventListener("input", function () {
-        if (fields.name.value.trim().length >= 2) {
-            setState("name", copy.name, "nameSuccess", soundOn && !spoken.name, true);
-            spoken.name = true;
-            pointTo(fields.username);
+        enableAudio();
+
+        if (isNameValid()) {
+            setState("name");
+        } else {
+            setState("initial", { speak: false });
         }
     });
 
+    /* --------------------------------------------------------
+       USERNAME
+       -------------------------------------------------------- */
+
     fields.username.addEventListener("focus", function () {
-        pointTo(fields.username);
-        setState("name", copy.name, "nameSuccess", soundOn && !spoken.usernameFocus, true);
-        spoken.usernameFocus = true;
+        enableAudio();
+
+        const status = getUsernameStatus();
+
+        if (status === "taken") {
+            setState("error");
+        } else if (isNameValid()) {
+            setState("name", { speak: false });
+        }
     });
 
     fields.username.addEventListener("input", function () {
-        if (fields.username.value.trim().length >= 3) {
-            setState("email", copy.username, "usernameSuccess", soundOn && !spoken.username, true);
-            spoken.username = true;
-            pointTo(fields.email);
+        enableAudio();
+
+        const status = getUsernameStatus();
+
+        if (status === "taken") {
+            setState("error");
+            return;
+        }
+
+        if (status === "valid") {
+            setState("email");
+            return;
+        }
+
+        if (isNameValid()) {
+            setState("name", { speak: false });
+        } else {
+            setState("initial", { speak: false });
         }
     });
 
+    /* --------------------------------------------------------
+       EMAIL
+       -------------------------------------------------------- */
+
     fields.email.addEventListener("focus", function () {
-        pointTo(fields.email);
-        setState("email", copy.email, "emailIntro", soundOn && !spoken.emailFocus, false);
-        spoken.emailFocus = true;
+        enableAudio();
+
+        if (getUsernameStatus() === "valid") {
+            setState("email");
+        }
     });
 
     fields.email.addEventListener("input", function () {
-        if (fields.email.checkValidity() && fields.email.value.trim()) {
-            setState("ready", copy.ready, "ready", soundOn && !spoken.ready, true);
-            spoken.ready = true;
-            guide.classList.remove("guide-pointing");
+        enableAudio();
+
+        if (getUsernameStatus() === "taken") {
+            setState("error");
+            return;
+        }
+
+        if (getUsernameStatus() === "valid" && isEmailValid()) {
+            setState("ready");
+        } else if (getUsernameStatus() === "valid") {
+            setState("email", { speak: false });
         }
     });
 
-    [fields.name, fields.username, fields.email].forEach(function (field) {
-        field.addEventListener("blur", function () {
-            if (!field.value.trim()) return;
-            if (!field.checkValidity()) {
-                setState("error", copy.error, "usernameError", soundOn, false);
-                guide.classList.remove("guide-pointing");
-            }
-        });
+    /* --------------------------------------------------------
+       BLUR VALIDATION
+       -------------------------------------------------------- */
+
+    fields.name.addEventListener("blur", function () {
+        if (fields.name.value.trim() && !isNameValid()) {
+            setState("error");
+        }
     });
+
+    fields.username.addEventListener("blur", function () {
+        const status = getUsernameStatus();
+
+        if (status === "taken") {
+            setState("error");
+        }
+    });
+
+    fields.email.addEventListener("blur", function () {
+        if (fields.email.value.trim() && !isEmailValid()) {
+            setState("error");
+        }
+    });
+
+    /* --------------------------------------------------------
+       SOUND TOGGLE
+       -------------------------------------------------------- */
+
+    toggle.addEventListener("click", function () {
+        audioUnlocked = true;
+        soundEnabled = !soundEnabled;
+
+        toggleLabel.textContent = soundEnabled
+            ? "SOUND ON"
+            : "SOUND OFF";
+
+        if (!soundEnabled) {
+            stopAudio();
+            return;
+        }
+
+        /* Play the current state's voice exactly once when sound is enabled. */
+        lastPlayedState = currentState;
+        playVoice(currentState);
+    });
+
+    /* --------------------------------------------------------
+       SUBMIT
+       -------------------------------------------------------- */
 
     form.addEventListener("submit", function (event) {
-        const valid = Object.values(fields).every(function (field) {
-            return field && field.value.trim() && field.checkValidity();
-        });
-        if (valid) {
-            setState("success", copy.success, "success", soundOn, true);
-            guide.classList.remove("guide-pointing");
-        } else {
+        enableAudio();
+
+        const valid =
+            isNameValid() &&
+            getUsernameStatus() === "valid" &&
+            isEmailValid();
+
+        if (!valid) {
             event.preventDefault();
-            setState("error", copy.error, "usernameError", soundOn, false);
-            const firstInvalid = Object.values(fields).find(function (field) {
-                return !field.value.trim() || !field.checkValidity();
-            });
-            if (firstInvalid) {
-                firstInvalid.focus();
-                pointTo(firstInvalid);
+
+            if (!isNameValid()) {
+                setState("error");
+                fields.name.focus();
+                return;
             }
+
+            if (getUsernameStatus() !== "valid") {
+                setState("error");
+                fields.username.focus();
+                return;
+            }
+
+            setState("error");
+            fields.email.focus();
+            return;
         }
+
+        if (submitLocked) {
+            event.preventDefault();
+            return;
+        }
+
+        /* Let the success photograph be visible before navigation. */
+        event.preventDefault();
+        submitLocked = true;
+        setState("success");
+
+        const button = form.querySelector(".auth-submit");
+        if (button) {
+            button.disabled = true;
+            button.innerHTML = '<span>CHECKING DETAILS...</span><span>→</span>';
+        }
+
+        window.setTimeout(function () {
+            form.submit();
+        }, 650);
     });
 
-    window.addEventListener("resize", function () {
-        const active = document.activeElement;
-        if (active && (active === fields.name || active === fields.username || active === fields.email)) pointTo(active);
-    });
+    /* --------------------------------------------------------
+       STARTUP
+       -------------------------------------------------------- */
 
-    // Initial nonchalant state. No autoplay; sound starts only after the user opts in.
-    setState("initial", copy.initial, null, false, false);
+    setState("initial", { speak: false });
+
+    /* Preload the six real character photographs. */
+    frames.forEach(function (frame) {
+        const image = frame.querySelector("img");
+        if (!image) return;
+        const preload = new Image();
+        preload.src = image.src;
+    });
 });
