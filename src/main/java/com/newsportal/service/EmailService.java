@@ -3,16 +3,18 @@ package com.newsportal.service;
 import com.newsportal.entity.EmailVerificationToken;
 import com.newsportal.entity.User;
 
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
+import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.MailException;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Service
 public class EmailService {
@@ -20,21 +22,29 @@ public class EmailService {
     private static final Logger logger =
             LoggerFactory.getLogger(EmailService.class);
 
-    private final JavaMailSender mailSender;
+    private static final String RESEND_API_URL =
+            "https://api.resend.com/emails";
 
-    @Value("${spring.mail.username}")
+    private final WebClient webClient;
+
+    @Value("${resend.api-key:}")
+    private String resendApiKey;
+
+    @Value("${resend.from-email:}")
     private String fromEmail;
 
     @Value("${app.base-url:http://localhost:8082}")
     private String baseUrl;
 
-    public EmailService(JavaMailSender mailSender) {
-        this.mailSender = mailSender;
+    public EmailService(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.build();
     }
 
     public void sendVerificationEmail(
             User user,
             EmailVerificationToken token) {
+
+        validateConfiguration();
 
         String verificationUrl =
                 baseUrl
@@ -167,63 +177,63 @@ public class EmailService {
                         verificationUrl
                 );
 
+        Map<String, Object> payload = Map.of(
+                "from", fromEmail,
+                "to", List.of(user.getEmail()),
+                "subject", subject,
+                "html", html
+        );
+
         try {
 
-            MimeMessage message =
-                    mailSender.createMimeMessage();
-
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(
-                            message,
-                            true,
-                            "UTF-8"
-                    );
-
-            helper.setFrom(fromEmail);
-            helper.setTo(user.getEmail());
-            helper.setSubject(subject);
-            helper.setText(html, true);
-
-            mailSender.send(message);
+            webClient
+                    .post()
+                    .uri(RESEND_API_URL)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + resendApiKey)
+                    .bodyValue(payload)
+                    .retrieve()
+                    .toBodilessEntity()
+                    .block(Duration.ofSeconds(15));
 
             logger.info(
-                    "Verification email sent successfully: recipient={}",
+                    "Verification email sent successfully via Resend: recipient={}",
                     user.getEmail()
             );
 
-        } catch (MessagingException e) {
+        } catch (WebClientResponseException e) {
 
             logger.error(
-                    "Email message creation failed: recipient={}, errorType={}, message={}",
+                    "Resend email delivery failed: recipient={}, status={}, errorType={}, message={}",
                     user.getEmail(),
+                    e.getStatusCode().value(),
                     e.getClass().getSimpleName(),
                     e.getMessage()
             );
 
             throw new RuntimeException(
-                    "Unable to create verification email.",
+                    "Unable to send verification email through the email provider.",
                     e
             );
 
-        } catch (MailException e) {
+        } catch (WebClientRequestException e) {
 
             logger.error(
-                    "SMTP email delivery failed: recipient={}, errorType={}, message={}",
+                    "Resend connection failed: recipient={}, errorType={}, message={}",
                     user.getEmail(),
                     e.getClass().getSimpleName(),
                     e.getMessage()
             );
 
             throw new RuntimeException(
-                    "Unable to send verification email. "
-                    + "Please check the email configuration.",
+                    "Unable to connect to the email provider.",
                     e
             );
 
         } catch (Exception e) {
 
             logger.error(
-                    "Unknown email error: recipient={}, errorType={}, message={}",
+                    "Unexpected Resend email error: recipient={}, errorType={}, message={}",
                     user.getEmail(),
                     e.getClass().getSimpleName(),
                     e.getMessage()
@@ -233,6 +243,19 @@ public class EmailService {
                     "Unable to send verification email.",
                     e
             );
+        }
+    }
+
+    private void validateConfiguration() {
+
+        if (resendApiKey == null || resendApiKey.isBlank()) {
+            logger.error("Resend email configuration is missing: RESEND_API_KEY is not configured");
+            throw new IllegalStateException("Email provider is not configured.");
+        }
+
+        if (fromEmail == null || fromEmail.isBlank()) {
+            logger.error("Resend email configuration is missing: RESEND_FROM_EMAIL is not configured");
+            throw new IllegalStateException("Email sender is not configured.");
         }
     }
 
