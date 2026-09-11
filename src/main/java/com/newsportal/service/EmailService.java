@@ -35,7 +35,7 @@ public class EmailService {
     @Value("${mailjet.from-email:}")
     private String fromEmail;
 
-    @Value("${app.base-url:http://localhost:8082}")
+    @Value("${APP_BASE_URL:http://localhost:8082}")
     private String baseUrl;
 
     public EmailService(WebClient.Builder webClientBuilder) {
