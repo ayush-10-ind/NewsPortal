@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Verification - AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
+    <link rel="stylesheet" th:href="@{/email-verification.css}">
 </head>
-<body>
+<body class="email-verification-page">
 
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
@@ -41,10 +42,9 @@
                 Verification successful.
             </div>
 
-            <!-- AGNIPRESS EMAIL VERIFICATION PAGE V2 -->
+            <!-- AGNIPRESS EMAIL VERIFICATION PAGE V3 -->
             <!-- The password form is rendered whenever the controller supplies
-                 setPasswordRequest. It is intentionally independent of the
-                 token value so the verified-user page cannot lose the form. -->
+                 setPasswordRequest. It remains independent of the token value. -->
             <div th:if="${setPasswordRequest != null and success == null}">
 
                 <div class="auth-form-header">
@@ -74,6 +74,7 @@
                                th:field="*{password}"
                                placeholder="Create a password"
                                autocomplete="new-password"
+                               minlength="8"
                                required>
 
                         <div th:if="${#fields.hasErrors('password')}"
@@ -90,6 +91,7 @@
                                th:field="*{confirmPassword}"
                                placeholder="Repeat your password"
                                autocomplete="new-password"
+                               minlength="8"
                                required>
 
                         <div th:if="${#fields.hasErrors('confirmPassword')}"
