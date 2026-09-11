@@ -6,7 +6,7 @@
     <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
-    <link rel="stylesheet" th:href="@{/register-guide.css?v=3}">
+    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-2}">
     <style>
         .register-form-force{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
         .register-form-force .auth-field{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
@@ -16,9 +16,12 @@
     </style>
 </head>
 <body>
+
 <div th:replace="~{fragments/navbar :: navbar}"></div>
+
 <main class="auth-page">
     <div class="auth-container">
+
         <section class="auth-intro">
             <span class="auth-kicker">THE NEWSROOM</span>
             <h1>Stay <em>informed.</em></h1>
@@ -26,45 +29,90 @@
             <div class="auth-intro-line"></div>
             <span class="auth-edition">AGNIPRESS / MEMBER EDITION</span>
         </section>
+
         <section class="auth-form-section register-page-form-section">
+            <!-- Visible static guide: this is intentionally present in the HTML so the cat is never dependent on JavaScript to render. -->
+            <aside class="register-guide" aria-live="polite">
+                <button class="register-guide-toggle" type="button" aria-label="Turn guide sounds on or off">
+                    <span class="register-guide-toggle-icon">♪</span>
+                    <span class="register-guide-toggle-label">SOUND OFF</span>
+                </button>
+                <div class="register-guide-bubble">Hey there. Let's create your account.</div>
+                <div class="register-guide-pointer" aria-hidden="true"></div>
+                <div class="register-guide-cat" aria-hidden="true">
+                    <svg viewBox="0 0 180 170" role="presentation">
+                        <g class="cat-tail-art"><path d="M132 129 C169 134 168 87 144 86" /></g>
+                        <ellipse class="cat-body-art" cx="91" cy="123" rx="49" ry="35" />
+                        <path class="cat-ear-art" d="M45 69 L49 20 L82 51 Z" />
+                        <path class="cat-ear-art" d="M112 51 L143 20 L139 73 Z" />
+                        <path class="cat-head-art" d="M43 65 C43 38 65 27 92 27 C121 27 141 43 140 70 C139 99 120 111 91 111 C62 111 43 94 43 65 Z" />
+                        <path class="cat-face-detail" d="M68 73 Q77 66 84 73" />
+                        <path class="cat-face-detail" d="M100 73 Q109 66 118 73" />
+                        <ellipse class="cat-eye-art" cx="77" cy="70" rx="4.5" ry="3" />
+                        <ellipse class="cat-eye-art" cx="109" cy="70" rx="4.5" ry="3" />
+                        <path class="cat-nose-art" d="M89 80 Q92 78 95 80 Q92 84 89 80 Z" />
+                        <path class="cat-mouth-art" d="M92 84 Q87 89 83 86 M92 84 Q97 89 101 86" />
+                        <path class="cat-paw-art" d="M51 128 Q43 139 53 146 Q63 149 69 137" />
+                    </svg>
+                </div>
+            </aside>
+
             <div class="auth-form-header">
                 <span class="auth-form-kicker">NEW MEMBER</span>
                 <h2>Create account</h2>
                 <p>Join the AgniPress newsroom community.</p>
             </div>
+
             <div th:if="${error}" class="auth-error" th:text="${error}">Registration failed.</div>
+
             <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="auth-form register-form-force">
                 <div class="auth-field">
                     <label for="name">FULL NAME</label>
                     <input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required>
                     <div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div>
                 </div>
+
                 <div class="auth-field">
                     <label for="username">USERNAME</label>
                     <input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required>
                     <small>This username must be unique.</small>
                     <div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div>
                 </div>
+
                 <div class="auth-field">
                     <label for="email">EMAIL ADDRESS</label>
                     <input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required>
                     <small>We will send a verification link to this email. You will create your password after verification.</small>
                     <div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div>
                 </div>
+
                 <button type="submit" class="auth-submit">SEND VERIFICATION EMAIL <span>→</span></button>
             </form>
-            <div class="auth-footer"><span>ALREADY A MEMBER?</span><a th:href="@{/login}">SIGN IN</a></div>
+
+            <div class="auth-footer">
+                <span>ALREADY A MEMBER?</span>
+                <a th:href="@{/login}">SIGN IN</a>
+            </div>
         </section>
     </div>
 </main>
+
 <footer class="site-footer">
     <div class="editorial-container footer-grid">
-        <div><div class="footer-brand">AGNIPRESS</div><p>Independent reporting and stories shaping the day ahead.</p></div>
+        <div>
+            <div class="footer-brand">AGNIPRESS</div>
+            <p>Independent reporting and stories shaping the day ahead.</p>
+        </div>
         <div class="footer-links">
-            <a th:href="@{/}">HOME</a><a th:href="@{/newsList}">NEWS</a><a th:href="@{/newsList(category='India')}">INDIA</a><a th:href="@{/newsList(category='World')}">WORLD</a><a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
+            <a th:href="@{/}">HOME</a>
+            <a th:href="@{/newsList}">NEWS</a>
+            <a th:href="@{/newsList(category='India')}">INDIA</a>
+            <a th:href="@{/newsList(category='World')}">WORLD</a>
+            <a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
         </div>
     </div>
 </footer>
-<script th:src="@{/register-guide.js?v=3}"></script>
+
+<script th:src="@{/register-guide.js?v=20260912-2}"></script>
 </body>
 </html>
