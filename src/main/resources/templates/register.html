@@ -1,41 +1,27 @@
 <!DOCTYPE html>
 
-<html
-    lang="en"
-    xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 
 <head>
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Join News Portal</title>
+    <title>Join AgniPress</title>
 
-    <link
-        rel="stylesheet"
-        th:href="@{/newsportal.css}">
+    <link rel="stylesheet" th:href="@{/newsportal.css}">
 
 </head>
 
-
 <body>
 
-<div
-    th:replace="~{fragments/navbar :: navbar}">
-</div>
-
+<!-- AGNIPRESS REGISTER V2 -->
+<div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <main class="auth-page">
 
     <div class="auth-container">
-
-
-        <!-- ================================================= -->
-        <!-- LEFT -->
-        <!-- ================================================= -->
 
         <section class="auth-intro">
 
@@ -49,25 +35,19 @@
             </h1>
 
             <p>
-                Create your News Portal account and
+                Create your AgniPress account and
                 keep the stories that matter close.
             </p>
 
             <div class="auth-intro-line"></div>
 
             <span class="auth-edition">
-                NEWS PORTAL / MEMBER EDITION
+                AGNIPRESS / MEMBER EDITION
             </span>
 
         </section>
 
-
-        <!-- ================================================= -->
-        <!-- RIGHT -->
-        <!-- ================================================= -->
-
         <section class="auth-form-section">
-
 
             <div class="auth-form-header">
 
@@ -80,40 +60,23 @@
                 </h2>
 
                 <p>
-                    Join the newsroom community.
+                    Join the AgniPress newsroom community.
                 </p>
 
             </div>
-
-
-            <!-- ================================================= -->
-            <!-- ERROR -->
-            <!-- ================================================= -->
 
             <div
                 th:if="${error}"
                 class="auth-error"
                 th:text="${error}">
-
                 Registration failed.
-
             </div>
-
-
-            <!-- ================================================= -->
-            <!-- FORM -->
-            <!-- ================================================= -->
 
             <form
                 th:action="@{/register}"
                 th:object="${registerRequest}"
                 method="post"
                 class="auth-form">
-
-
-                <!-- ================================================= -->
-                <!-- NAME -->
-                <!-- ================================================= -->
 
                 <div class="auth-field">
 
@@ -137,11 +100,6 @@
 
                 </div>
 
-
-                <!-- ================================================= -->
-                <!-- USERNAME -->
-                <!-- ================================================= -->
-
                 <div class="auth-field">
 
                     <label for="username">
@@ -156,15 +114,8 @@
                         autocomplete="username"
                         required>
 
-                    <small
-                        style="
-                            display:block;
-                            margin-top:8px;
-                            color:#6b7280;
-                        ">
-
+                    <small style="display:block; margin-top:8px; color:#6b7280;">
                         This username must be unique.
-
                     </small>
 
                     <div
@@ -174,11 +125,6 @@
                     </div>
 
                 </div>
-
-
-                <!-- ================================================= -->
-                <!-- EMAIL -->
-                <!-- ================================================= -->
 
                 <div class="auth-field">
 
@@ -194,16 +140,9 @@
                         autocomplete="email"
                         required>
 
-                    <small
-                        style="
-                            display:block;
-                            margin-top:8px;
-                            color:#6b7280;
-                        ">
-
+                    <small style="display:block; margin-top:8px; color:#6b7280;">
                         We will send a verification link to this email.
                         You will create your password after verification.
-
                     </small>
 
                     <div
@@ -214,29 +153,14 @@
 
                 </div>
 
-
-                <!-- ================================================= -->
-                <!-- SUBMIT -->
-                <!-- ================================================= -->
-
                 <button
                     type="submit"
                     class="auth-submit">
-
                     SEND VERIFICATION EMAIL
-
-                    <span>
-                        →
-                    </span>
-
+                    <span>→</span>
                 </button>
 
             </form>
-
-
-            <!-- ================================================= -->
-            <!-- FOOTER -->
-            <!-- ================================================= -->
 
             <div class="auth-footer">
 
@@ -250,13 +174,11 @@
 
             </div>
 
-
         </section>
 
     </div>
 
 </main>
-
 
 <footer class="site-footer">
 
@@ -265,7 +187,7 @@
         <div>
 
             <div class="footer-brand">
-                NEWS PORTAL
+                AGNIPRESS
             </div>
 
             <p>
@@ -275,28 +197,13 @@
 
         </div>
 
-
         <div class="footer-links">
 
-            <a href="/">
-                HOME
-            </a>
-
-            <a href="/newsList">
-                NEWS
-            </a>
-
-            <a href="/newsList?category=India">
-                INDIA
-            </a>
-
-            <a href="/newsList?category=World">
-                WORLD
-            </a>
-
-            <a href="/newsList?category=Technology">
-                TECHNOLOGY
-            </a>
+            <a href="/">HOME</a>
+            <a href="/newsList">NEWS</a>
+            <a href="/newsList?category=India">INDIA</a>
+            <a href="/newsList?category=World">WORLD</a>
+            <a href="/newsList?category=Technology">TECHNOLOGY</a>
 
         </div>
 
