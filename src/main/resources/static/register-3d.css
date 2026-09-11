@@ -1,0 +1,101 @@
+/* =========================================================
+   AGNIPRESS REGISTRATION — LIVE 3D CAT
+   The cat is a responsive character, not a photograph.
+   ========================================================= */
+
+.register-guide {
+    height: 330px !important;
+    margin-bottom: 6px !important;
+    pointer-events: none !important;
+}
+
+.register-guide-topline {
+    height: 48px !important;
+    pointer-events: none !important;
+}
+
+.register-guide-bubble {
+    position: relative !important;
+    z-index: 20 !important;
+    max-width: 340px !important;
+    text-shadow: 0 1px 0 rgba(255,255,255,.55) !important;
+}
+
+.register-guide-toggle {
+    position: relative !important;
+    z-index: 25 !important;
+}
+
+.cat-stage {
+    position: absolute !important;
+    left: -18px !important;
+    right: -18px !important;
+    bottom: -2px !important;
+    width: calc(100% + 36px) !important;
+    height: 302px !important;
+    overflow: hidden !important;
+    border-radius: 2px !important;
+    perspective: 900px !important;
+}
+
+#cat-3d-canvas {
+    position: absolute !important;
+    inset: 0 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    outline: none !important;
+    cursor: default !important;
+    touch-action: none !important;
+}
+
+.cat-stage-hint {
+    position: absolute !important;
+    left: 50% !important;
+    bottom: 8px !important;
+    transform: translateX(-50%) !important;
+    z-index: 10 !important;
+    white-space: nowrap !important;
+    color: rgba(80,75,68,.55) !important;
+    font: 8px/1 Arial,sans-serif !important;
+    letter-spacing: .16em !important;
+    text-transform: uppercase !important;
+    pointer-events: none !important;
+    opacity: .7 !important;
+    transition: opacity .5s ease !important;
+}
+
+.cat-stage:hover .cat-stage-hint {
+    opacity: .28 !important;
+}
+
+/* Keep the old image-frame system completely out of the live stage. */
+.cat-frame {
+    display: none !important;
+}
+
+@media (max-width: 1000px) {
+    .register-guide { height: 310px !important; }
+    .cat-stage {
+        height: 286px !important;
+        left: -12px !important;
+        right: -12px !important;
+        width: calc(100% + 24px) !important;
+    }
+}
+
+@media (max-width: 600px) {
+    .register-guide { height: 270px !important; }
+    .register-guide-bubble { max-width: 220px !important; }
+    .cat-stage {
+        height: 245px !important;
+        left: -8px !important;
+        right: -8px !important;
+        width: calc(100% + 16px) !important;
+    }
+    .cat-stage-hint { font-size: 7px !important; bottom: 5px !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cat-stage-hint { transition: none !important; }
+}
