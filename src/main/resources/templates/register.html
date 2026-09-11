@@ -6,7 +6,7 @@
     <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
-    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-7}">
+    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-10}">
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
@@ -23,145 +23,37 @@
 
         <section class="auth-form-section register-page-form-section">
             <aside class="register-guide" aria-live="polite">
-                <button class="register-guide-toggle" type="button" aria-label="Turn guide sounds on or off">
-                    <span>♪</span> <span class="register-guide-toggle-label">SOUND OFF</span>
-                </button>
-                <div class="register-guide-bubble">Hey there. Let's create your account.</div>
-                <div class="register-guide-pointer" aria-hidden="true"></div>
+                <div class="register-guide-topline">
+                    <div class="register-guide-bubble">Hi there. Let's create your account.</div>
+                    <button class="register-guide-toggle" type="button" aria-label="Turn guide sounds on or off">
+                        <span>♪</span>
+                        <span class="register-guide-toggle-label">SOUND OFF</span>
+                    </button>
+                </div>
 
                 <div class="cat-stage" aria-hidden="true">
-                    <!-- 01 / INTRO: nonchalant black cat reading the paper -->
                     <div class="cat-frame active" data-cat="initial">
-                        <svg viewBox="0 0 360 245" role="presentation">
-                            <defs>
-                                <radialGradient id="c1" cx="35%" cy="25%"><stop offset="0" stop-color="#403d39"/><stop offset=".48" stop-color="#1d1b19"/><stop offset="1" stop-color="#090908"/></radialGradient>
-                                <linearGradient id="w1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf0"/><stop offset="1" stop-color="#d7cbb5"/></linearGradient>
-                            </defs>
-                            <g class="float">
-                                <ellipse cx="190" cy="218" rx="96" ry="13" fill="#000" opacity=".12"/>
-                                <path class="line" stroke="#171513" stroke-width="25" d="M252 190 C318 194 319 132 286 126"/>
-                                <ellipse cx="190" cy="177" rx="88" ry="54" fill="url(#c1)"/>
-                                <path d="M127 96 L132 28 L171 66 L215 66 L254 28 L259 98Z" fill="url(#c1)"/>
-                                <path d="M122 94 C122 48 151 30 194 30 C238 30 267 51 266 97 C265 137 239 157 194 157 C149 157 122 135 122 94Z" fill="url(#c1)"/>
-                                <path d="M140 57 L134 39 L159 65Z M249 57 L255 39 L230 65Z" fill="#8b5b3f" opacity=".75"/>
-                                <ellipse cx="177" cy="97" rx="7" ry="5" fill="#e8d6a9"/><ellipse cx="214" cy="97" rx="7" ry="5" fill="#e8d6a9"/>
-                                <path d="M170 91 Q178 86 185 91 M207 91 Q214 86 222 91" fill="none" stroke="#e9dec8" stroke-width="3" stroke-linecap="round"/>
-                                <path d="M193 106 Q198 103 203 106 Q198 112 193 106Z" fill="#b94d32"/>
-                                <path d="M198 111 Q193 115 189 112 M198 111 Q203 115 207 112" fill="none" stroke="#e9dec8" stroke-width="2.5" stroke-linecap="round"/>
-                                <path d="M167 112 L130 108 M167 119 L127 124 M229 112 L265 108 M229 119 L268 124" fill="none" stroke="#d9ceb8" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M132 167 Q117 184 130 195 Q145 200 155 181" fill="url(#c1)"/>
-                                <path class="paper" d="M63 134 L154 127 L163 208 L70 212Z"/><path class="paper-line" d="M78 151 L142 147 M76 164 L145 160 M78 177 L142 173 M80 190 L124 187"/>
-                                <circle cx="92" cy="145" r="5" fill="#b94d32" opacity=".8"/>
-                            </g>
-                        </svg>
+                        <img src="/cat/01-idle-welcome.png" alt="">
                     </div>
-
-                    <!-- 02 / NAME: relaxed cat acknowledges and points -->
                     <div class="cat-frame" data-cat="name">
-                        <svg viewBox="0 0 360 245" role="presentation">
-                            <defs><radialGradient id="c2"><stop stop-color="#4a4742"/><stop offset=".55" stop-color="#201e1b"/><stop offset="1" stop-color="#0a0a09"/></radialGradient></defs>
-                            <g class="float">
-                                <ellipse cx="190" cy="220" rx="94" ry="12" fill="#000" opacity=".11"/>
-                                <path class="line tail" stroke="#171513" stroke-width="25" d="M254 188 C321 193 320 129 285 126"/>
-                                <ellipse cx="190" cy="178" rx="86" ry="53" fill="url(#c2)"/>
-                                <path d="M128 96 L132 28 L171 65 L215 65 L254 28 L259 98Z" fill="url(#c2)"/>
-                                <path d="M122 94 C122 47 152 30 194 30 C238 30 267 52 266 96 C265 137 239 157 194 157 C149 157 122 135 122 94Z" fill="url(#c2)"/>
-                                <path d="M174 98 Q181 88 188 98 M207 98 Q214 88 221 98" fill="none" stroke="#eadfca" stroke-width="4" stroke-linecap="round"/>
-                                <path d="M193 108 Q198 105 203 108 Q198 114 193 108Z" fill="#b94d32"/>
-                                <path d="M167 113 L128 109 M167 120 L126 125 M229 113 L267 109 M229 120 L269 125" fill="none" stroke="#d9ceb8" stroke-width="2"/>
-                                <path d="M145 168 Q131 184 143 195 Q155 199 165 182" fill="#292723"/>
-                                <path d="M146 169 Q174 149 224 137" fill="none" stroke="#292723" stroke-width="16" stroke-linecap="round"/>
-                                <path d="M218 132 L241 130 L224 147Z" fill="#b94d32"/>
-                                <path d="M70 156 L108 153" stroke="#b94d32" stroke-width="2"/><circle cx="61" cy="156" r="4" fill="#b94d32"/>
-                            </g>
-                        </svg>
+                        <img src="/cat/02-name-filled-pointing.png" alt="">
                     </div>
-
-                    <!-- 03 / ERROR: unimpressed, newspaper back up -->
                     <div class="cat-frame" data-cat="error">
-                        <svg viewBox="0 0 360 245" role="presentation">
-                            <defs><radialGradient id="c3"><stop stop-color="#373532"/><stop offset=".5" stop-color="#181715"/><stop offset="1" stop-color="#070706"/></radialGradient></defs>
-                            <g class="float sad">
-                                <ellipse cx="190" cy="220" rx="95" ry="12" fill="#000" opacity=".13"/>
-                                <path class="line tail" stroke="#171513" stroke-width="25" d="M253 188 C306 201 321 155 296 137"/>
-                                <ellipse cx="190" cy="178" rx="87" ry="53" fill="url(#c3)"/>
-                                <path d="M128 97 L132 29 L171 66 L215 66 L254 29 L259 99Z" fill="url(#c3)"/>
-                                <path d="M122 95 C122 49 152 31 194 31 C238 31 267 53 266 97 C265 137 239 157 194 157 C149 157 122 136 122 95Z" fill="url(#c3)"/>
-                                <path d="M169 90 Q180 97 189 91 M207 91 Q216 97 224 90" fill="none" stroke="#e2d5bf" stroke-width="3.5" stroke-linecap="round"/>
-                                <path d="M170 103 Q180 99 189 104 M207 104 Q216 99 224 103" fill="none" stroke="#0c0b0a" stroke-width="5" stroke-linecap="round"/>
-                                <path d="M194 108 Q199 105 204 108 Q199 114 194 108Z" fill="#8b5b3f"/>
-                                <path d="M188 121 Q199 113 211 121" fill="none" stroke="#eadfca" stroke-width="3" stroke-linecap="round"/>
-                                <path d="M166 112 L129 106 M166 120 L126 123 M230 112 L267 106 M230 120 L269 123" fill="none" stroke="#c9bca5" stroke-width="2"/>
-                                <path d="M54 131 L154 138 L148 210 L48 202Z" fill="#f1eadc" stroke="#29241f" stroke-width="2"/>
-                                <path d="M67 148 L139 153 M65 162 L139 167 M64 177 L133 182 M62 191 L111 194" fill="none" stroke="#8c8478" stroke-width="2"/>
-                                <path d="M89 143 L119 146" stroke="#b94d32" stroke-width="3"/>
-                            </g>
-                        </svg>
+                        <img src="/cat/03-error-unimpressed.png" alt="">
                     </div>
-
-                    <!-- 04 / EMAIL: cat leans forward with a calm pointing paw -->
                     <div class="cat-frame" data-cat="email">
-                        <svg viewBox="0 0 360 245" role="presentation">
-                            <defs><radialGradient id="c4"><stop stop-color="#514d46"/><stop offset=".5" stop-color="#24221f"/><stop offset="1" stop-color="#0b0b0a"/></radialGradient><linearGradient id="cream4"><stop stop-color="#fff8e8"/><stop offset="1" stop-color="#cdbfa5"/></linearGradient></defs>
-                            <g class="float">
-                                <ellipse cx="192" cy="219" rx="100" ry="12" fill="#000" opacity=".11"/>
-                                <path class="line tail" stroke="#171513" stroke-width="25" d="M260 188 C323 193 319 130 287 126"/>
-                                <ellipse cx="190" cy="178" rx="91" ry="54" fill="url(#c4)"/>
-                                <path d="M127 96 L132 27 L171 65 L215 65 L255 27 L260 98Z" fill="url(#c4)"/>
-                                <path d="M121 95 C121 48 151 30 194 30 C238 30 268 52 267 97 C266 137 239 157 194 157 C148 157 121 136 121 95Z" fill="url(#c4)"/>
-                                <path d="M171 96 Q179 90 187 96 M208 96 Q215 90 223 96" fill="none" stroke="#e9dec8" stroke-width="3"/>
-                                <circle cx="179" cy="97" r="4.5" fill="#e9d6a5"/><circle cx="215" cy="97" r="4.5" fill="#e9d6a5"/>
-                                <path d="M194 107 Q199 104 204 107 Q199 113 194 107Z" fill="#b94d32"/>
-                                <path d="M167 113 L127 108 M167 120 L125 124 M230 113 L269 108 M230 120 L271 124" fill="none" stroke="#d6cab4" stroke-width="2"/>
-                                <path d="M146 169 Q132 184 145 194 Q158 198 167 181" fill="url(#c4)"/>
-                                <path d="M150 169 Q181 150 228 143" fill="none" stroke="#26231f" stroke-width="16" stroke-linecap="round"/>
-                                <path d="M221 138 L245 138 L227 151Z" fill="#b94d32"/>
-                                <rect x="264" y="150" width="45" height="31" rx="3" fill="url(#cream4)" stroke="#25211d" stroke-width="2"/><path d="M266 153 L286 168 L307 153" fill="none" stroke="#8b5b3f" stroke-width="2"/>
-                            </g>
-                        </svg>
+                        <img src="/cat/04-email-focus.png" alt="">
                     </div>
-
-                    <!-- 05 / READY: coffee, soft smile, confident nod -->
                     <div class="cat-frame" data-cat="ready">
-                        <svg viewBox="0 0 360 245" role="presentation">
-                            <defs><radialGradient id="c5"><stop stop-color="#6a4937"/><stop offset=".28" stop-color="#3b2920"/><stop offset=".7" stop-color="#191613"/><stop offset="1" stop-color="#090908"/></radialGradient><linearGradient id="cream5"><stop stop-color="#fff7e5"/><stop offset="1" stop-color="#d0b995"/></linearGradient></defs>
-                            <g class="float">
-                                <ellipse cx="190" cy="219" rx="97" ry="12" fill="#000" opacity=".11"/>
-                                <path class="line tail" stroke="#211a15" stroke-width="25" d="M254 188 C318 193 319 130 286 126"/>
-                                <ellipse cx="190" cy="178" rx="87" ry="53" fill="url(#c5)"/>
-                                <path d="M127 96 L132 28 L171 65 L215 65 L254 28 L259 98Z" fill="url(#c5)"/>
-                                <path d="M122 95 C122 48 151 30 194 30 C238 30 267 52 266 97 C265 137 239 157 194 157 C149 157 122 136 122 95Z" fill="url(#c5)"/>
-                                <path d="M170 97 Q179 89 187 97 M208 97 Q215 89 223 97" fill="none" stroke="#f0dfbb" stroke-width="3.5"/>
-                                <path d="M194 107 Q199 104 204 107 Q199 113 194 107Z" fill="#b94d32"/>
-                                <path d="M190 112 Q199 120 208 112" fill="none" stroke="#f0dfbb" stroke-width="3" stroke-linecap="round"/>
-                                <path d="M167 113 L128 108 M167 120 L126 124 M230 113 L268 108 M230 120 L270 124" fill="none" stroke="#d7c6a9" stroke-width="2"/>
-                                <path d="M146 169 Q132 184 145 195 Q158 199 168 181" fill="url(#c5)"/>
-                                <path d="M246 149 L284 149 L280 184 L250 184Z" fill="#b94d32" stroke="#1c1815" stroke-width="2"/><path d="M283 156 Q301 156 294 172 Q291 177 282 171" fill="none" stroke="#1c1815" stroke-width="4"/><path d="M256 143 Q251 132 258 123 M270 143 Q265 132 272 123" class="steam"/>
-                                <path d="M61 72 L65 84 L77 88 L65 92 L61 104 L57 92 L45 88 L57 84Z" fill="#b94d32" opacity=".8"/>
-                            </g>
-                        </svg>
+                        <img src="/cat/05-ready-to-submit.png" alt="">
                     </div>
-
-                    <!-- 06 / SUCCESS: cat relaxes, smiles, celebrates quietly -->
                     <div class="cat-frame" data-cat="success">
-                        <svg viewBox="0 0 360 245" role="presentation">
-                            <defs><radialGradient id="c6"><stop stop-color="#514e48"/><stop offset=".5" stop-color="#24221f"/><stop offset="1" stop-color="#090908"/></radialGradient></defs>
-                            <g class="float">
-                                <ellipse cx="190" cy="219" rx="100" ry="12" fill="#000" opacity=".10"/>
-                                <path class="line tail" stroke="#171513" stroke-width="25" d="M255 188 C319 195 323 126 286 122"/>
-                                <ellipse cx="190" cy="178" rx="88" ry="53" fill="url(#c6)"/>
-                                <path d="M127 96 L132 28 L171 65 L215 65 L255 28 L260 98Z" fill="url(#c6)"/>
-                                <path d="M121 95 C121 48 151 30 194 30 C238 30 268 52 267 97 C266 137 239 157 194 157 C148 157 121 136 121 95Z" fill="url(#c6)"/>
-                                <path d="M170 98 Q179 89 188 98 M207 98 Q215 89 224 98" fill="none" stroke="#efe1c5" stroke-width="4" stroke-linecap="round"/>
-                                <path d="M194 107 Q199 104 204 107 Q199 113 194 107Z" fill="#b94d32"/>
-                                <path d="M184 112 Q199 128 214 112" fill="none" stroke="#efe1c5" stroke-width="3.5" stroke-linecap="round"/>
-                                <path d="M167 113 L127 108 M167 120 L125 124 M230 113 L270 108 M230 120 L272 124" fill="none" stroke="#d6c9b1" stroke-width="2"/>
-                                <path d="M146 168 Q132 184 145 195 Q158 199 168 181" fill="url(#c6)"/>
-                                <path d="M57 75 L61 86 L72 90 L61 94 L57 105 L53 94 L42 90 L53 86Z" fill="#b94d32"/><path d="M290 68 L294 79 L305 83 L294 87 L290 98 L286 87 L275 83 L286 79Z" fill="#b94d32"/>
-                                <circle cx="83" cy="126" r="4" fill="#8b5b3f"/><circle cx="298" cy="128" r="4" fill="#8b5b3f"/>
-                            </g>
-                        </svg>
+                        <img src="/cat/06-success.png" alt="">
                     </div>
+                </div>
+
+                <div class="register-guide-caption" aria-hidden="true">
+                    <span class="caption-text">Hi there. Let's create your account.</span>
                 </div>
             </aside>
 
@@ -173,24 +65,27 @@
 
             <div th:if="${error}" class="auth-error" th:text="${error}">Registration failed.</div>
 
-            <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="auth-form register-form-force">
+            <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="auth-form register-form-force" novalidate>
                 <div class="auth-field">
                     <label for="name">FULL NAME</label>
                     <input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required>
                     <div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div>
                 </div>
+
                 <div class="auth-field">
                     <label for="username">USERNAME</label>
                     <input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required>
                     <small>This username must be unique.</small>
                     <div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div>
                 </div>
+
                 <div class="auth-field">
                     <label for="email">EMAIL ADDRESS</label>
                     <input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required>
                     <small>We will send a verification link to this email. You will create your password after verification.</small>
                     <div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div>
                 </div>
+
                 <button type="submit" class="auth-submit">SEND VERIFICATION EMAIL <span>→</span></button>
             </form>
 
@@ -207,6 +102,6 @@
         </div>
     </div>
 </footer>
-<script th:src="@{/register-guide.js?v=20260912-7}"></script>
+<script th:src="@{/register-guide.js?v=20260912-10}"></script>
 </body>
 </html>
