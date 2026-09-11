@@ -6,7 +6,7 @@
     <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
-    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-11}">
+    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-12}">
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
@@ -31,25 +31,9 @@
                     </button>
                 </div>
 
-                <div class="cat-stage" aria-hidden="true">
-                    <div class="cat-frame active" data-cat="initial">
-                        <img src="/cat/01-idle-welcome.png" alt="">
-                    </div>
-                    <div class="cat-frame" data-cat="name">
-                        <img src="/cat/02-name-filled-pointing.png" alt="">
-                    </div>
-                    <div class="cat-frame" data-cat="error">
-                        <img src="/cat/03-error-unimpressed.png" alt="">
-                    </div>
-                    <div class="cat-frame" data-cat="email">
-                        <img src="/cat/04-email-focus.png" alt="">
-                    </div>
-                    <div class="cat-frame" data-cat="ready">
-                        <img src="/cat/05-ready-to-submit.png" alt="">
-                    </div>
-                    <div class="cat-frame" data-cat="success">
-                        <img src="/cat/06-success.png" alt="">
-                    </div>
+                <div class="cat-stage" aria-label="Interactive AgniPress cat guide">
+                    <canvas id="cat-3d-canvas"></canvas>
+                    <div class="cat-stage-hint">move your cursor · the newsroom cat is watching</div>
                 </div>
             </aside>
 
@@ -98,6 +82,14 @@
         </div>
     </div>
 </footer>
-<script th:src="@{/register-guide.js?v=20260912-11}"></script>
+
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js"
+    }
+}
+</script>
+<script type="module" th:src="@{/register-guide.js?v=20260912-12}"></script>
 </body>
 </html>
