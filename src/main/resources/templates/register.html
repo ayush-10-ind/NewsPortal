@@ -1,33 +1,56 @@
 <!DOCTYPE html>
-
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-
 <head>
-
     <meta charset="UTF-8">
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
-
     <link rel="stylesheet" th:href="@{/newsportal.css}">
+    <style>
+        /* AGNIPRESS REGISTER - DEFINITIVE FORM */
+        .register-form-force {
+            display: block !important;
+            width: 100% !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
 
+        .register-form-force .auth-field {
+            display: block !important;
+            width: 100% !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .register-form-force input {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .register-form-force .auth-submit {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+
+        .register-page-form-section {
+            display: block !important;
+            min-height: 500px;
+        }
+    </style>
 </head>
-
 <body>
 
-<!-- AGNIPRESS REGISTER V2 -->
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
 <main class="auth-page">
-
     <div class="auth-container">
 
         <section class="auth-intro">
-
-            <span class="auth-kicker">
-                THE NEWSROOM
-            </span>
+            <span class="auth-kicker">THE NEWSROOM</span>
 
             <h1>
                 Stay
@@ -44,31 +67,18 @@
             <span class="auth-edition">
                 AGNIPRESS / MEMBER EDITION
             </span>
-
         </section>
 
-        <section class="auth-form-section">
-
+        <section class="auth-form-section register-page-form-section">
             <div class="auth-form-header">
+                <span class="auth-form-kicker">NEW MEMBER</span>
 
-                <span class="auth-form-kicker">
-                    NEW MEMBER
-                </span>
+                <h2>Create account</h2>
 
-                <h2>
-                    Create account
-                </h2>
-
-                <p>
-                    Join the AgniPress newsroom community.
-                </p>
-
+                <p>Join the AgniPress newsroom community.</p>
             </div>
 
-            <div
-                th:if="${error}"
-                class="auth-error"
-                th:text="${error}">
+            <div th:if="${error}" class="auth-error" th:text="${error}">
                 Registration failed.
             </div>
 
@@ -76,14 +86,10 @@
                 th:action="@{/register}"
                 th:object="${registerRequest}"
                 method="post"
-                class="auth-form">
+                class="auth-form register-form-force">
 
                 <div class="auth-field">
-
-                    <label for="name">
-                        FULL NAME
-                    </label>
-
+                    <label for="name">FULL NAME</label>
                     <input
                         id="name"
                         type="text"
@@ -97,15 +103,10 @@
                         class="auth-error"
                         th:errors="*{name}">
                     </div>
-
                 </div>
 
                 <div class="auth-field">
-
-                    <label for="username">
-                        USERNAME
-                    </label>
-
+                    <label for="username">USERNAME</label>
                     <input
                         id="username"
                         type="text"
@@ -114,7 +115,7 @@
                         autocomplete="username"
                         required>
 
-                    <small style="display:block; margin-top:8px; color:#6b7280;">
+                    <small>
                         This username must be unique.
                     </small>
 
@@ -123,15 +124,10 @@
                         class="auth-error"
                         th:errors="*{username}">
                     </div>
-
                 </div>
 
                 <div class="auth-field">
-
-                    <label for="email">
-                        EMAIL ADDRESS
-                    </label>
-
+                    <label for="email">EMAIL ADDRESS</label>
                     <input
                         id="email"
                         type="email"
@@ -140,7 +136,7 @@
                         autocomplete="email"
                         required>
 
-                    <small style="display:block; margin-top:8px; color:#6b7280;">
+                    <small>
                         We will send a verification link to this email.
                         You will create your password after verification.
                     </small>
@@ -150,67 +146,41 @@
                         class="auth-error"
                         th:errors="*{email}">
                     </div>
-
                 </div>
 
-                <button
-                    type="submit"
-                    class="auth-submit">
+                <button type="submit" class="auth-submit">
                     SEND VERIFICATION EMAIL
                     <span>→</span>
                 </button>
-
             </form>
 
             <div class="auth-footer">
-
-                <span>
-                    ALREADY A MEMBER?
-                </span>
-
-                <a href="/login">
-                    SIGN IN
-                </a>
-
+                <span>ALREADY A MEMBER?</span>
+                <a th:href="@{/login}">SIGN IN</a>
             </div>
-
         </section>
-
     </div>
-
 </main>
 
 <footer class="site-footer">
-
     <div class="editorial-container footer-grid">
-
         <div>
-
-            <div class="footer-brand">
-                AGNIPRESS
-            </div>
-
+            <div class="footer-brand">AGNIPRESS</div>
             <p>
                 Independent reporting and stories
                 shaping the day ahead.
             </p>
-
         </div>
 
         <div class="footer-links">
-
-            <a href="/">HOME</a>
-            <a href="/newsList">NEWS</a>
-            <a href="/newsList?category=India">INDIA</a>
-            <a href="/newsList?category=World">WORLD</a>
-            <a href="/newsList?category=Technology">TECHNOLOGY</a>
-
+            <a th:href="@{/}">HOME</a>
+            <a th:href="@{/newsList}">NEWS</a>
+            <a th:href="@{/newsList(category='India')}">INDIA</a>
+            <a th:href="@{/newsList(category='World')}">WORLD</a>
+            <a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
         </div>
-
     </div>
-
 </footer>
 
 </body>
-
 </html>
