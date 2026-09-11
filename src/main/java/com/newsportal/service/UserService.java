@@ -34,20 +34,11 @@ public class UserService {
             EmailVerificationTokenRepository tokenRepository,
             EmailService emailService) {
 
-        this.userRepository =
-                userRepository;
-
-        this.roleRepository =
-                roleRepository;
-
-        this.passwordEncoder =
-                passwordEncoder;
-
-        this.tokenRepository =
-                tokenRepository;
-
-        this.emailService =
-                emailService;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.tokenRepository = tokenRepository;
+        this.emailService = emailService;
     }
 
 
@@ -69,7 +60,6 @@ public class UserService {
                         .trim()
                         .toLowerCase();
 
-
         // =================================================
         // CHECK IF EMAIL ALREADY EXISTS
         // =================================================
@@ -79,21 +69,11 @@ public class UserService {
                         .findByEmail(email)
                         .orElse(null);
 
-
         // =================================================
         // EXISTING USER
         // =================================================
 
         if (existingUser != null) {
-
-            /*
-             * =================================================
-             * COMPLETED ACCOUNT
-             * =================================================
-             *
-             * If email has already been verified and a password
-             * exists, this is a real registered account.
-             */
 
             if (existingUser.isEmailVerified()
                     && existingUser.getPassword() != null
@@ -104,19 +84,6 @@ public class UserService {
                         + "Please sign in instead."
                 );
             }
-
-
-            /*
-             * =================================================
-             * PENDING ACCOUNT
-             * =================================================
-             *
-             * The user started registration but never completed
-             * verification/password creation.
-             *
-             * We reuse this account instead of creating another
-             * users row.
-             */
 
             // -------------------------------------------------
             // CHECK USERNAME
@@ -136,67 +103,35 @@ public class UserService {
                 existingUser.setUsername(username);
             }
 
-
             // -------------------------------------------------
-            // UPDATE NAME
+            // UPDATE PENDING ACCOUNT
             // -------------------------------------------------
 
             existingUser.setName(
                     request.getName().trim()
             );
 
-
-            // -------------------------------------------------
-            // RESET ACCOUNT STATE
-            // -------------------------------------------------
-
             existingUser.setPassword(null);
-
             existingUser.setEnabled(false);
-
             existingUser.setEmailVerified(false);
-
-
-            // -------------------------------------------------
-            // SAVE UPDATED USER
-            // -------------------------------------------------
 
             User savedUser =
                     userRepository.save(existingUser);
 
-
             // -------------------------------------------------
-            // DELETE OLD VERIFICATION TOKEN
+            // REPLACE OLD TOKEN
             // -------------------------------------------------
 
-            tokenRepository.deleteAllByUser(
-                    savedUser
-            );
-
-            /*
-             * Flush immediately so the old token's unique
-             * user_id constraint is definitely removed before
-             * inserting the new token.
-             */
-
+            tokenRepository.deleteAllByUser(savedUser);
             tokenRepository.flush();
 
-
-            // -------------------------------------------------
-            // CREATE NEW TOKEN
-            // -------------------------------------------------
-
             EmailVerificationToken newToken =
-                    new EmailVerificationToken(
-                            savedUser
-                    );
-
+                    new EmailVerificationToken(savedUser);
 
             tokenRepository.save(newToken);
 
-
             // -------------------------------------------------
-            // SEND NEW VERIFICATION EMAIL
+            // SEND EMAIL
             // -------------------------------------------------
 
             try {
@@ -217,18 +152,12 @@ public class UserService {
                 );
             }
 
-
             return savedUser;
         }
-
 
         // =====================================================
         // NEW USER
         // =====================================================
-
-        // -----------------------------------------------------
-        // USERNAME DUPLICATE
-        // -----------------------------------------------------
 
         if (userRepository.existsByUsername(username)) {
 
@@ -237,11 +166,6 @@ public class UserService {
                     + "Please choose another."
             );
         }
-
-
-        // =====================================================
-        // ROLE
-        // =====================================================
 
         Role userRole =
                 roleRepository
@@ -252,72 +176,30 @@ public class UserService {
                                 )
                         );
 
-
-        // =====================================================
-        // CREATE USER
-        // =====================================================
-
-        User user =
-                new User();
+        User user = new User();
 
         user.setName(
                 request.getName().trim()
         );
 
-        user.setUsername(
-                username
-        );
-
-        user.setEmail(
-                email
-        );
-
-
-        /*
-         * Password is deliberately NULL until the user
-         * verifies their email and creates a password.
-         */
-
+        user.setUsername(username);
+        user.setEmail(email);
         user.setPassword(null);
-
-
-        /*
-         * Account cannot log in until verification
-         * and password creation are completed.
-         */
-
         user.setEnabled(false);
-
         user.setEmailVerified(false);
-
-
-        // -----------------------------------------------------
-        // ROLE
-        // -----------------------------------------------------
-
         user.addRole(userRole);
-
-
-        // -----------------------------------------------------
-        // SAVE USER
-        // -----------------------------------------------------
 
         User savedUser =
                 userRepository.save(user);
-
 
         // =====================================================
         // CREATE VERIFICATION TOKEN
         // =====================================================
 
         EmailVerificationToken token =
-                new EmailVerificationToken(
-                        savedUser
-                );
-
+                new EmailVerificationToken(savedUser);
 
         tokenRepository.save(token);
-
 
         // =====================================================
         // SEND VERIFICATION EMAIL
@@ -332,15 +214,8 @@ public class UserService {
 
         } catch (Exception e) {
 
-            /*
-             * If the email cannot be sent, remove both the
-             * token and the pending user.
-             */
-
             tokenRepository.delete(token);
-
             userRepository.delete(savedUser);
-
 
             throw new RuntimeException(
                     "We could not send a verification email "
@@ -349,37 +224,65 @@ public class UserService {
             );
         }
 
-
         return savedUser;
     }
 
 
     // =====================================================
-    // SET PASSWORD AFTER EMAIL VERIFICATION
+    // COMPLETE EMAIL VERIFICATION + PASSWORD CREATION
     // =====================================================
 
     @Transactional
-    public void setPassword(
-            User user,
+    public void completeEmailVerification(
+            String token,
             SetPasswordRequestDTO request) {
 
+        // -------------------------------------------------
+        // FIND TOKEN INSIDE THE SAME TRANSACTION
+        // -------------------------------------------------
 
-        // =================================================
+        EmailVerificationToken verificationToken =
+                tokenRepository
+                        .findByToken(token)
+                        .orElse(null);
+
+        if (verificationToken == null) {
+
+            throw new RuntimeException(
+                    "This verification link is invalid or has already been used."
+            );
+        }
+
+        if (verificationToken.isExpired()) {
+
+            throw new RuntimeException(
+                    "This verification link has expired. Please register again."
+            );
+        }
+
+        // -------------------------------------------------
         // PASSWORD MATCH
-        // =================================================
+        // -------------------------------------------------
 
-        if (!request.getPassword()
-                .equals(request.getConfirmPassword())) {
+        if (request.getPassword() == null
+                || request.getConfirmPassword() == null
+                || !request.getPassword()
+                        .equals(request.getConfirmPassword())) {
 
             throw new RuntimeException(
                     "Passwords do not match."
             );
         }
 
+        // -------------------------------------------------
+        // GET USER
+        // -------------------------------------------------
 
-        // =================================================
+        User user = verificationToken.getUser();
+
+        // -------------------------------------------------
         // SET PASSWORD
-        // =================================================
+        // -------------------------------------------------
 
         user.setPassword(
                 passwordEncoder.encode(
@@ -387,24 +290,46 @@ public class UserService {
                 )
         );
 
-
-        // =================================================
-        // VERIFY EMAIL
-        // =================================================
-
         user.setEmailVerified(true);
-
-
-        // =================================================
-        // ENABLE ACCOUNT
-        // =================================================
-
         user.setEnabled(true);
 
+        userRepository.save(user);
 
-        // =================================================
-        // SAVE USER
-        // =================================================
+        // -------------------------------------------------
+        // DELETE TOKEN ATOMICALLY
+        // -------------------------------------------------
+
+        tokenRepository.delete(verificationToken);
+    }
+
+
+    // =====================================================
+    // LEGACY PASSWORD METHOD
+    // =====================================================
+
+    @Transactional
+    public void setPassword(
+            User user,
+            SetPasswordRequestDTO request) {
+
+        if (request.getPassword() == null
+                || request.getConfirmPassword() == null
+                || !request.getPassword()
+                        .equals(request.getConfirmPassword())) {
+
+            throw new RuntimeException(
+                    "Passwords do not match."
+            );
+        }
+
+        user.setPassword(
+                passwordEncoder.encode(
+                        request.getPassword()
+                )
+        );
+
+        user.setEmailVerified(true);
+        user.setEnabled(true);
 
         userRepository.save(user);
     }
