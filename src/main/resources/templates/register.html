@@ -6,40 +6,14 @@
     <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
+    <link rel="stylesheet" th:href="@{/register-guide.css}">
     <style>
         /* AGNIPRESS REGISTER - DEFINITIVE FORM */
-        .register-form-force {
-            display: block !important;
-            width: 100% !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        .register-form-force .auth-field {
-            display: block !important;
-            width: 100% !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        .register-form-force input {
-            display: block !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        .register-form-force .auth-submit {
-            display: flex !important;
-            visibility: visible !important;
-            opacity: 1 !important;
-        }
-
-        .register-page-form-section {
-            display: block !important;
-            min-height: 500px;
-        }
+        .register-form-force{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
+        .register-form-force .auth-field{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
+        .register-form-force input{display:block!important;width:100%!important;box-sizing:border-box!important;visibility:visible!important;opacity:1!important}
+        .register-form-force .auth-submit{display:flex!important;visibility:visible!important;opacity:1!important}
+        .register-page-form-section{display:block!important;min-height:500px;position:relative}
     </style>
 </head>
 <body>
@@ -64,17 +38,13 @@
 
             <div class="auth-intro-line"></div>
 
-            <span class="auth-edition">
-                AGNIPRESS / MEMBER EDITION
-            </span>
+            <span class="auth-edition">AGNIPRESS / MEMBER EDITION</span>
         </section>
 
         <section class="auth-form-section register-page-form-section">
             <div class="auth-form-header">
                 <span class="auth-form-kicker">NEW MEMBER</span>
-
                 <h2>Create account</h2>
-
                 <p>Join the AgniPress newsroom community.</p>
             </div>
 
@@ -82,70 +52,32 @@
                 Registration failed.
             </div>
 
-            <form
-                th:action="@{/register}"
-                th:object="${registerRequest}"
-                method="post"
-                class="auth-form register-form-force">
+            <form th:action="@{/register}"
+                  th:object="${registerRequest}"
+                  method="post"
+                  class="auth-form register-form-force">
 
                 <div class="auth-field">
                     <label for="name">FULL NAME</label>
-                    <input
-                        id="name"
-                        type="text"
-                        th:field="*{name}"
-                        placeholder="Your name"
-                        autocomplete="name"
-                        required>
-
-                    <div
-                        th:if="${#fields.hasErrors('name')}"
-                        class="auth-error"
-                        th:errors="*{name}">
-                    </div>
+                    <input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required>
+                    <div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div>
                 </div>
 
                 <div class="auth-field">
                     <label for="username">USERNAME</label>
-                    <input
-                        id="username"
-                        type="text"
-                        th:field="*{username}"
-                        placeholder="Choose a unique username"
-                        autocomplete="username"
-                        required>
-
-                    <small>
-                        This username must be unique.
-                    </small>
-
-                    <div
-                        th:if="${#fields.hasErrors('username')}"
-                        class="auth-error"
-                        th:errors="*{username}">
-                    </div>
+                    <input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required>
+                    <small>This username must be unique.</small>
+                    <div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div>
                 </div>
 
                 <div class="auth-field">
                     <label for="email">EMAIL ADDRESS</label>
-                    <input
-                        id="email"
-                        type="email"
-                        th:field="*{email}"
-                        placeholder="you@example.com"
-                        autocomplete="email"
-                        required>
-
+                    <input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required>
                     <small>
                         We will send a verification link to this email.
                         You will create your password after verification.
                     </small>
-
-                    <div
-                        th:if="${#fields.hasErrors('email')}"
-                        class="auth-error"
-                        th:errors="*{email}">
-                    </div>
+                    <div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div>
                 </div>
 
                 <button type="submit" class="auth-submit">
@@ -166,12 +98,8 @@
     <div class="editorial-container footer-grid">
         <div>
             <div class="footer-brand">AGNIPRESS</div>
-            <p>
-                Independent reporting and stories
-                shaping the day ahead.
-            </p>
+            <p>Independent reporting and stories shaping the day ahead.</p>
         </div>
-
         <div class="footer-links">
             <a th:href="@{/}">HOME</a>
             <a th:href="@{/newsList}">NEWS</a>
@@ -182,5 +110,6 @@
     </div>
 </footer>
 
+<script th:src="@{/register-guide.js}"></script>
 </body>
 </html>
