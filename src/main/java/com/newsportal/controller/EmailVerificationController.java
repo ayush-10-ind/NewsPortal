@@ -59,7 +59,7 @@ public class EmailVerificationController {
                     "This verification link is invalid or has already been used."
             );
 
-            return "emailVerification";
+            return "email-verification-page";
         }
 
         // =================================================
@@ -73,7 +73,7 @@ public class EmailVerificationController {
                     "This verification link has expired. Please register again."
             );
 
-            return "emailVerification";
+            return "email-verification-page";
         }
 
         // =================================================
@@ -103,7 +103,9 @@ public class EmailVerificationController {
                 userName
         );
 
-        return "emailVerification";
+        // Use a dedicated template name so the verification page
+        // cannot be confused with a stale/cached emailVerification template.
+        return "email-verification-page";
     }
 
     // =====================================================
@@ -142,7 +144,7 @@ public class EmailVerificationController {
                     "This verification link is invalid or has already been used."
             );
 
-            return "emailVerification";
+            return "email-verification-page";
         }
 
         // =================================================
@@ -156,7 +158,7 @@ public class EmailVerificationController {
                     "This verification link has expired."
             );
 
-            return "emailVerification";
+            return "email-verification-page";
         }
 
         // =================================================
@@ -177,7 +179,7 @@ public class EmailVerificationController {
                     user.getName()
             );
 
-            return "emailVerification";
+            return "email-verification-page";
         }
 
         // =================================================
@@ -214,7 +216,7 @@ public class EmailVerificationController {
                     user.getName()
             );
 
-            return "emailVerification";
+            return "email-verification-page";
         }
 
         // =================================================
@@ -235,6 +237,6 @@ public class EmailVerificationController {
                 + "You can now sign in."
         );
 
-        return "emailVerification";
+        return "email-verification-page";
     }
 }
