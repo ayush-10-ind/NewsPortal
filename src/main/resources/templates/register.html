@@ -6,110 +6,65 @@
     <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
-    <link rel="stylesheet" th:href="@{/register-guide.css}">
+    <link rel="stylesheet" th:href="@{/register-guide.css?v=3}">
     <style>
-        /* AGNIPRESS REGISTER - DEFINITIVE FORM */
         .register-form-force{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
         .register-form-force .auth-field{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
         .register-form-force input{display:block!important;width:100%!important;box-sizing:border-box!important;visibility:visible!important;opacity:1!important}
         .register-form-force .auth-submit{display:flex!important;visibility:visible!important;opacity:1!important}
-        .register-page-form-section{display:block!important;min-height:500px;position:relative}
+        .register-page-form-section{display:block!important;min-height:500px;position:relative;overflow:visible!important}
     </style>
 </head>
 <body>
-
 <div th:replace="~{fragments/navbar :: navbar}"></div>
-
 <main class="auth-page">
     <div class="auth-container">
-
         <section class="auth-intro">
             <span class="auth-kicker">THE NEWSROOM</span>
-
-            <h1>
-                Stay
-                <em>informed.</em>
-            </h1>
-
-            <p>
-                Create your AgniPress account and
-                keep the stories that matter close.
-            </p>
-
+            <h1>Stay <em>informed.</em></h1>
+            <p>Create your AgniPress account and keep the stories that matter close.</p>
             <div class="auth-intro-line"></div>
-
             <span class="auth-edition">AGNIPRESS / MEMBER EDITION</span>
         </section>
-
         <section class="auth-form-section register-page-form-section">
             <div class="auth-form-header">
                 <span class="auth-form-kicker">NEW MEMBER</span>
                 <h2>Create account</h2>
                 <p>Join the AgniPress newsroom community.</p>
             </div>
-
-            <div th:if="${error}" class="auth-error" th:text="${error}">
-                Registration failed.
-            </div>
-
-            <form th:action="@{/register}"
-                  th:object="${registerRequest}"
-                  method="post"
-                  class="auth-form register-form-force">
-
+            <div th:if="${error}" class="auth-error" th:text="${error}">Registration failed.</div>
+            <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="auth-form register-form-force">
                 <div class="auth-field">
                     <label for="name">FULL NAME</label>
                     <input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required>
                     <div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div>
                 </div>
-
                 <div class="auth-field">
                     <label for="username">USERNAME</label>
                     <input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required>
                     <small>This username must be unique.</small>
                     <div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div>
                 </div>
-
                 <div class="auth-field">
                     <label for="email">EMAIL ADDRESS</label>
                     <input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required>
-                    <small>
-                        We will send a verification link to this email.
-                        You will create your password after verification.
-                    </small>
+                    <small>We will send a verification link to this email. You will create your password after verification.</small>
                     <div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div>
                 </div>
-
-                <button type="submit" class="auth-submit">
-                    SEND VERIFICATION EMAIL
-                    <span>→</span>
-                </button>
+                <button type="submit" class="auth-submit">SEND VERIFICATION EMAIL <span>→</span></button>
             </form>
-
-            <div class="auth-footer">
-                <span>ALREADY A MEMBER?</span>
-                <a th:href="@{/login}">SIGN IN</a>
-            </div>
+            <div class="auth-footer"><span>ALREADY A MEMBER?</span><a th:href="@{/login}">SIGN IN</a></div>
         </section>
     </div>
 </main>
-
 <footer class="site-footer">
     <div class="editorial-container footer-grid">
-        <div>
-            <div class="footer-brand">AGNIPRESS</div>
-            <p>Independent reporting and stories shaping the day ahead.</p>
-        </div>
+        <div><div class="footer-brand">AGNIPRESS</div><p>Independent reporting and stories shaping the day ahead.</p></div>
         <div class="footer-links">
-            <a th:href="@{/}">HOME</a>
-            <a th:href="@{/newsList}">NEWS</a>
-            <a th:href="@{/newsList(category='India')}">INDIA</a>
-            <a th:href="@{/newsList(category='World')}">WORLD</a>
-            <a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
+            <a th:href="@{/}">HOME</a><a th:href="@{/newsList}">NEWS</a><a th:href="@{/newsList(category='India')}">INDIA</a><a th:href="@{/newsList(category='World')}">WORLD</a><a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
         </div>
     </div>
 </footer>
-
-<script th:src="@{/register-guide.js}"></script>
+<script th:src="@{/register-guide.js?v=3}"></script>
 </body>
 </html>
