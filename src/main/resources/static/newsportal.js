@@ -4,6 +4,48 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
     /* =========================================================
+       AGNIPRESS HOMEPAGE POLISH
+       ========================================================= */
+
+    function loadHomepagePolish() {
+
+        if (!document.querySelector(".home-hero")) {
+            return;
+        }
+
+        if (document.querySelector('link[data-home-polish="true"]')) {
+            return;
+        }
+
+        const stylesheet = document.createElement("link");
+        stylesheet.rel = "stylesheet";
+        stylesheet.href = "/home-polish.css";
+        stylesheet.dataset.homePolish = "true";
+        document.head.appendChild(stylesheet);
+
+        document.title = "AgniPress — Latest News";
+
+        document.querySelectorAll(".home-hero-topline span:first-child").forEach(function (element) {
+            element.textContent = "AGNIPRESS";
+        });
+
+        document.querySelectorAll(".home-featured-fallback").forEach(function (element) {
+            element.textContent = "AGNIPRESS";
+        });
+
+        document.querySelectorAll(".footer-brand").forEach(function (element) {
+            element.textContent = "AGNIPRESS";
+        });
+
+        document.querySelectorAll(".footer-bottom span:first-child").forEach(function (element) {
+            element.textContent = "© 2026 AgniPress";
+        });
+    }
+
+    loadHomepagePolish();
+
+
+    /* =========================================================
        WEATHER NAVIGATION
        ========================================================= */
 
@@ -13,124 +55,60 @@ document.addEventListener("DOMContentLoaded", function () {
             document.querySelector(".desktop-navigation");
 
         if (!desktopNavigation) {
-            console.warn(
-                "News Portal: .desktop-navigation not found."
-            );
+            console.warn("AgniPress: .desktop-navigation not found.");
             return;
         }
 
-        /*
-         * The weather link already exists in navbar.html.
-         * Do not create a duplicate.
-         */
-        if (
-            desktopNavigation.querySelector(
-                ".weather-nav-link"
-            )
-        ) {
+        if (desktopNavigation.querySelector(".weather-nav-link")) {
             return;
         }
 
-        const weatherLink =
-            document.createElement("a");
-
+        const weatherLink = document.createElement("a");
         weatherLink.href = "/weather";
         weatherLink.className = "weather-nav-link";
         weatherLink.title = "Weather";
 
-        const weatherLogo =
-            document.createElement("img");
-
-        weatherLogo.src =
-            "/images/weather-logo.png";
-
+        const weatherLogo = document.createElement("img");
+        weatherLogo.src = "/images/weather-logo.png";
         weatherLogo.alt = "Weather";
         weatherLogo.className = "weather-nav-logo";
 
-        const weatherText =
-            document.createElement("span");
-
+        const weatherText = document.createElement("span");
         weatherText.textContent = "WEATHER";
         weatherText.className = "weather-nav-text";
 
         weatherLink.appendChild(weatherLogo);
         weatherLink.appendChild(weatherText);
 
-        const navigationLinks =
-            Array.from(
-                desktopNavigation.querySelectorAll("a")
-            );
+        const navigationLinks = Array.from(
+            desktopNavigation.querySelectorAll("a")
+        );
 
-        const sportsLink =
-            navigationLinks.find(function (link) {
-
-                return (
-                    link.textContent
-                        .trim()
-                        .toUpperCase() === "SPORTS"
-                );
-
-            });
+        const sportsLink = navigationLinks.find(function (link) {
+            return link.textContent.trim().toUpperCase() === "SPORTS";
+        });
 
         if (sportsLink) {
-
-            sportsLink.insertAdjacentElement(
-                "afterend",
-                weatherLink
-            );
-
+            sportsLink.insertAdjacentElement("afterend", weatherLink);
         } else {
-
-            desktopNavigation.appendChild(
-                weatherLink
-            );
-
+            desktopNavigation.appendChild(weatherLink);
         }
 
-
-        /* MOBILE WEATHER */
-
-        const mobileNavigation =
-            document.querySelector(
-                ".mobile-navigation"
-            );
-
-        /*
-         * navbar.html already contains WEATHER.
-         * Therefore we don't append another one.
-         */
+        const mobileNavigation = document.querySelector(".mobile-navigation");
 
         if (
             mobileNavigation &&
-            !mobileNavigation.querySelector(
-                'a[href="/weather"]'
-            )
+            !mobileNavigation.querySelector('a[href="/weather"]')
         ) {
-
-            const mobileWeather =
-                document.createElement("a");
-
-            mobileWeather.href =
-                "/weather";
-
-            mobileWeather.className =
-                "weather-mobile-link";
-
+            const mobileWeather = document.createElement("a");
+            mobileWeather.href = "/weather";
+            mobileWeather.className = "weather-mobile-link";
             mobileWeather.innerHTML =
-                '<img ' +
-                'src="/images/weather-logo.png" ' +
-                'alt="Weather" ' +
-                'class="weather-nav-logo">' +
+                '<img src="/images/weather-logo.png" alt="Weather" class="weather-nav-logo">' +
                 '<span>WEATHER</span>';
-
-            mobileNavigation.appendChild(
-                mobileWeather
-            );
-
+            mobileNavigation.appendChild(mobileWeather);
         }
-
     }
-
 
     addWeatherNavigation();
 
@@ -139,28 +117,19 @@ document.addEventListener("DOMContentLoaded", function () {
        CURRENT DATE
        ========================================================= */
 
-    const currentDate =
-        document.getElementById(
-            "currentDate"
-        );
+    const currentDate = document.getElementById("currentDate");
 
     if (currentDate) {
-
-        const now =
-            new Date();
-
+        const now = new Date();
         const options = {
             day: "2-digit",
             month: "short",
             year: "numeric"
         };
 
-        currentDate.textContent =
-            now.toLocaleDateString(
-                "en-IN",
-                options
-            ).toUpperCase();
-
+        currentDate.textContent = now
+            .toLocaleDateString("en-IN", options)
+            .toUpperCase();
     }
 
 
@@ -168,206 +137,137 @@ document.addEventListener("DOMContentLoaded", function () {
        IST CLOCK
        ========================================================= */
 
-    const istClock =
-        document.getElementById(
-            "istClock"
-        );
+    const istClock = document.getElementById("istClock");
 
     function updateISTClock() {
-
         if (!istClock) {
             return;
         }
 
-        const now =
-            new Date();
+        const now = new Date();
 
-        const time =
-            now.toLocaleTimeString(
-                "en-IN",
-                {
-                    timeZone: "Asia/Kolkata",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit",
-                    hour12: false
-                }
-            );
+        const time = now.toLocaleTimeString("en-IN", {
+            timeZone: "Asia/Kolkata",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false
+        });
 
-        istClock.textContent =
-            time + " IST";
-
+        istClock.textContent = time + " IST";
     }
 
     updateISTClock();
-
-    setInterval(
-        updateISTClock,
-        1000
-    );
+    setInterval(updateISTClock, 1000);
 
 
     /* =========================================================
        BREAKING NEWS ANIMATION
        ========================================================= */
 
-    const breakingTrack =
-        document.getElementById(
-            "breakingTrack"
-        );
+    const breakingTrack = document.getElementById("breakingTrack");
 
     if (breakingTrack) {
 
         let position = 0;
         let animationFrame;
+        let paused = false;
 
         function animateBreakingNews() {
 
+            if (paused) {
+                return;
+            }
+
             position -= 0.35;
 
-            const firstWidth =
-                breakingTrack.scrollWidth / 2;
+            const firstWidth = breakingTrack.scrollWidth / 2;
 
-            if (
-                Math.abs(position)
-                >= firstWidth
-            ) {
+            if (firstWidth > 0 && Math.abs(position) >= firstWidth) {
                 position = 0;
             }
 
             breakingTrack.style.transform =
-                "translateX(" +
-                position +
-                "px)";
+                "translate3d(" + position + "px,0,0)";
 
-            animationFrame =
-                requestAnimationFrame(
-                    animateBreakingNews
-                );
-
+            animationFrame = requestAnimationFrame(animateBreakingNews);
         }
 
         animateBreakingNews();
 
+        breakingTrack.addEventListener("mouseenter", function () {
+            paused = true;
+            cancelAnimationFrame(animationFrame);
+        });
 
-        breakingTrack.addEventListener(
-            "mouseenter",
-            function () {
-
-                cancelAnimationFrame(
-                    animationFrame
-                );
-
+        breakingTrack.addEventListener("mouseleave", function () {
+            if (!paused) {
+                return;
             }
-        );
+            paused = false;
+            animateBreakingNews();
+        });
 
+        breakingTrack.addEventListener("focusin", function () {
+            paused = true;
+            cancelAnimationFrame(animationFrame);
+        });
 
-        breakingTrack.addEventListener(
-            "mouseleave",
-            function () {
-
-                animateBreakingNews();
-
+        breakingTrack.addEventListener("focusout", function () {
+            if (!paused) {
+                return;
             }
-        );
-
+            paused = false;
+            animateBreakingNews();
+        });
     }
-
-
-    
-
-    /* =========================================================
-       MOBILE MENU
-       
-       IMPORTANT:
-       The mobile menu is handled ONLY inside navbar.html.
-       Do NOT add another click listener here.
-       ========================================================= */
 
 
     /* =========================================================
        IMAGE ERROR HANDLING
        ========================================================= */
 
-    const images =
-        document.querySelectorAll(
-            "img"
-        );
+    const images = document.querySelectorAll("img");
 
-    images.forEach(
-        function (image) {
+    images.forEach(function (image) {
 
-            image.addEventListener(
-                "error",
-                function () {
+        image.addEventListener("error", function () {
 
-                    if (
-                        image.dataset.fallbackHandled
-                    ) {
-                        return;
-                    }
+            if (image.dataset.fallbackHandled) {
+                return;
+            }
 
-                    image.dataset.fallbackHandled =
-                        "true";
+            image.dataset.fallbackHandled = "true";
+            image.style.display = "none";
 
-                    image.style.display =
-                        "none";
+            const parent = image.parentElement;
 
-                    const parent =
-                        image.parentElement;
+            if (!parent) {
+                return;
+            }
 
-                    if (!parent) {
-                        return;
-                    }
+            parent.classList.add("image-error");
 
-                    parent.classList.add(
-                        "image-error"
-                    );
-
-                    const fallback =
-                        parent.querySelector(
-                            ".home-image-fallback, " +
-                            ".home-featured-fallback, " +
-                            ".image-fallback"
-                        );
-
-                    if (fallback) {
-
-                        fallback.style.display =
-                            "flex";
-
-                    }
-
-                }
+            const fallback = parent.querySelector(
+                ".home-image-fallback, .home-featured-fallback, .image-fallback"
             );
 
-        }
-    );
+            if (fallback) {
+                fallback.style.display = "flex";
+            }
+        });
+    });
 
 
     /* =========================================================
        SMOOTH PAGE TRANSITIONS
        ========================================================= */
 
-    document
-        .querySelectorAll(
-            'a[href="/weather"]'
-        )
-        .forEach(
-            function (link) {
+    document.querySelectorAll('a[href="/weather"]').forEach(function (link) {
 
-                link.addEventListener(
-                    "click",
-                    function () {
-
-                        document.body.classList.add(
-                            "page-leaving"
-                        );
-
-                    }
-                );
-
-            }
-        );
+        link.addEventListener("click", function () {
+            document.body.classList.add("page-leaving");
+        });
+    });
 
 });
