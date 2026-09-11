@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification - AgniPress</title>
+    <link rel="stylesheet" th:href="@{/newsportal.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<main class="auth-page">
+    <div class="auth-container">
+
+        <section class="auth-intro">
+            <span class="auth-kicker">EMAIL VERIFICATION</span>
+
+            <h1>
+                Almost
+                <em>there.</em>
+            </h1>
+
+            <p>
+                Your email address has been verified.
+                Now create a secure password for your account.
+            </p>
+
+            <div class="auth-intro-line"></div>
+
+            <span class="auth-edition">AGNIPRESS / SECURITY</span>
+        </section>
+
+        <section class="auth-form-section">
+
+            <div th:if="${error}" class="auth-error" th:text="${error}">
+                Verification failed.
+            </div>
+
+            <div th:if="${success}" class="auth-success" th:text="${success}">
+                Verification successful.
+            </div>
+
+            <!-- AGNIPRESS EMAIL VERIFICATION PAGE V2 -->
+            <!-- The password form is rendered whenever the controller supplies
+                 setPasswordRequest. It is intentionally independent of the
+                 token value so the verified-user page cannot lose the form. -->
+            <div th:if="${setPasswordRequest != null and success == null}">
+
+                <div class="auth-form-header">
+                    <span class="auth-form-kicker">WELCOME</span>
+
+                    <h2>Create your password</h2>
+
+                    <p>
+                        Hello
+                        <strong th:text="${userName}">Member</strong>.
+                        Your email has been verified.
+                    </p>
+                </div>
+
+                <form th:action="@{/verify-email}"
+                      th:object="${setPasswordRequest}"
+                      method="post"
+                      class="auth-form">
+
+                    <input type="hidden" name="token" th:value="${token}">
+
+                    <div class="auth-field">
+                        <label for="password">PASSWORD</label>
+
+                        <input id="password"
+                               type="password"
+                               th:field="*{password}"
+                               placeholder="Create a password"
+                               autocomplete="new-password"
+                               required>
+
+                        <div th:if="${#fields.hasErrors('password')}"
+                             class="auth-error"
+                             th:errors="*{password}">
+                        </div>
+                    </div>
+
+                    <div class="auth-field">
+                        <label for="confirmPassword">CONFIRM PASSWORD</label>
+
+                        <input id="confirmPassword"
+                               type="password"
+                               th:field="*{confirmPassword}"
+                               placeholder="Repeat your password"
+                               autocomplete="new-password"
+                               required>
+
+                        <div th:if="${#fields.hasErrors('confirmPassword')}"
+                             class="auth-error"
+                             th:errors="*{confirmPassword}">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="auth-submit">
+                        VERIFY &amp; CREATE ACCOUNT
+                        <span>→</span>
+                    </button>
+                </form>
+            </div>
+
+            <div th:if="${success}" class="auth-footer">
+                <a href="/login">SIGN IN TO AGNIPRESS</a>
+            </div>
+
+        </section>
+    </div>
+</main>
+
+<footer class="site-footer">
+    <div class="editorial-container footer-grid">
+        <div>
+            <div class="footer-brand">AGNIPRESS</div>
+            <p>
+                Independent reporting and stories
+                shaping the day ahead.
+            </p>
+        </div>
+
+        <div class="footer-links">
+            <a href="/">HOME</a>
+            <a href="/newsList">NEWS</a>
+            <a href="/newsList?category=India">INDIA</a>
+            <a href="/newsList?category=World">WORLD</a>
+            <a href="/newsList?category=Technology">TECHNOLOGY</a>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
