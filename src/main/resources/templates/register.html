@@ -6,702 +6,207 @@
     <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
-    <style>
-        :root{
-            --paper:#f5f2eb;
-            --paper-deep:#ebe7de;
-            --ink:#121210;
-            --muted:#716d65;
-            --line:#d5d0c6;
-            --accent:#b94c32;
-            --cream:#e9dfc9;
-            --cat:#090908;
-        }
-
-        *{box-sizing:border-box}
-        body{background:var(--paper)!important;color:var(--ink)!important}
-
-        .agni-register{
-            width:min(1240px,calc(100% - 48px));
-            margin:58px auto 82px;
-        }
-
-        .agni-register-frame{
-            display:grid;
-            grid-template-columns:46% 54%;
-            min-height:680px;
-            border-top:1px solid var(--ink);
-            border-bottom:1px solid var(--line);
-        }
-
-        .agni-register-intro{
-            position:relative;
-            min-height:680px;
-            padding:76px 72px;
-            background:var(--paper-deep);
-            border-right:1px solid var(--line);
-            display:flex;
-            flex-direction:column;
-            justify-content:center;
-            overflow:hidden;
-        }
-
-        .agni-register-intro:before{
-            content:"";
-            position:absolute;
-            width:260px;
-            height:260px;
-            right:-130px;
-            top:-130px;
-            border:1px solid rgba(18,18,16,.08);
-            border-radius:50%;
-        }
-
-        .agni-register-kicker,
-        .agni-register-edition,
-        .agni-register-form-kicker,
-        .agni-register-label{
-            font-family:Arial,sans-serif;
-            font-size:9px;
-            line-height:1;
-            font-weight:800;
-            letter-spacing:.2em;
-            text-transform:uppercase;
-        }
-
-        .agni-register-kicker,.agni-register-form-kicker{color:var(--accent)}
-
-        .agni-register-intro h1{
-            margin:18px 0 18px;
-            max-width:470px;
-            font-family:Georgia,"Times New Roman",serif;
-            font-size:clamp(58px,6.1vw,86px);
-            line-height:.87;
-            letter-spacing:-.055em;
-            font-weight:400;
-        }
-
-        .agni-register-intro h1 em{color:var(--accent);font-weight:400}
-
-        .agni-register-intro p{
-            max-width:390px;
-            margin:0;
-            font:17px/1.65 Georgia,"Times New Roman",serif;
-            color:#565149;
-        }
-
-        .agni-register-intro-rule{
-            width:38px;
-            height:2px;
-            margin:30px 0 13px;
-            background:var(--accent);
-        }
-
-        .agni-register-edition{font-size:7px;color:#6b665d}
-
-        .agni-register-form-panel{
-            position:relative;
-            min-width:0;
-            padding:42px 68px 54px;
-            background:var(--paper);
-        }
-
-        .agni-register-guide{
-            position:relative;
-            width:100%;
-            height:260px;
-            margin:0 0 26px;
-            border-bottom:1px solid var(--line);
-        }
-
-        .agni-register-guide-stage{
-            position:absolute;
-            left:50%;
-            top:0;
-            width:390px;
-            height:238px;
-            transform:translateX(-50%);
-            overflow:visible;
-        }
-
-        .agni-register-sound{
-            position:absolute;
-            right:0;
-            top:0;
-            z-index:10;
-            border:1px solid var(--line);
-            background:rgba(245,242,235,.9);
-            color:var(--ink);
-            padding:8px 10px;
-            cursor:pointer;
-            font:800 8px/1 Arial,sans-serif;
-            letter-spacing:.14em;
-        }
-
-        .agni-register-sound:hover{border-color:var(--ink)}
-
-        .agni-register-bubble{
-            position:absolute;
-            left:0;
-            top:5px;
-            z-index:9;
-            width:210px;
-            min-height:48px;
-            padding:11px 14px;
-            border:1px solid var(--line);
-            border-radius:3px 15px 15px 15px;
-            background:rgba(250,248,243,.96);
-            box-shadow:0 12px 28px rgba(18,18,16,.07);
-            font:italic 14px/1.35 Georgia,"Times New Roman",serif;
-            color:#282621;
-            transition:opacity .25s ease,transform .25s ease;
-        }
-
-        .agni-register-bubble:after{
-            content:"";
-            position:absolute;
-            left:16px;
-            bottom:-6px;
-            width:10px;
-            height:10px;
-            background:#faf8f3;
-            border-right:1px solid var(--line);
-            border-bottom:1px solid var(--line);
-            transform:rotate(45deg);
-        }
-
-        .agni-register-cat{
-            position:absolute;
-            left:50%;
-            bottom:0;
-            width:330px;
-            height:220px;
-            transform:translateX(-42%);
-            filter:drop-shadow(0 16px 12px rgba(0,0,0,.13));
-        }
-
-        .agni-register-cat svg{display:block;width:100%;height:100%;overflow:visible}
-
-        .cat-scene{opacity:0;visibility:hidden;transition:opacity .35s ease}
-        .cat-scene-initial{opacity:1;visibility:visible}
-        .agni-register-guide.state-name .cat-scene,
-        .agni-register-guide.state-error .cat-scene,
-        .agni-register-guide.state-email .cat-scene,
-        .agni-register-guide.state-ready .cat-scene,
-        .agni-register-guide.state-success .cat-scene{opacity:0;visibility:hidden}
-        .agni-register-guide.state-name .cat-scene-name,
-        .agni-register-guide.state-error .cat-scene-error,
-        .agni-register-guide.state-email .cat-scene-email,
-        .agni-register-guide.state-ready .cat-scene-ready,
-        .agni-register-guide.state-success .cat-scene-success{opacity:1;visibility:visible}
-
-        .cat-body{fill:var(--cat)}
-        .cat-detail{fill:none;stroke:var(--cream);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
-        .cat-eye{fill:var(--cream)}
-        .cat-pupil{fill:var(--cat)}
-        .cat-nose{fill:var(--accent)}
-        .cat-paper{fill:#eee9df;stroke:#191917;stroke-width:2}
-        .cat-paper-line{fill:none;stroke:#77736c;stroke-width:1.7;stroke-linecap:round}
-        .cat-mug{fill:var(--accent);stroke:#171715;stroke-width:2}
-        .cat-steam{fill:none;stroke:#8b867d;stroke-width:2;stroke-linecap:round}
-        .cat-spark{fill:var(--accent)}
-        .cat-arm{fill:var(--cat);stroke:var(--cat);stroke-width:12;stroke-linecap:round}
-
-        .cat-tail{fill:none;stroke:var(--cat);stroke-width:17;stroke-linecap:round}
-        .cat-underline{fill:none;stroke:var(--cream);stroke-width:2.5;stroke-linecap:round}
-
-        .agni-register-guide.state-name .agni-register-cat{animation:catFloat 4.8s ease-in-out infinite}
-        .agni-register-guide.state-email .agni-register-cat{animation:catFloat 4.8s ease-in-out infinite}
-        .agni-register-guide.state-ready .agni-register-cat{animation:catFloat 4.8s ease-in-out infinite}
-        .agni-register-guide.state-success .agni-register-cat{animation:catSuccess .8s ease both}
-        .agni-register-guide.state-error .agni-register-cat{animation:catDisappointed .55s ease both}
-        .agni-register-guide.speaking .cat-head{animation:catTalk .26s ease-in-out infinite alternate}
-
-        @keyframes catFloat{0%,100%{transform:translateY(0) rotate(-.4deg)}50%{transform:translateY(-4px) rotate(.4deg)}}
-        @keyframes catTalk{from{transform:translateY(0)}to{transform:translateY(-2px)}}
-        @keyframes catDisappointed{0%{transform:rotate(0)}45%{transform:rotate(3deg) translateY(3px)}100%{transform:rotate(0)}}
-        @keyframes catSuccess{0%{transform:scale(.98)}45%{transform:scale(1.025) translateY(-4px)}100%{transform:scale(1)}}
-        @keyframes sparkPop{0%{opacity:0;transform:scale(.4)}60%{opacity:1;transform:scale(1.15)}100%{opacity:1;transform:scale(1)}}
-        .state-success .cat-spark{animation:sparkPop .7s ease both}
-
-        .agni-register-form-header{margin-bottom:25px}
-        .agni-register-form-header h2{
-            margin:9px 0 8px;
-            font:400 38px/1 Georgia,"Times New Roman",serif;
-            letter-spacing:-.035em;
-        }
-        .agni-register-form-header p{margin:0;color:#625e56;font:14px/1.5 Georgia,"Times New Roman",serif}
-
-        .agni-register-error{
-            margin:0 0 18px;
-            padding:10px 12px;
-            border-left:2px solid var(--accent);
-            background:#eee7df;
-            color:#6c2d20;
-            font:12px/1.45 Arial,sans-serif;
-        }
-
-        .agni-register-form{display:flex;flex-direction:column;gap:17px;margin:0!important;padding:0!important}
-        .agni-register-field{margin:0!important;padding:0!important}
-        .agni-register-label{display:block;margin:0 0 8px;color:#625e56}
-        .agni-register-field input{
-            display:block!important;
-            width:100%!important;
-            height:47px!important;
-            margin:0!important;
-            padding:0 13px!important;
-            border:1px solid #cec9bf!important;
-            border-radius:0!important;
-            outline:none!important;
-            background:#faf9f5!important;
-            color:var(--ink)!important;
-            box-shadow:none!important;
-            font:14px/1 Arial,sans-serif!important;
-            transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
-        }
-        .agni-register-field input:focus{border-color:#68635b!important;background:#fff!important;box-shadow:0 0 0 3px rgba(185,76,50,.07)!important}
-        .agni-register-field input::placeholder{color:#9b968d}
-        .agni-register-field small{display:block;margin-top:6px;color:#78736a;font:11px/1.45 Arial,sans-serif}
-        .agni-register-field .field-error{margin-top:6px;color:#a33d29;font:11px/1.4 Arial,sans-serif}
-
-        .agni-register-submit{
-            width:100%;
-            min-height:49px;
-            margin-top:4px;
-            border:1px solid var(--ink);
-            background:var(--ink);
-            color:#fff;
-            cursor:pointer;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            padding:0 15px;
-            font:800 9px/1 Arial,sans-serif;
-            letter-spacing:.16em;
-            text-transform:uppercase;
-            transition:background .2s ease,color .2s ease,transform .2s ease;
-        }
-        .agni-register-submit:hover{background:var(--accent);border-color:var(--accent);transform:translateY(-1px)}
-        .agni-register-submit span{font-size:18px;line-height:1;letter-spacing:0}
-
-        .agni-register-footer{
-            margin-top:20px;
-            padding-top:18px;
-            border-top:1px solid var(--line);
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            gap:15px;
-            font:800 8px/1 Arial,sans-serif;
-            letter-spacing:.15em;
-        }
-        .agni-register-footer span{color:#817c73}
-        .agni-register-footer a{color:var(--ink);text-decoration:none;border-bottom:1px solid var(--accent);padding-bottom:3px}
-
-        .agni-register-note{
-            margin-top:14px;
-            color:#858077;
-            text-align:center;
-            font:10px/1.5 Arial,sans-serif;
-        }
-
-        .agni-register-footer-site{margin-top:38px!important}
-
-        @media(max-width:1050px){
-            .agni-register{width:min(940px,calc(100% - 32px))}
-            .agni-register-frame{grid-template-columns:43% 57%}
-            .agni-register-intro{padding:62px 48px}
-            .agni-register-form-panel{padding:36px 46px 48px}
-            .agni-register-guide-stage{transform:translateX(-48%);width:350px}
-            .agni-register-cat{width:300px}
-        }
-
-        @media(max-width:820px){
-            .agni-register{margin:34px auto 60px}
-            .agni-register-frame{display:block;min-height:0}
-            .agni-register-intro{min-height:360px;border-right:0;border-bottom:1px solid var(--line);padding:58px 38px}
-            .agni-register-intro h1{font-size:64px}
-            .agni-register-form-panel{padding:34px 34px 46px}
-            .agni-register-guide{height:250px}
-            .agni-register-guide-stage{width:350px}
-        }
-
-        @media(max-width:520px){
-            .agni-register{width:calc(100% - 18px);margin:22px auto 42px}
-            .agni-register-intro{min-height:315px;padding:45px 25px}
-            .agni-register-intro h1{font-size:52px}
-            .agni-register-intro p{font-size:15px}
-            .agni-register-form-panel{padding:28px 22px 38px}
-            .agni-register-guide{height:225px;margin-bottom:20px}
-            .agni-register-guide-stage{width:300px;height:205px}
-            .agni-register-cat{width:270px;height:190px}
-            .agni-register-bubble{width:185px;font-size:12px}
-            .agni-register-sound{font-size:7px;padding:7px 8px}
-            .agni-register-form-header h2{font-size:33px}
-        }
-
-        @media(prefers-reduced-motion:reduce){
-            .agni-register-guide .agni-register-cat,
-            .agni-register-guide.speaking .cat-head,
-            .state-success .cat-spark{animation:none!important}
-        }
-    </style>
+    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-7}">
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
 
-<main class="agni-register">
-    <div class="agni-register-frame">
-        <section class="agni-register-intro">
-            <span class="agni-register-kicker">THE NEWSROOM</span>
+<main class="auth-page">
+    <div class="auth-container">
+        <section class="auth-intro">
+            <span class="auth-kicker">THE NEWSROOM</span>
             <h1>Stay <em>informed.</em></h1>
             <p>Create your AgniPress account and keep the stories that matter close.</p>
-            <div class="agni-register-intro-rule"></div>
-            <span class="agni-register-edition">AGNIPRESS / MEMBER EDITION</span>
+            <div class="auth-intro-line"></div>
+            <span class="auth-edition">AGNIPRESS / MEMBER EDITION</span>
         </section>
 
-        <section class="agni-register-form-panel">
-            <div class="agni-register-guide state-initial" id="registerGuide" aria-live="polite">
-                <button class="agni-register-sound" id="soundToggle" type="button" aria-label="Turn registration guide sounds on or off">
-                    ♪ <span>SOUND OFF</span>
+        <section class="auth-form-section register-page-form-section">
+            <aside class="register-guide" aria-live="polite">
+                <button class="register-guide-toggle" type="button" aria-label="Turn guide sounds on or off">
+                    <span>♪</span> <span class="register-guide-toggle-label">SOUND OFF</span>
                 </button>
-                <div class="agni-register-bubble" id="guideBubble">Hey there. Let's create your account.</div>
+                <div class="register-guide-bubble">Hey there. Let's create your account.</div>
+                <div class="register-guide-pointer" aria-hidden="true"></div>
 
-                <div class="agni-register-guide-stage">
-                    <div class="agni-register-cat" aria-hidden="true">
-                        <svg viewBox="0 0 390 260" role="presentation">
+                <div class="cat-stage" aria-hidden="true">
+                    <!-- 01 / INTRO: nonchalant black cat reading the paper -->
+                    <div class="cat-frame active" data-cat="initial">
+                        <svg viewBox="0 0 360 245" role="presentation">
                             <defs>
-                                <filter id="softCatShadow" x="-30%" y="-30%" width="170%" height="180%">
-                                    <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
-                                    <feOffset dy="7"/>
-                                    <feComponentTransfer><feFuncA type="linear" slope=".18"/></feComponentTransfer>
-                                    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-                                </filter>
+                                <radialGradient id="c1" cx="35%" cy="25%"><stop offset="0" stop-color="#403d39"/><stop offset=".48" stop-color="#1d1b19"/><stop offset="1" stop-color="#090908"/></radialGradient>
+                                <linearGradient id="w1" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fffaf0"/><stop offset="1" stop-color="#d7cbb5"/></linearGradient>
                             </defs>
-
-                            <!-- 1. Calm introduction -->
-                            <g class="cat-scene cat-scene-initial" filter="url(#softCatShadow)">
-                                <path class="cat-tail" d="M278 207 C337 222 347 149 309 141"/>
-                                <ellipse class="cat-body" cx="203" cy="205" rx="91" ry="54"/>
-                                <path class="cat-body" d="M122 185 Q107 224 145 239 Q177 249 191 216Z"/>
-                                <path class="cat-body" d="M181 151 L158 84 L198 113 L235 83 L259 154Z"/>
-                                <path class="cat-head" d="M132 124 C132 82 164 55 204 55 C246 55 276 83 273 126 C270 165 244 183 203 183 C162 183 132 163 132 124Z"/>
-                                <path class="cat-detail" d="M143 89 L149 35 L184 69 M228 69 L264 34 L259 91"/>
-                                <path class="cat-detail" d="M162 112 Q178 104 190 112 M217 112 Q231 104 246 112"/>
-                                <ellipse class="cat-eye" cx="177" cy="124" rx="7" ry="5"/><ellipse class="cat-eye" cx="232" cy="124" rx="7" ry="5"/>
-                                <ellipse class="cat-pupil" cx="178" cy="124" rx="2.5" ry="3.8"/><ellipse class="cat-pupil" cx="231" cy="124" rx="2.5" ry="3.8"/>
-                                <path class="cat-nose" d="M198 137 Q203 133 208 137 Q203 143 198 137Z"/>
-                                <path class="cat-detail" d="M203 143 Q197 151 191 147 M203 143 Q209 151 215 147"/>
-                                <path class="cat-detail" d="M163 144 L120 137 M164 151 L117 157 M243 144 L286 137 M243 151 L289 157"/>
-                                <path class="cat-detail" d="M157 198 Q146 214 159 222 Q174 224 181 209"/>
-                                <path class="cat-paper" d="M57 190 L139 190 L133 245 L51 239Z"/>
-                                <path class="cat-paper-line" d="M66 202 L128 204 M64 214 L126 217 M63 226 L112 229"/>
+                            <g class="float">
+                                <ellipse cx="190" cy="218" rx="96" ry="13" fill="#000" opacity=".12"/>
+                                <path class="line" stroke="#171513" stroke-width="25" d="M252 190 C318 194 319 132 286 126"/>
+                                <ellipse cx="190" cy="177" rx="88" ry="54" fill="url(#c1)"/>
+                                <path d="M127 96 L132 28 L171 66 L215 66 L254 28 L259 98Z" fill="url(#c1)"/>
+                                <path d="M122 94 C122 48 151 30 194 30 C238 30 267 51 266 97 C265 137 239 157 194 157 C149 157 122 135 122 94Z" fill="url(#c1)"/>
+                                <path d="M140 57 L134 39 L159 65Z M249 57 L255 39 L230 65Z" fill="#8b5b3f" opacity=".75"/>
+                                <ellipse cx="177" cy="97" rx="7" ry="5" fill="#e8d6a9"/><ellipse cx="214" cy="97" rx="7" ry="5" fill="#e8d6a9"/>
+                                <path d="M170 91 Q178 86 185 91 M207 91 Q214 86 222 91" fill="none" stroke="#e9dec8" stroke-width="3" stroke-linecap="round"/>
+                                <path d="M193 106 Q198 103 203 106 Q198 112 193 106Z" fill="#b94d32"/>
+                                <path d="M198 111 Q193 115 189 112 M198 111 Q203 115 207 112" fill="none" stroke="#e9dec8" stroke-width="2.5" stroke-linecap="round"/>
+                                <path d="M167 112 L130 108 M167 119 L127 124 M229 112 L265 108 M229 119 L268 124" fill="none" stroke="#d9ceb8" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M132 167 Q117 184 130 195 Q145 200 155 181" fill="url(#c1)"/>
+                                <path class="paper" d="M63 134 L154 127 L163 208 L70 212Z"/><path class="paper-line" d="M78 151 L142 147 M76 164 L145 160 M78 177 L142 173 M80 190 L124 187"/>
+                                <circle cx="92" cy="145" r="5" fill="#b94d32" opacity=".8"/>
                             </g>
+                        </svg>
+                    </div>
 
-                            <!-- 2. Happy, pointing to username -->
-                            <g class="cat-scene cat-scene-name" filter="url(#softCatShadow)">
-                                <path class="cat-tail" d="M278 207 C337 222 347 149 309 141"/>
-                                <ellipse class="cat-body" cx="203" cy="205" rx="91" ry="54"/>
-                                <path class="cat-head" d="M132 124 C132 82 164 55 204 55 C246 55 276 83 273 126 C270 165 244 183 203 183 C162 183 132 163 132 124Z"/>
-                                <path class="cat-detail" d="M143 89 L149 35 L184 69 M228 69 L264 34 L259 91"/>
-                                <path class="cat-detail" d="M162 114 Q177 101 190 114 M217 114 Q231 101 246 114"/>
-                                <path class="cat-detail" d="M169 125 Q177 116 185 125 M224 125 Q232 116 240 125"/>
-                                <path class="cat-nose" d="M198 137 Q203 133 208 137 Q203 143 198 137Z"/>
-                                <path class="cat-detail" d="M203 143 Q197 151 191 147 M203 143 Q209 151 215 147"/>
-                                <path class="cat-detail" d="M163 144 L120 137 M164 151 L117 157 M243 144 L286 137 M243 151 L289 157"/>
-                                <path class="cat-arm" d="M169 198 Q221 174 278 159"/>
-                                <path class="cat-body" d="M273 151 L298 147 L278 169Z"/>
-                                <path class="cat-detail" d="M157 198 Q146 214 159 222 Q174 224 181 209"/>
-                                <path class="cat-paper" d="M57 191 L127 191 L122 238 L51 234Z"/>
-                                <path class="cat-paper-line" d="M65 203 L115 205 M63 215 L113 217"/>
+                    <!-- 02 / NAME: relaxed cat acknowledges and points -->
+                    <div class="cat-frame" data-cat="name">
+                        <svg viewBox="0 0 360 245" role="presentation">
+                            <defs><radialGradient id="c2"><stop stop-color="#4a4742"/><stop offset=".55" stop-color="#201e1b"/><stop offset="1" stop-color="#0a0a09"/></radialGradient></defs>
+                            <g class="float">
+                                <ellipse cx="190" cy="220" rx="94" ry="12" fill="#000" opacity=".11"/>
+                                <path class="line tail" stroke="#171513" stroke-width="25" d="M254 188 C321 193 320 129 285 126"/>
+                                <ellipse cx="190" cy="178" rx="86" ry="53" fill="url(#c2)"/>
+                                <path d="M128 96 L132 28 L171 65 L215 65 L254 28 L259 98Z" fill="url(#c2)"/>
+                                <path d="M122 94 C122 47 152 30 194 30 C238 30 267 52 266 96 C265 137 239 157 194 157 C149 157 122 135 122 94Z" fill="url(#c2)"/>
+                                <path d="M174 98 Q181 88 188 98 M207 98 Q214 88 221 98" fill="none" stroke="#eadfca" stroke-width="4" stroke-linecap="round"/>
+                                <path d="M193 108 Q198 105 203 108 Q198 114 193 108Z" fill="#b94d32"/>
+                                <path d="M167 113 L128 109 M167 120 L126 125 M229 113 L267 109 M229 120 L269 125" fill="none" stroke="#d9ceb8" stroke-width="2"/>
+                                <path d="M145 168 Q131 184 143 195 Q155 199 165 182" fill="#292723"/>
+                                <path d="M146 169 Q174 149 224 137" fill="none" stroke="#292723" stroke-width="16" stroke-linecap="round"/>
+                                <path d="M218 132 L241 130 L224 147Z" fill="#b94d32"/>
+                                <path d="M70 156 L108 153" stroke="#b94d32" stroke-width="2"/><circle cx="61" cy="156" r="4" fill="#b94d32"/>
                             </g>
+                        </svg>
+                    </div>
 
-                            <!-- 3. Unimpressed error / newspaper -->
-                            <g class="cat-scene cat-scene-error" filter="url(#softCatShadow)">
-                                <path class="cat-tail" d="M280 208 C325 223 342 173 316 154"/>
-                                <ellipse class="cat-body" cx="203" cy="205" rx="91" ry="54"/>
-                                <path class="cat-head" d="M132 124 C132 82 164 55 204 55 C246 55 276 83 273 126 C270 165 244 183 203 183 C162 183 132 163 132 124Z"/>
-                                <path class="cat-detail" d="M143 89 L149 35 L184 69 M228 69 L264 34 L259 91"/>
-                                <path class="cat-detail" d="M162 116 Q177 123 190 116 M217 116 Q231 123 246 116"/>
-                                <path class="cat-detail" d="M168 126 Q177 132 185 126 M225 126 Q232 132 240 126"/>
-                                <path class="cat-nose" d="M198 137 Q203 133 208 137 Q203 143 198 137Z"/>
-                                <path class="cat-detail" d="M191 151 Q203 142 215 151"/>
-                                <path class="cat-detail" d="M163 145 L120 151 M164 152 L117 165 M243 145 L286 151 M243 152 L289 165"/>
-                                <path class="cat-detail" d="M158 198 Q147 214 160 222 Q174 224 181 209"/>
-                                <path class="cat-paper" d="M52 174 L139 174 L132 244 L45 238Z"/>
-                                <path class="cat-paper-line" d="M62 187 L128 189 M60 200 L126 203 M58 213 L124 216 M57 226 L105 229"/>
+                    <!-- 03 / ERROR: unimpressed, newspaper back up -->
+                    <div class="cat-frame" data-cat="error">
+                        <svg viewBox="0 0 360 245" role="presentation">
+                            <defs><radialGradient id="c3"><stop stop-color="#373532"/><stop offset=".5" stop-color="#181715"/><stop offset="1" stop-color="#070706"/></radialGradient></defs>
+                            <g class="float sad">
+                                <ellipse cx="190" cy="220" rx="95" ry="12" fill="#000" opacity=".13"/>
+                                <path class="line tail" stroke="#171513" stroke-width="25" d="M253 188 C306 201 321 155 296 137"/>
+                                <ellipse cx="190" cy="178" rx="87" ry="53" fill="url(#c3)"/>
+                                <path d="M128 97 L132 29 L171 66 L215 66 L254 29 L259 99Z" fill="url(#c3)"/>
+                                <path d="M122 95 C122 49 152 31 194 31 C238 31 267 53 266 97 C265 137 239 157 194 157 C149 157 122 136 122 95Z" fill="url(#c3)"/>
+                                <path d="M169 90 Q180 97 189 91 M207 91 Q216 97 224 90" fill="none" stroke="#e2d5bf" stroke-width="3.5" stroke-linecap="round"/>
+                                <path d="M170 103 Q180 99 189 104 M207 104 Q216 99 224 103" fill="none" stroke="#0c0b0a" stroke-width="5" stroke-linecap="round"/>
+                                <path d="M194 108 Q199 105 204 108 Q199 114 194 108Z" fill="#8b5b3f"/>
+                                <path d="M188 121 Q199 113 211 121" fill="none" stroke="#eadfca" stroke-width="3" stroke-linecap="round"/>
+                                <path d="M166 112 L129 106 M166 120 L126 123 M230 112 L267 106 M230 120 L269 123" fill="none" stroke="#c9bca5" stroke-width="2"/>
+                                <path d="M54 131 L154 138 L148 210 L48 202Z" fill="#f1eadc" stroke="#29241f" stroke-width="2"/>
+                                <path d="M67 148 L139 153 M65 162 L139 167 M64 177 L133 182 M62 191 L111 194" fill="none" stroke="#8c8478" stroke-width="2"/>
+                                <path d="M89 143 L119 146" stroke="#b94d32" stroke-width="3"/>
                             </g>
+                        </svg>
+                    </div>
 
-                            <!-- 4. Relaxed email state -->
-                            <g class="cat-scene cat-scene-email" filter="url(#softCatShadow)">
-                                <path class="cat-tail" d="M278 207 C337 222 347 149 309 141"/>
-                                <ellipse class="cat-body" cx="203" cy="205" rx="91" ry="54"/>
-                                <path class="cat-head" d="M132 124 C132 82 164 55 204 55 C246 55 276 83 273 126 C270 165 244 183 203 183 C162 183 132 163 132 124Z"/>
-                                <path class="cat-detail" d="M143 89 L149 35 L184 69 M228 69 L264 34 L259 91"/>
-                                <path class="cat-detail" d="M162 112 Q178 105 190 112 M217 112 Q231 105 246 112"/>
-                                <ellipse class="cat-eye" cx="177" cy="124" rx="7" ry="5"/><ellipse class="cat-eye" cx="232" cy="124" rx="7" ry="5"/>
-                                <ellipse class="cat-pupil" cx="178" cy="124" rx="2.5" ry="3.8"/><ellipse class="cat-pupil" cx="231" cy="124" rx="2.5" ry="3.8"/>
-                                <path class="cat-nose" d="M198 137 Q203 133 208 137 Q203 143 198 137Z"/>
-                                <path class="cat-detail" d="M203 143 Q197 151 191 147 M203 143 Q209 151 215 147"/>
-                                <path class="cat-detail" d="M163 144 L120 137 M164 151 L117 157 M243 144 L286 137 M243 151 L289 157"/>
-                                <path class="cat-arm" d="M167 198 Q218 177 278 160"/>
-                                <path class="cat-body" d="M273 152 L299 148 L279 169Z"/>
-                                <path class="cat-detail" d="M157 198 Q146 214 159 222 Q174 224 181 209"/>
+                    <!-- 04 / EMAIL: cat leans forward with a calm pointing paw -->
+                    <div class="cat-frame" data-cat="email">
+                        <svg viewBox="0 0 360 245" role="presentation">
+                            <defs><radialGradient id="c4"><stop stop-color="#514d46"/><stop offset=".5" stop-color="#24221f"/><stop offset="1" stop-color="#0b0b0a"/></radialGradient><linearGradient id="cream4"><stop stop-color="#fff8e8"/><stop offset="1" stop-color="#cdbfa5"/></linearGradient></defs>
+                            <g class="float">
+                                <ellipse cx="192" cy="219" rx="100" ry="12" fill="#000" opacity=".11"/>
+                                <path class="line tail" stroke="#171513" stroke-width="25" d="M260 188 C323 193 319 130 287 126"/>
+                                <ellipse cx="190" cy="178" rx="91" ry="54" fill="url(#c4)"/>
+                                <path d="M127 96 L132 27 L171 65 L215 65 L255 27 L260 98Z" fill="url(#c4)"/>
+                                <path d="M121 95 C121 48 151 30 194 30 C238 30 268 52 267 97 C266 137 239 157 194 157 C148 157 121 136 121 95Z" fill="url(#c4)"/>
+                                <path d="M171 96 Q179 90 187 96 M208 96 Q215 90 223 96" fill="none" stroke="#e9dec8" stroke-width="3"/>
+                                <circle cx="179" cy="97" r="4.5" fill="#e9d6a5"/><circle cx="215" cy="97" r="4.5" fill="#e9d6a5"/>
+                                <path d="M194 107 Q199 104 204 107 Q199 113 194 107Z" fill="#b94d32"/>
+                                <path d="M167 113 L127 108 M167 120 L125 124 M230 113 L269 108 M230 120 L271 124" fill="none" stroke="#d6cab4" stroke-width="2"/>
+                                <path d="M146 169 Q132 184 145 194 Q158 198 167 181" fill="url(#c4)"/>
+                                <path d="M150 169 Q181 150 228 143" fill="none" stroke="#26231f" stroke-width="16" stroke-linecap="round"/>
+                                <path d="M221 138 L245 138 L227 151Z" fill="#b94d32"/>
+                                <rect x="264" y="150" width="45" height="31" rx="3" fill="url(#cream4)" stroke="#25211d" stroke-width="2"/><path d="M266 153 L286 168 L307 153" fill="none" stroke="#8b5b3f" stroke-width="2"/>
                             </g>
+                        </svg>
+                    </div>
 
-                            <!-- 5. Ready / mug and calm nod -->
-                            <g class="cat-scene cat-scene-ready" filter="url(#softCatShadow)">
-                                <path class="cat-tail" d="M278 207 C337 222 347 149 309 141"/>
-                                <ellipse class="cat-body" cx="203" cy="205" rx="91" ry="54"/>
-                                <path class="cat-head" d="M132 124 C132 82 164 55 204 55 C246 55 276 83 273 126 C270 165 244 183 203 183 C162 183 132 163 132 124Z"/>
-                                <path class="cat-detail" d="M143 89 L149 35 L184 69 M228 69 L264 34 L259 91"/>
-                                <path class="cat-detail" d="M162 113 Q178 103 190 113 M217 113 Q231 103 246 113"/>
-                                <path class="cat-detail" d="M168 125 Q177 117 185 125 M225 125 Q232 117 240 125"/>
-                                <path class="cat-nose" d="M198 137 Q203 133 208 137 Q203 143 198 137Z"/>
-                                <path class="cat-detail" d="M203 143 Q197 151 191 147 M203 143 Q209 151 215 147"/>
-                                <path class="cat-detail" d="M163 144 L120 137 M164 151 L117 157 M243 144 L286 137 M243 151 L289 157"/>
-                                <path class="cat-detail" d="M157 198 Q146 214 159 222 Q174 224 181 209"/>
-                                <path class="cat-mug" d="M271 174 L318 174 L312 216 L277 216Z"/>
-                                <path class="cat-detail" d="M318 182 Q337 181 329 199 Q325 205 314 199"/>
-                                <path class="cat-steam" d="M284 167 Q277 157 285 148 M300 167 Q293 157 301 148"/>
+                    <!-- 05 / READY: coffee, soft smile, confident nod -->
+                    <div class="cat-frame" data-cat="ready">
+                        <svg viewBox="0 0 360 245" role="presentation">
+                            <defs><radialGradient id="c5"><stop stop-color="#6a4937"/><stop offset=".28" stop-color="#3b2920"/><stop offset=".7" stop-color="#191613"/><stop offset="1" stop-color="#090908"/></radialGradient><linearGradient id="cream5"><stop stop-color="#fff7e5"/><stop offset="1" stop-color="#d0b995"/></linearGradient></defs>
+                            <g class="float">
+                                <ellipse cx="190" cy="219" rx="97" ry="12" fill="#000" opacity=".11"/>
+                                <path class="line tail" stroke="#211a15" stroke-width="25" d="M254 188 C318 193 319 130 286 126"/>
+                                <ellipse cx="190" cy="178" rx="87" ry="53" fill="url(#c5)"/>
+                                <path d="M127 96 L132 28 L171 65 L215 65 L254 28 L259 98Z" fill="url(#c5)"/>
+                                <path d="M122 95 C122 48 151 30 194 30 C238 30 267 52 266 97 C265 137 239 157 194 157 C149 157 122 136 122 95Z" fill="url(#c5)"/>
+                                <path d="M170 97 Q179 89 187 97 M208 97 Q215 89 223 97" fill="none" stroke="#f0dfbb" stroke-width="3.5"/>
+                                <path d="M194 107 Q199 104 204 107 Q199 113 194 107Z" fill="#b94d32"/>
+                                <path d="M190 112 Q199 120 208 112" fill="none" stroke="#f0dfbb" stroke-width="3" stroke-linecap="round"/>
+                                <path d="M167 113 L128 108 M167 120 L126 124 M230 113 L268 108 M230 120 L270 124" fill="none" stroke="#d7c6a9" stroke-width="2"/>
+                                <path d="M146 169 Q132 184 145 195 Q158 199 168 181" fill="url(#c5)"/>
+                                <path d="M246 149 L284 149 L280 184 L250 184Z" fill="#b94d32" stroke="#1c1815" stroke-width="2"/><path d="M283 156 Q301 156 294 172 Q291 177 282 171" fill="none" stroke="#1c1815" stroke-width="4"/><path d="M256 143 Q251 132 258 123 M270 143 Q265 132 272 123" class="steam"/>
+                                <path d="M61 72 L65 84 L77 88 L65 92 L61 104 L57 92 L45 88 L57 84Z" fill="#b94d32" opacity=".8"/>
                             </g>
+                        </svg>
+                    </div>
 
-                            <!-- 6. Success / relaxed smile -->
-                            <g class="cat-scene cat-scene-success" filter="url(#softCatShadow)">
-                                <path class="cat-tail" d="M278 207 C337 222 347 149 309 141"/>
-                                <ellipse class="cat-body" cx="203" cy="205" rx="91" ry="54"/>
-                                <path class="cat-head" d="M132 124 C132 82 164 55 204 55 C246 55 276 83 273 126 C270 165 244 183 203 183 C162 183 132 163 132 124Z"/>
-                                <path class="cat-detail" d="M143 89 L149 35 L184 69 M228 69 L264 34 L259 91"/>
-                                <path class="cat-detail" d="M162 113 Q178 101 190 113 M217 113 Q231 101 246 113"/>
-                                <path class="cat-detail" d="M168 125 Q177 116 185 125 M225 125 Q232 116 240 125"/>
-                                <path class="cat-nose" d="M198 137 Q203 133 208 137 Q203 143 198 137Z"/>
-                                <path class="cat-detail" d="M190 144 Q203 158 216 144"/>
-                                <path class="cat-detail" d="M163 144 L120 137 M164 151 L117 157 M243 144 L286 137 M243 151 L289 157"/>
-                                <path class="cat-detail" d="M157 198 Q146 214 159 222 Q174 224 181 209"/>
-                                <path class="cat-mug" d="M271 174 L318 174 L312 216 L277 216Z"/>
-                                <path class="cat-detail" d="M318 182 Q337 181 329 199 Q325 205 314 199"/>
-                                <path class="cat-spark" d="M83 91 L87 102 L98 106 L87 110 L83 121 L79 110 L68 106 L79 102Z"/>
-                                <path class="cat-spark" d="M310 77 L314 88 L325 92 L314 96 L310 107 L306 96 L295 92 L306 88Z"/>
+                    <!-- 06 / SUCCESS: cat relaxes, smiles, celebrates quietly -->
+                    <div class="cat-frame" data-cat="success">
+                        <svg viewBox="0 0 360 245" role="presentation">
+                            <defs><radialGradient id="c6"><stop stop-color="#514e48"/><stop offset=".5" stop-color="#24221f"/><stop offset="1" stop-color="#090908"/></radialGradient></defs>
+                            <g class="float">
+                                <ellipse cx="190" cy="219" rx="100" ry="12" fill="#000" opacity=".10"/>
+                                <path class="line tail" stroke="#171513" stroke-width="25" d="M255 188 C319 195 323 126 286 122"/>
+                                <ellipse cx="190" cy="178" rx="88" ry="53" fill="url(#c6)"/>
+                                <path d="M127 96 L132 28 L171 65 L215 65 L255 28 L260 98Z" fill="url(#c6)"/>
+                                <path d="M121 95 C121 48 151 30 194 30 C238 30 268 52 267 97 C266 137 239 157 194 157 C148 157 121 136 121 95Z" fill="url(#c6)"/>
+                                <path d="M170 98 Q179 89 188 98 M207 98 Q215 89 224 98" fill="none" stroke="#efe1c5" stroke-width="4" stroke-linecap="round"/>
+                                <path d="M194 107 Q199 104 204 107 Q199 113 194 107Z" fill="#b94d32"/>
+                                <path d="M184 112 Q199 128 214 112" fill="none" stroke="#efe1c5" stroke-width="3.5" stroke-linecap="round"/>
+                                <path d="M167 113 L127 108 M167 120 L125 124 M230 113 L270 108 M230 120 L272 124" fill="none" stroke="#d6c9b1" stroke-width="2"/>
+                                <path d="M146 168 Q132 184 145 195 Q158 199 168 181" fill="url(#c6)"/>
+                                <path d="M57 75 L61 86 L72 90 L61 94 L57 105 L53 94 L42 90 L53 86Z" fill="#b94d32"/><path d="M290 68 L294 79 L305 83 L294 87 L290 98 L286 87 L275 83 L286 79Z" fill="#b94d32"/>
+                                <circle cx="83" cy="126" r="4" fill="#8b5b3f"/><circle cx="298" cy="128" r="4" fill="#8b5b3f"/>
                             </g>
                         </svg>
                     </div>
                 </div>
-            </div>
+            </aside>
 
-            <div class="agni-register-form-header">
-                <span class="agni-register-form-kicker">NEW MEMBER</span>
+            <div class="auth-form-header">
+                <span class="auth-form-kicker">NEW MEMBER</span>
                 <h2>Create account</h2>
                 <p>Join the AgniPress newsroom community.</p>
             </div>
 
-            <div th:if="${error}" class="agni-register-error" th:text="${error}">Registration failed.</div>
+            <div th:if="${error}" class="auth-error" th:text="${error}">Registration failed.</div>
 
-            <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="agni-register-form" id="registerForm">
-                <div class="agni-register-field">
-                    <label class="agni-register-label" for="name">FULL NAME</label>
+            <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="auth-form register-form-force">
+                <div class="auth-field">
+                    <label for="name">FULL NAME</label>
                     <input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required>
-                    <div th:if="${#fields.hasErrors('name')}" class="field-error" th:errors="*{name}"></div>
+                    <div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div>
                 </div>
-
-                <div class="agni-register-field">
-                    <label class="agni-register-label" for="username">USERNAME</label>
+                <div class="auth-field">
+                    <label for="username">USERNAME</label>
                     <input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required>
                     <small>This username must be unique.</small>
-                    <div th:if="${#fields.hasErrors('username')}" class="field-error" th:errors="*{username}"></div>
+                    <div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div>
                 </div>
-
-                <div class="agni-register-field">
-                    <label class="agni-register-label" for="email">EMAIL ADDRESS</label>
+                <div class="auth-field">
+                    <label for="email">EMAIL ADDRESS</label>
                     <input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required>
                     <small>We will send a verification link to this email. You will create your password after verification.</small>
-                    <div th:if="${#fields.hasErrors('email')}" class="field-error" th:errors="*{email}"></div>
+                    <div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div>
                 </div>
-
-                <button type="submit" class="agni-register-submit">SEND VERIFICATION EMAIL <span>→</span></button>
+                <button type="submit" class="auth-submit">SEND VERIFICATION EMAIL <span>→</span></button>
             </form>
 
-            <div class="agni-register-footer">
-                <span>ALREADY A MEMBER?</span>
-                <a th:href="@{/login}">SIGN IN</a>
-            </div>
-            <div class="agni-register-note">Your account becomes active after email verification.</div>
+            <div class="auth-footer"><span>ALREADY A MEMBER?</span><a th:href="@{/login}">SIGN IN</a></div>
         </section>
     </div>
 </main>
 
-<footer class="site-footer agni-register-footer-site">
+<footer class="site-footer">
     <div class="editorial-container footer-grid">
-        <div>
-            <div class="footer-brand">AGNIPRESS</div>
-            <p>Independent reporting and stories shaping the day ahead.</p>
-        </div>
+        <div><div class="footer-brand">AGNIPRESS</div><p>Independent reporting and stories shaping the day ahead.</p></div>
         <div class="footer-links">
-            <a th:href="@{/}">HOME</a>
-            <a th:href="@{/newsList}">NEWS</a>
-            <a th:href="@{/newsList(category='India')}">INDIA</a>
-            <a th:href="@{/newsList(category='World')}">WORLD</a>
-            <a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
+            <a th:href="@{/}">HOME</a><a th:href="@{/newsList}">NEWS</a><a th:href="@{/newsList(category='India')}">INDIA</a><a th:href="@{/newsList(category='World')}">WORLD</a><a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
         </div>
     </div>
 </footer>
-
-<script>
-(function(){
-    "use strict";
-
-    const guide = document.getElementById("registerGuide");
-    const form = document.getElementById("registerForm");
-    const bubble = document.getElementById("guideBubble");
-    const soundToggle = document.getElementById("soundToggle");
-    if(!guide || !form || !bubble || !soundToggle) return;
-
-    const messages = {
-        initial: "Hey there. Let's create your account.",
-        name: "Good. Now your username.",
-        username: "Nice. Almost there. Add your email.",
-        email: "Perfect. You're ready to join.",
-        error: "Hmm. I'm not convinced. Check that field.",
-        success: "All set. I'll see you in the newsroom."
-    };
-
-    // Optional voice pack. Put your recorded files in src/main/resources/static/audio/cat/.
-    const VOICE_PACK = {
-        intro: "/audio/cat/intro.mp3",
-        nameSuccess: "/audio/cat/name-success.mp3",
-        usernameSuccess: "/audio/cat/username-success.mp3",
-        emailIntro: "/audio/cat/email-intro.mp3",
-        ready: "/audio/cat/ready.mp3",
-        error: "/audio/cat/username-error.mp3",
-        success: "/audio/cat/success.mp3",
-        meow: "/audio/cat/meow.mp3"
-    };
-
-    let soundOn = false;
-    let activeAudio = null;
-    let speakingTimer = null;
-    const validSeen = {name:false,username:false,email:false};
-
-    function stopAudio(){
-        if(activeAudio){
-            activeAudio.pause();
-            activeAudio.currentTime = 0;
-            activeAudio = null;
-        }
-        if("speechSynthesis" in window) window.speechSynthesis.cancel();
-        guide.classList.remove("speaking");
-        clearTimeout(speakingTimer);
-    }
-
-    function fallbackSpeak(text){
-        if(!soundOn || !("speechSynthesis" in window)) return;
-        const u = new SpeechSynthesisUtterance(text);
-        u.rate = .9;
-        u.pitch = 1.0;
-        u.volume = .72;
-        u.onend = function(){ guide.classList.remove("speaking"); };
-        window.speechSynthesis.speak(u);
-        guide.classList.add("speaking");
-    }
-
-    function meow(){
-        if(!soundOn) return;
-        const audio = new Audio(VOICE_PACK.meow);
-        audio.volume = .45;
-        audio.play().catch(function(){
-            // A missing optional meow file is intentionally harmless.
-        });
-    }
-
-    function playVoice(key,text,withMeow){
-        if(!soundOn) return;
-        stopAudio();
-        const audio = new Audio(VOICE_PACK[key]);
-        activeAudio = audio;
-        audio.preload = "auto";
-        audio.volume = .82;
-        guide.classList.add("speaking");
-        audio.addEventListener("ended",function(){
-            guide.classList.remove("speaking");
-            if(withMeow) meow();
-        },{once:true});
-        audio.addEventListener("error",function(){
-            activeAudio = null;
-            fallbackSpeak(text);
-            if(withMeow){
-                speakingTimer = setTimeout(meow,Math.max(700,text.length*45));
-            }
-        },{once:true});
-        audio.play().catch(function(){ audio.dispatchEvent(new Event("error")); });
-    }
-
-    function setState(state,text,voiceKey,withMeow){
-        ["state-name","state-error","state-email","state-ready","state-success"].forEach(function(c){guide.classList.remove(c);});
-        if(state !== "initial") guide.classList.add("state-"+state);
-        bubble.style.opacity="0";
-        bubble.style.transform="translateY(4px)";
-        setTimeout(function(){
-            bubble.textContent=text;
-            bubble.style.opacity="1";
-            bubble.style.transform="translateY(0)";
-        },100);
-        if(soundOn && voiceKey) playVoice(voiceKey,text,!!withMeow);
-    }
-
-    function focusMessage(id){
-        if(id === "name") setState("initial",messages.initial,"intro",false);
-        if(id === "username") setState("name",messages.name,"nameSuccess",true);
-        if(id === "email") setState("email",messages.email,"emailIntro",false);
-    }
-
-    soundToggle.addEventListener("click",function(){
-        soundOn=!soundOn;
-        soundToggle.querySelector("span").textContent=soundOn?"SOUND ON":"SOUND OFF";
-        if(soundOn){
-            setState("initial",messages.initial,"intro",false);
-        }else{
-            stopAudio();
-        }
-    });
-
-    ["name","username","email"].forEach(function(id){
-        const field=document.getElementById(id);
-        if(!field) return;
-
-        field.addEventListener("focus",function(){
-            focusMessage(id);
-        });
-
-        field.addEventListener("input",function(){
-            const hasValue=field.value.trim().length>0;
-            const valid=hasValue && field.checkValidity();
-            if(!valid){ validSeen[id]=false; return; }
-            if(valid && !validSeen[id]){
-                validSeen[id]=true;
-                if(id === "name") setState("name",messages.name,"nameSuccess",true);
-                if(id === "username") setState("email",messages.username,"usernameSuccess",true);
-                if(id === "email") setState("ready",messages.email,"ready",true);
-            }
-        });
-
-        field.addEventListener("blur",function(){
-            if(!field.value.trim()) return;
-            if(!field.checkValidity()) setState("error",messages.error,"error",false);
-        });
-    });
-
-    form.addEventListener("submit",function(event){
-        const fields=["name","username","email"].map(function(id){return document.getElementById(id);});
-        const valid=fields.every(function(field){return field && field.value.trim() && field.checkValidity();});
-        if(!valid){
-            event.preventDefault();
-            setState("error",messages.error,"error",false);
-            const firstInvalid=fields.find(function(field){return !field || !field.value.trim() || !field.checkValidity();});
-            if(firstInvalid) firstInvalid.focus();
-            return;
-        }
-        setState("success",messages.success,"success",true);
-    });
-})();
-</script>
+<script th:src="@{/register-guide.js?v=20260912-7}"></script>
 </body>
 </html>
