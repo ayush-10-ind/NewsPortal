@@ -7,7 +7,7 @@
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
     <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-12}">
-    <link rel="stylesheet" th:href="@{/register-3d.css?v=20260912-04}">
+    <link rel="stylesheet" th:href="@{/register-3d.css?v=20260912-05}">
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
@@ -32,30 +32,8 @@
                     </button>
                 </div>
 
-                <div class="cat-stage" aria-label="Interactive AgniPress cat guide">
-                    <canvas id="cat-3d-canvas" aria-hidden="true"></canvas>
-
-                    <!-- Static fallback: the character remains visible even if JavaScript fails to load. -->
-                    <div class="cat-3d" role="img" aria-label="AgniPress newsroom cat">
-                        <div class="cat-floor-shadow"></div>
-                        <div class="cat-tail"><div class="cat-tail-tip"></div></div>
-                        <div class="cat-body"><div class="cat-belly"></div></div>
-                        <div class="cat-arm left"><div class="cat-paw"></div></div>
-                        <div class="cat-arm right"><div class="cat-paw"></div></div>
-                        <div class="cat-head">
-                            <div class="cat-ear left"></div>
-                            <div class="cat-ear right"></div>
-                            <div class="cat-eye left"><div class="cat-pupil"></div></div>
-                            <div class="cat-eye right"><div class="cat-pupil"></div></div>
-                            <div class="cat-muzzle">
-                                <div class="cat-nose"></div>
-                                <div class="cat-mouth"></div>
-                            </div>
-                            <div class="cat-whiskers left"></div>
-                            <div class="cat-whiskers right"></div>
-                        </div>
-                    </div>
-
+                <div class="cat-stage" aria-label="Interactive 3D AgniPress newsroom cat guide">
+                    <canvas id="cat-3d-canvas" aria-label="Interactive 3D newsroom cat"></canvas>
                     <div class="cat-stage-hint">move your cursor · the newsroom cat is watching</div>
                 </div>
             </aside>
@@ -106,6 +84,7 @@
     </div>
 </footer>
 
-<script th:src="@{/register-guide.js?v=20260912-15}"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.min.js"></script>
+<script th:src="@{/register-guide.js?v=20260912-16}"></script>
 </body>
 </html>
