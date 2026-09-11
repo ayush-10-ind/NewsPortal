@@ -6,115 +6,19 @@
     <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
-    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-3}">
+    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-4}">
     <style>
-        /* Registration form visibility */
-        .register-form-force{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
+        .register-form-force{display:flex!important;flex-direction:column!important;gap:18px!important;width:100%!important;margin-top:28px!important;position:relative!important;z-index:100!important;min-height:300px!important;visibility:visible!important;opacity:1!important}
         .register-form-force .auth-field{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
         .register-form-force input{display:block!important;width:100%!important;box-sizing:border-box!important;visibility:visible!important;opacity:1!important}
         .register-form-force .auth-submit{display:flex!important;visibility:visible!important;opacity:1!important}
         .register-page-form-section{display:block!important;position:relative!important;overflow:visible!important;min-height:0!important}
-
-        /* Critical guide styles are kept here as well as in register-guide.css so
-           the cinematic cat cannot fall back into normal document flow. */
-        .register-page-form-section .register-guide{
-            position:absolute!important;
-            left:-245px!important;
-            top:72px!important;
-            width:205px!important;
-            min-height:245px!important;
-            height:245px!important;
-            z-index:50!important;
-            pointer-events:none!important;
-            transform:none!important;
-        }
-        .register-guide-toggle{
-            pointer-events:auto!important;
-            position:absolute!important;
-            right:0!important;
-            top:0!important;
-            border:1px solid #d8d4cb!important;
-            background:#faf9f5!important;
-            color:#11110f!important;
-            padding:7px 9px!important;
-            font:700 8px/1 Arial,sans-serif!important;
-            letter-spacing:.14em!important;
-            cursor:pointer!important;
-        }
-        .register-guide-bubble{
-            position:absolute!important;
-            left:0!important;
-            top:38px!important;
-            width:195px!important;
-            padding:11px 14px!important;
-            border:1px solid #d8d4cb!important;
-            border-radius:16px 16px 16px 3px!important;
-            background:rgba(250,249,245,.97)!important;
-            box-shadow:0 12px 28px rgba(17,17,15,.08)!important;
-            font:italic 14px/1.35 Georgia,serif!important;
-            color:#171717!important;
-            transform-origin:bottom left!important;
-        }
-        .register-guide-cat{
-            position:absolute!important;
-            left:24px!important;
-            top:101px!important;
-            width:145px!important;
-            height:137px!important;
-            filter:drop-shadow(0 10px 10px rgba(0,0,0,.13))!important;
-            animation:catFloat 4.5s ease-in-out infinite!important;
-        }
-        .register-guide-cat svg{display:block!important;width:100%!important;height:100%!important;overflow:visible!important}
-        .cat-tail-art path{fill:none!important;stroke:#161615!important;stroke-width:15!important;stroke-linecap:round!important}
-        .cat-body-art,.cat-head-art,.cat-ear-art{fill:#161615!important}
-        .cat-face-detail,.cat-mouth-art{fill:none!important;stroke:#d8c9a7!important;stroke-width:2.2!important;stroke-linecap:round!important}
-        .cat-eye-art{fill:#d8c9a7!important}
-        .cat-nose-art{fill:#b4482f!important}
-        .cat-paw-art{fill:#161615!important}
-        .register-guide-pointer{
-            position:absolute!important;
-            left:92px!important;
-            top:172px!important;
-            width:88px!important;
-            height:1px!important;
-            background:#b4482f!important;
-            transform-origin:left center!important;
-            opacity:0!important;
-            transition:opacity .35s ease,transform .45s ease!important;
-        }
-        .register-guide-pointer:after{content:"";position:absolute;right:-1px;top:-4px;width:7px;height:7px;border-top:1.5px solid #b4482f;border-right:1.5px solid #b4482f;transform:rotate(45deg)}
-        .guide-pointing .register-guide-pointer{opacity:1!important}
-        .guide-happy .cat-head-art{transform-origin:92px 72px;animation:catNod .55s ease}
-        .guide-happy .cat-tail-art{transform-origin:143px 110px;animation:tailFlick .7s ease}
-        .guide-sad .cat-head-art{transform-origin:92px 72px;animation:catSad .45s ease}
-        .guide-speaking .cat-head-art{transform-origin:92px 72px;animation:catTalk .3s ease-in-out infinite alternate}
-        @keyframes catFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-5px) rotate(1deg)}}
-        @keyframes catTalk{from{transform:rotate(-1deg)}to{transform:rotate(1.5deg) translateY(-2px)}}
-        @keyframes catNod{0%{transform:rotate(0)}40%{transform:rotate(-6deg) translateY(-3px)}100%{transform:rotate(0)}}
-        @keyframes catSad{0%,100%{transform:rotate(0)}50%{transform:rotate(5deg) translateY(4px)}}
-        @keyframes tailFlick{0%,100%{transform:rotate(0)}50%{transform:rotate(14deg)}}
-        @media(max-width:1100px){
-            .register-page-form-section .register-guide{left:-205px!important;width:180px!important}
-            .register-guide-bubble{width:172px!important;font-size:13px!important}
-            .register-guide-cat{left:18px!important;width:128px!important;height:121px!important}
-        }
-        @media(max-width:900px){
-            .register-page-form-section .register-guide{position:relative!important;left:auto!important;top:auto!important;width:100%!important;height:210px!important;min-height:210px!important;margin:18px auto 0!important;text-align:center!important}
-            .register-guide-toggle{right:8px!important;top:0!important}
-            .register-guide-bubble{position:relative!important;top:auto!important;left:auto!important;margin:0 auto!important;width:min(100%,250px)!important;text-align:left!important}
-            .register-guide-cat{position:relative!important;left:auto!important;top:auto!important;margin:-2px auto 0!important;width:118px!important;height:112px!important}
-            .register-guide-pointer{display:none!important}
-        }
-        @media(prefers-reduced-motion:reduce){.register-guide-cat{animation:none!important}}
     </style>
 </head>
 <body>
-
 <div th:replace="~{fragments/navbar :: navbar}"></div>
-
 <main class="auth-page">
     <div class="auth-container">
-
         <section class="auth-intro">
             <span class="auth-kicker">THE NEWSROOM</span>
             <h1>Stay <em>informed.</em></h1>
@@ -132,19 +36,76 @@
                 <div class="register-guide-bubble">Hey there. Let's create your account.</div>
                 <div class="register-guide-pointer" aria-hidden="true"></div>
                 <div class="register-guide-cat" aria-hidden="true">
-                    <svg viewBox="0 0 180 170" role="presentation">
-                        <g class="cat-tail-art"><path d="M132 129 C169 134 168 87 144 86" /></g>
-                        <ellipse class="cat-body-art" cx="91" cy="123" rx="49" ry="35" />
-                        <path class="cat-ear-art" d="M45 69 L49 20 L82 51 Z" />
-                        <path class="cat-ear-art" d="M112 51 L143 20 L139 73 Z" />
-                        <path class="cat-head-art" d="M43 65 C43 38 65 27 92 27 C121 27 141 43 140 70 C139 99 120 111 91 111 C62 111 43 94 43 65 Z" />
-                        <path class="cat-face-detail" d="M68 73 Q77 66 84 73" />
-                        <path class="cat-face-detail" d="M100 73 Q109 66 118 73" />
-                        <ellipse class="cat-eye-art" cx="77" cy="70" rx="4.5" ry="3" />
-                        <ellipse class="cat-eye-art" cx="109" cy="70" rx="4.5" ry="3" />
-                        <path class="cat-nose-art" d="M89 80 Q92 78 95 80 Q92 84 89 80 Z" />
-                        <path class="cat-mouth-art" d="M92 84 Q87 89 83 86 M92 84 Q97 89 101 86" />
-                        <path class="cat-paw-art" d="M51 128 Q43 139 53 146 Q63 149 69 137" />
+                    <svg viewBox="0 0 260 220" role="presentation">
+                        <defs>
+                            <filter id="catShadow" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur in="SourceAlpha" stdDeviation="3"/><feOffset dy="5"/><feComponentTransfer><feFuncA type="linear" slope=".18"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                        </defs>
+
+                        <g class="cat-state cat-state-initial" filter="url(#catShadow)">
+                            <path class="cat-tail" d="M183 169 C228 177 231 121 205 116"/>
+                            <ellipse class="cat-body" cx="133" cy="164" rx="62" ry="43"/>
+                            <path class="cat-head" d="M76 96 C76 58 105 40 139 40 C175 40 199 62 197 100 C195 135 171 151 135 151 C99 151 76 132 76 96Z"/>
+                            <path class="cat-ear" d="M82 70 L86 14 L121 49Z"/><path class="cat-ear" d="M158 49 L193 14 L189 72Z"/>
+                            <path class="cat-brow" d="M105 86 Q119 80 130 87 M151 87 Q163 80 176 86"/>
+                            <ellipse class="cat-eye" cx="119" cy="94" rx="5" ry="4"/><ellipse class="cat-eye" cx="160" cy="94" rx="5" ry="4"/>
+                            <path class="cat-nose" d="M134 104 Q139 101 144 104 Q139 110 134 104Z"/><path class="cat-mouth" d="M139 109 Q133 116 128 112 M139 109 Q145 116 150 112"/>
+                            <path class="cat-paw" d="M94 165 Q83 181 96 190 Q109 193 116 178"/>
+                            <path class="cat-whisker" d="M105 108 L72 103 M105 114 L69 119 M173 108 L207 103 M173 114 L210 120"/>
+                        </g>
+
+                        <g class="cat-state cat-state-name" filter="url(#catShadow)">
+                            <path class="cat-tail" d="M183 169 C228 177 231 121 205 116"/><ellipse class="cat-body" cx="133" cy="164" rx="62" ry="43"/>
+                            <path class="cat-head" d="M76 96 C76 58 105 40 139 40 C175 40 199 62 197 100 C195 135 171 151 135 151 C99 151 76 132 76 96Z"/>
+                            <path class="cat-ear" d="M82 70 L86 14 L121 49Z"/><path class="cat-ear" d="M158 49 L193 14 L189 72Z"/>
+                            <path class="cat-brow" d="M105 83 Q119 76 130 83 M151 83 Q164 76 176 83"/>
+                            <path class="cat-eye happy-eye" d="M112 95 Q119 88 126 95"/><path class="cat-eye happy-eye" d="M154 95 Q161 88 168 95"/>
+                            <path class="cat-nose" d="M134 104 Q139 101 144 104 Q139 110 134 104Z"/><path class="cat-mouth" d="M139 109 Q133 115 128 111 M139 109 Q145 115 150 111"/>
+                            <path class="cat-paw" d="M96 169 Q88 183 101 188 Q114 188 119 174 L125 159"/><path class="cat-whisker" d="M105 108 L72 103 M105 114 L69 119 M173 108 L207 103 M173 114 L210 120"/>
+                            <path class="cat-point-arm" d="M118 165 Q145 151 181 143"/>
+                            <path class="cat-point-paw" d="M177 139 L193 137 L181 149Z"/>
+                        </g>
+
+                        <g class="cat-state cat-state-error" filter="url(#catShadow)">
+                            <path class="cat-tail" d="M183 170 C211 184 222 146 207 128"/><ellipse class="cat-body" cx="133" cy="164" rx="62" ry="43"/>
+                            <path class="cat-head" d="M76 96 C76 58 105 40 139 40 C175 40 199 62 197 100 C195 135 171 151 135 151 C99 151 76 132 76 96Z"/>
+                            <path class="cat-ear" d="M82 70 L86 14 L121 49Z"/><path class="cat-ear" d="M158 49 L193 14 L189 72Z"/>
+                            <path class="cat-brow sad-brow" d="M105 91 Q118 98 129 91 M151 91 Q163 98 176 91"/>
+                            <path class="cat-eye sad-eye" d="M112 98 Q120 103 127 98"/><path class="cat-eye sad-eye" d="M153 98 Q161 103 168 98"/>
+                            <path class="cat-nose" d="M134 105 Q139 102 144 105 Q139 111 134 105Z"/><path class="cat-mouth sad-mouth" d="M130 118 Q139 111 149 118"/>
+                            <path class="cat-paw" d="M93 166 Q83 180 96 188 Q108 191 116 177"/><path class="cat-whisker" d="M105 108 L72 103 M105 114 L69 119 M173 108 L207 103 M173 114 L210 120"/>
+                            <path class="cat-newspaper" d="M41 151 L102 151 L96 201 L35 196Z"/><path class="paper-line" d="M48 163 L91 166 M46 174 L89 177 M45 185 L77 188"/>
+                        </g>
+
+                        <g class="cat-state cat-state-email" filter="url(#catShadow)">
+                            <path class="cat-tail" d="M183 169 C228 177 231 121 205 116"/><ellipse class="cat-body" cx="133" cy="164" rx="62" ry="43"/>
+                            <path class="cat-head" d="M76 96 C76 58 105 40 139 40 C175 40 199 62 197 100 C195 135 171 151 135 151 C99 151 76 132 76 96Z"/>
+                            <path class="cat-ear" d="M82 70 L86 14 L121 49Z"/><path class="cat-ear" d="M158 49 L193 14 L189 72Z"/>
+                            <path class="cat-brow" d="M105 86 Q119 81 130 87 M151 87 Q164 81 176 86"/><ellipse class="cat-eye" cx="119" cy="94" rx="5" ry="4"/><ellipse class="cat-eye" cx="160" cy="94" rx="5" ry="4"/>
+                            <path class="cat-nose" d="M134 104 Q139 101 144 104 Q139 110 134 104Z"/><path class="cat-mouth" d="M139 109 Q133 116 128 112 M139 109 Q145 116 150 112"/>
+                            <path class="cat-paw" d="M95 168 Q87 181 99 188 Q112 190 118 176"/><path class="cat-whisker" d="M105 108 L72 103 M105 114 L69 119 M173 108 L207 103 M173 114 L210 120"/>
+                            <path class="cat-point-arm" d="M117 164 Q148 151 184 142"/><path class="cat-point-paw" d="M180 138 L195 137 L184 149Z"/>
+                        </g>
+
+                        <g class="cat-state cat-state-ready" filter="url(#catShadow)">
+                            <path class="cat-tail" d="M183 169 C228 177 231 121 205 116"/><ellipse class="cat-body" cx="133" cy="164" rx="62" ry="43"/>
+                            <path class="cat-head" d="M76 96 C76 58 105 40 139 40 C175 40 199 62 197 100 C195 135 171 151 135 151 C99 151 76 132 76 96Z"/>
+                            <path class="cat-ear" d="M82 70 L86 14 L121 49Z"/><path class="cat-ear" d="M158 49 L193 14 L189 72Z"/>
+                            <path class="cat-brow" d="M105 84 Q119 79 130 85 M151 85 Q164 79 176 84"/><path class="cat-eye happy-eye" d="M112 95 Q119 88 126 95"/><path class="cat-eye happy-eye" d="M154 95 Q161 88 168 95"/>
+                            <path class="cat-nose" d="M134 104 Q139 101 144 104 Q139 110 134 104Z"/><path class="cat-mouth" d="M139 109 Q133 115 128 111 M139 109 Q145 115 150 111"/>
+                            <path class="cat-paw" d="M94 167 Q84 181 97 190 Q110 191 117 177"/><path class="cat-whisker" d="M105 108 L72 103 M105 114 L69 119 M173 108 L207 103 M173 114 L210 120"/>
+                            <path class="cat-mug" d="M183 151 L211 151 L207 177 L186 177Z"/><path class="mug-handle" d="M210 157 Q222 157 216 168 Q213 172 208 168"/><path class="steam" d="M191 145 Q187 136 194 129 M201 145 Q197 136 204 129"/>
+                        </g>
+
+                        <g class="cat-state cat-state-success" filter="url(#catShadow)">
+                            <path class="cat-tail" d="M183 169 C228 177 231 121 205 116"/><ellipse class="cat-body" cx="133" cy="164" rx="62" ry="43"/>
+                            <path class="cat-head" d="M76 96 C76 58 105 40 139 40 C175 40 199 62 197 100 C195 135 171 151 135 151 C99 151 76 132 76 96Z"/>
+                            <path class="cat-ear" d="M82 70 L86 14 L121 49Z"/><path class="cat-ear" d="M158 49 L193 14 L189 72Z"/>
+                            <path class="cat-brow" d="M105 82 Q119 76 130 82 M151 82 Q164 76 176 82"/><path class="cat-eye happy-eye" d="M112 95 Q119 87 126 95"/><path class="cat-eye happy-eye" d="M154 95 Q161 87 168 95"/>
+                            <path class="cat-nose" d="M134 104 Q139 101 144 104 Q139 110 134 104Z"/><path class="cat-mouth success-mouth" d="M128 109 Q139 122 150 109"/>
+                            <path class="cat-paw" d="M94 167 Q84 181 97 190 Q110 191 117 177"/><path class="cat-whisker" d="M105 108 L72 103 M105 114 L69 119 M173 108 L207 103 M173 114 L210 120"/>
+                            <path class="cat-mug" d="M183 151 L211 151 L207 177 L186 177Z"/><path class="mug-handle" d="M210 157 Q222 157 216 168 Q213 172 208 168"/>
+                            <path class="spark" d="M55 68 L58 77 L67 80 L58 83 L55 93 L52 83 L43 80 L52 77Z"/><path class="spark" d="M208 73 L211 81 L219 84 L211 87 L208 95 L205 87 L197 84 L205 81Z"/>
+                        </g>
                     </svg>
                 </div>
             </aside>
@@ -158,53 +119,17 @@
             <div th:if="${error}" class="auth-error" th:text="${error}">Registration failed.</div>
 
             <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="auth-form register-form-force">
-                <div class="auth-field">
-                    <label for="name">FULL NAME</label>
-                    <input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required>
-                    <div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div>
-                </div>
-
-                <div class="auth-field">
-                    <label for="username">USERNAME</label>
-                    <input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required>
-                    <small>This username must be unique.</small>
-                    <div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div>
-                </div>
-
-                <div class="auth-field">
-                    <label for="email">EMAIL ADDRESS</label>
-                    <input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required>
-                    <small>We will send a verification link to this email. You will create your password after verification.</small>
-                    <div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div>
-                </div>
-
+                <div class="auth-field"><label for="name">FULL NAME</label><input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required><div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div></div>
+                <div class="auth-field"><label for="username">USERNAME</label><input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required><small>This username must be unique.</small><div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div></div>
+                <div class="auth-field"><label for="email">EMAIL ADDRESS</label><input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required><small>We will send a verification link to this email. You will create your password after verification.</small><div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div></div>
                 <button type="submit" class="auth-submit">SEND VERIFICATION EMAIL <span>→</span></button>
             </form>
 
-            <div class="auth-footer">
-                <span>ALREADY A MEMBER?</span>
-                <a th:href="@{/login}">SIGN IN</a>
-            </div>
+            <div class="auth-footer"><span>ALREADY A MEMBER?</span><a th:href="@{/login}">SIGN IN</a></div>
         </section>
     </div>
 </main>
-
-<footer class="site-footer">
-    <div class="editorial-container footer-grid">
-        <div>
-            <div class="footer-brand">AGNIPRESS</div>
-            <p>Independent reporting and stories shaping the day ahead.</p>
-        </div>
-        <div class="footer-links">
-            <a th:href="@{/}">HOME</a>
-            <a th:href="@{/newsList}">NEWS</a>
-            <a th:href="@{/newsList(category='India')}">INDIA</a>
-            <a th:href="@{/newsList(category='World')}">WORLD</a>
-            <a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
-        </div>
-    </div>
-</footer>
-
-<script th:src="@{/register-guide.js?v=20260912-3}"></script>
+<footer class="site-footer"><div class="editorial-container footer-grid"><div><div class="footer-brand">AGNIPRESS</div><p>Independent reporting and stories shaping the day ahead.</p></div><div class="footer-links"><a th:href="@{/}">HOME</a><a th:href="@{/newsList}">NEWS</a><a th:href="@{/newsList(category='India')}">INDIA</a><a th:href="@{/newsList(category='World')}">WORLD</a><a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a></div></div></footer>
+<script th:src="@{/register-guide.js?v=20260912-4}"></script>
 </body>
 </html>
