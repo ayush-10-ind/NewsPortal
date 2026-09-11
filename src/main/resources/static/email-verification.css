@@ -1,0 +1,142 @@
+/* =========================================================
+   AGNIPRESS EMAIL VERIFICATION
+   Responsive overrides
+   ========================================================= */
+
+/* Keep the verification form usable on every screen size. */
+.email-verification-page {
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.email-verification-page .auth-container {
+    width: min(1240px, calc(100% - 32px));
+    margin: 60px auto 0;
+}
+
+.email-verification-page .auth-form-section {
+    min-width: 0;
+}
+
+.email-verification-page .auth-form {
+    width: 100%;
+}
+
+.email-verification-page .auth-field,
+.email-verification-page .auth-field input,
+.email-verification-page .auth-submit {
+    width: 100%;
+    max-width: 100%;
+}
+
+.email-verification-page .auth-field input {
+    min-width: 0;
+}
+
+@media (max-width: 750px) {
+
+    .email-verification-page .auth-container {
+        width: calc(100% - 24px);
+        margin: 28px auto 0;
+        display: block;
+    }
+
+    .email-verification-page .auth-intro {
+        padding: 34px 24px;
+    }
+
+    .email-verification-page .auth-intro h1 {
+        font-size: clamp(48px, 16vw, 72px);
+        letter-spacing: -3px;
+        line-height: .9;
+    }
+
+    .email-verification-page .auth-intro p {
+        max-width: 100%;
+        font-size: 15px;
+    }
+
+    .email-verification-page .auth-form-section {
+        padding: 34px 24px 38px;
+        display: block;
+        min-width: 0;
+    }
+
+    .email-verification-page .auth-form-header h2 {
+        font-size: clamp(34px, 10vw, 48px);
+        line-height: 1;
+        letter-spacing: -1.8px;
+    }
+
+    .email-verification-page .auth-form-header p {
+        font-size: 15px;
+        line-height: 1.55;
+    }
+
+    .email-verification-page .auth-form {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin-top: 26px;
+    }
+
+    .email-verification-page .auth-field {
+        display: block !important;
+        margin-bottom: 20px;
+    }
+
+    .email-verification-page .auth-field label {
+        display: block;
+        margin-bottom: 8px;
+    }
+
+    .email-verification-page .auth-field input {
+        display: block !important;
+        width: 100% !important;
+        height: 54px;
+        padding: 0 15px;
+        font-size: 16px;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .email-verification-page .auth-submit {
+        display: flex !important;
+        width: 100% !important;
+        min-height: 56px;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        margin-top: 4px;
+        padding: 15px 18px;
+        font-size: 10px;
+        white-space: normal;
+        text-align: center;
+    }
+
+    .email-verification-page .auth-submit span {
+        flex-shrink: 0;
+    }
+}
+
+@media (max-width: 420px) {
+
+    .email-verification-page .auth-container {
+        width: calc(100% - 16px);
+        margin-top: 18px;
+    }
+
+    .email-verification-page .auth-intro,
+    .email-verification-page .auth-form-section {
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+
+    .email-verification-page .auth-intro h1 {
+        font-size: 50px;
+    }
+
+    .email-verification-page .auth-form-header h2 {
+        font-size: 34px;
+    }
+}
