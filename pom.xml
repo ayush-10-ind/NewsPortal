@@ -110,7 +110,7 @@
 
         <!-- =================================================
              WEBFLUX
-             Required for WebClient
+             Required for WebClient and HTTPS APIs
              ================================================= -->
 
         <dependency>
@@ -136,17 +136,6 @@
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
-        </dependency>
-
-
-        <!-- =================================================
-             EMAIL
-             Gmail SMTP / JavaMailSender
-             ================================================= -->
-
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
 
 
