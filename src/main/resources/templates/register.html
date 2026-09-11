@@ -6,13 +6,106 @@
     <meta name="description" content="Create your AgniPress account.">
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
-    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-2}">
+    <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-3}">
     <style>
+        /* Registration form visibility */
         .register-form-force{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
         .register-form-force .auth-field{display:block!important;width:100%!important;visibility:visible!important;opacity:1!important}
         .register-form-force input{display:block!important;width:100%!important;box-sizing:border-box!important;visibility:visible!important;opacity:1!important}
         .register-form-force .auth-submit{display:flex!important;visibility:visible!important;opacity:1!important}
-        .register-page-form-section{display:block!important;min-height:500px;position:relative;overflow:visible!important}
+        .register-page-form-section{display:block!important;position:relative!important;overflow:visible!important;min-height:0!important}
+
+        /* Critical guide styles are kept here as well as in register-guide.css so
+           the cinematic cat cannot fall back into normal document flow. */
+        .register-page-form-section .register-guide{
+            position:absolute!important;
+            left:-245px!important;
+            top:72px!important;
+            width:205px!important;
+            min-height:245px!important;
+            height:245px!important;
+            z-index:50!important;
+            pointer-events:none!important;
+            transform:none!important;
+        }
+        .register-guide-toggle{
+            pointer-events:auto!important;
+            position:absolute!important;
+            right:0!important;
+            top:0!important;
+            border:1px solid #d8d4cb!important;
+            background:#faf9f5!important;
+            color:#11110f!important;
+            padding:7px 9px!important;
+            font:700 8px/1 Arial,sans-serif!important;
+            letter-spacing:.14em!important;
+            cursor:pointer!important;
+        }
+        .register-guide-bubble{
+            position:absolute!important;
+            left:0!important;
+            top:38px!important;
+            width:195px!important;
+            padding:11px 14px!important;
+            border:1px solid #d8d4cb!important;
+            border-radius:16px 16px 16px 3px!important;
+            background:rgba(250,249,245,.97)!important;
+            box-shadow:0 12px 28px rgba(17,17,15,.08)!important;
+            font:italic 14px/1.35 Georgia,serif!important;
+            color:#171717!important;
+            transform-origin:bottom left!important;
+        }
+        .register-guide-cat{
+            position:absolute!important;
+            left:24px!important;
+            top:101px!important;
+            width:145px!important;
+            height:137px!important;
+            filter:drop-shadow(0 10px 10px rgba(0,0,0,.13))!important;
+            animation:catFloat 4.5s ease-in-out infinite!important;
+        }
+        .register-guide-cat svg{display:block!important;width:100%!important;height:100%!important;overflow:visible!important}
+        .cat-tail-art path{fill:none!important;stroke:#161615!important;stroke-width:15!important;stroke-linecap:round!important}
+        .cat-body-art,.cat-head-art,.cat-ear-art{fill:#161615!important}
+        .cat-face-detail,.cat-mouth-art{fill:none!important;stroke:#d8c9a7!important;stroke-width:2.2!important;stroke-linecap:round!important}
+        .cat-eye-art{fill:#d8c9a7!important}
+        .cat-nose-art{fill:#b4482f!important}
+        .cat-paw-art{fill:#161615!important}
+        .register-guide-pointer{
+            position:absolute!important;
+            left:92px!important;
+            top:172px!important;
+            width:88px!important;
+            height:1px!important;
+            background:#b4482f!important;
+            transform-origin:left center!important;
+            opacity:0!important;
+            transition:opacity .35s ease,transform .45s ease!important;
+        }
+        .register-guide-pointer:after{content:"";position:absolute;right:-1px;top:-4px;width:7px;height:7px;border-top:1.5px solid #b4482f;border-right:1.5px solid #b4482f;transform:rotate(45deg)}
+        .guide-pointing .register-guide-pointer{opacity:1!important}
+        .guide-happy .cat-head-art{transform-origin:92px 72px;animation:catNod .55s ease}
+        .guide-happy .cat-tail-art{transform-origin:143px 110px;animation:tailFlick .7s ease}
+        .guide-sad .cat-head-art{transform-origin:92px 72px;animation:catSad .45s ease}
+        .guide-speaking .cat-head-art{transform-origin:92px 72px;animation:catTalk .3s ease-in-out infinite alternate}
+        @keyframes catFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-5px) rotate(1deg)}}
+        @keyframes catTalk{from{transform:rotate(-1deg)}to{transform:rotate(1.5deg) translateY(-2px)}}
+        @keyframes catNod{0%{transform:rotate(0)}40%{transform:rotate(-6deg) translateY(-3px)}100%{transform:rotate(0)}}
+        @keyframes catSad{0%,100%{transform:rotate(0)}50%{transform:rotate(5deg) translateY(4px)}}
+        @keyframes tailFlick{0%,100%{transform:rotate(0)}50%{transform:rotate(14deg)}}
+        @media(max-width:1100px){
+            .register-page-form-section .register-guide{left:-205px!important;width:180px!important}
+            .register-guide-bubble{width:172px!important;font-size:13px!important}
+            .register-guide-cat{left:18px!important;width:128px!important;height:121px!important}
+        }
+        @media(max-width:900px){
+            .register-page-form-section .register-guide{position:relative!important;left:auto!important;top:auto!important;width:100%!important;height:210px!important;min-height:210px!important;margin:18px auto 0!important;text-align:center!important}
+            .register-guide-toggle{right:8px!important;top:0!important}
+            .register-guide-bubble{position:relative!important;top:auto!important;left:auto!important;margin:0 auto!important;width:min(100%,250px)!important;text-align:left!important}
+            .register-guide-cat{position:relative!important;left:auto!important;top:auto!important;margin:-2px auto 0!important;width:118px!important;height:112px!important}
+            .register-guide-pointer{display:none!important}
+        }
+        @media(prefers-reduced-motion:reduce){.register-guide-cat{animation:none!important}}
     </style>
 </head>
 <body>
@@ -31,7 +124,6 @@
         </section>
 
         <section class="auth-form-section register-page-form-section">
-            <!-- Visible static guide: this is intentionally present in the HTML so the cat is never dependent on JavaScript to render. -->
             <aside class="register-guide" aria-live="polite">
                 <button class="register-guide-toggle" type="button" aria-label="Turn guide sounds on or off">
                     <span class="register-guide-toggle-icon">♪</span>
@@ -113,6 +205,6 @@
     </div>
 </footer>
 
-<script th:src="@{/register-guide.js?v=20260912-2}"></script>
+<script th:src="@{/register-guide.js?v=20260912-3}"></script>
 </body>
 </html>
