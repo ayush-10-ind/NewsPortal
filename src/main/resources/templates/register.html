@@ -7,7 +7,7 @@
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
     <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-12}">
-    <link rel="stylesheet" th:href="@{/register-3d.css?v=20260912-01}">
+    <link rel="stylesheet" th:href="@{/register-3d.css?v=20260912-02}">
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
@@ -84,13 +84,7 @@
     </div>
 </footer>
 
-<script type="importmap">
-{
-    "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.module.js"
-    }
-}
-</script>
-<script type="module" th:src="@{/register-guide.js?v=20260912-13}"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.min.js"></script>
+<script th:src="@{/register-guide.js?v=20260912-14}"></script>
 </body>
 </html>
