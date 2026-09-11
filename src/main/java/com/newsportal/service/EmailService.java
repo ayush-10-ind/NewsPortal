@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientRequestException;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 @Service
@@ -22,15 +21,18 @@ public class EmailService {
     private static final Logger logger =
             LoggerFactory.getLogger(EmailService.class);
 
-    private static final String RESEND_API_URL =
-            "https://api.resend.com/emails";
+    private static final String MAILJET_API_URL =
+            "https://api.mailjet.com/v3.1/send";
 
     private final WebClient webClient;
 
-    @Value("${resend.api-key:}")
-    private String resendApiKey;
+    @Value("${mailjet.api-key:}")
+    private String apiKey;
 
-    @Value("${resend.from-email:}")
+    @Value("${mailjet.secret-key:}")
+    private String secretKey;
+
+    @Value("${mailjet.from-email:}")
     private String fromEmail;
 
     @Value("${app.base-url:http://localhost:8082}")
@@ -177,34 +179,44 @@ public class EmailService {
                         verificationUrl
                 );
 
+        Map<String, Object> message = Map.of(
+                "From", Map.of(
+                        "Email", fromEmail,
+                        "Name", "AgniPress"
+                ),
+                "To", List.of(Map.of(
+                        "Email", user.getEmail(),
+                        "Name", user.getName()
+                )),
+                "Subject", subject,
+                "HTMLPart", html
+        );
+
         Map<String, Object> payload = Map.of(
-                "from", fromEmail,
-                "to", List.of(user.getEmail()),
-                "subject", subject,
-                "html", html
+                "Messages", List.of(message)
         );
 
         try {
 
             webClient
                     .post()
-                    .uri(RESEND_API_URL)
+                    .uri(MAILJET_API_URL)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .header("Authorization", "Bearer " + resendApiKey)
+                    .headers(headers -> headers.setBasicAuth(apiKey, secretKey))
                     .bodyValue(payload)
                     .retrieve()
                     .toBodilessEntity()
                     .block(Duration.ofSeconds(15));
 
             logger.info(
-                    "Verification email sent successfully via Resend: recipient={}",
+                    "Verification email sent successfully via Mailjet: recipient={}",
                     user.getEmail()
             );
 
         } catch (WebClientResponseException e) {
 
             logger.error(
-                    "Resend email delivery failed: recipient={}, status={}, errorType={}, message={}",
+                    "Mailjet email delivery failed: recipient={}, status={}, errorType={}, message={}",
                     user.getEmail(),
                     e.getStatusCode().value(),
                     e.getClass().getSimpleName(),
@@ -216,24 +228,10 @@ public class EmailService {
                     e
             );
 
-        } catch (WebClientRequestException e) {
-
-            logger.error(
-                    "Resend connection failed: recipient={}, errorType={}, message={}",
-                    user.getEmail(),
-                    e.getClass().getSimpleName(),
-                    e.getMessage()
-            );
-
-            throw new RuntimeException(
-                    "Unable to connect to the email provider.",
-                    e
-            );
-
         } catch (Exception e) {
 
             logger.error(
-                    "Unexpected Resend email error: recipient={}, errorType={}, message={}",
+                    "Mailjet email error: recipient={}, errorType={}, message={}",
                     user.getEmail(),
                     e.getClass().getSimpleName(),
                     e.getMessage()
@@ -248,13 +246,18 @@ public class EmailService {
 
     private void validateConfiguration() {
 
-        if (resendApiKey == null || resendApiKey.isBlank()) {
-            logger.error("Resend email configuration is missing: RESEND_API_KEY is not configured");
+        if (apiKey == null || apiKey.isBlank()) {
+            logger.error("Mailjet email configuration is missing: MAILJET_API_KEY is not configured");
             throw new IllegalStateException("Email provider is not configured.");
         }
 
+        if (secretKey == null || secretKey.isBlank()) {
+            logger.error("Mailjet email configuration is missing: MAILJET_SECRET_KEY is not configured");
+            throw new IllegalStateException("Email provider secret is not configured.");
+        }
+
         if (fromEmail == null || fromEmail.isBlank()) {
-            logger.error("Resend email configuration is missing: RESEND_FROM_EMAIL is not configured");
+            logger.error("Mailjet email configuration is missing: MAILJET_FROM_EMAIL is not configured");
             throw new IllegalStateException("Email sender is not configured.");
         }
     }
