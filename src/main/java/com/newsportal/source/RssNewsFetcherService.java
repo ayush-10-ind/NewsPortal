@@ -28,7 +28,7 @@ public class RssNewsFetcherService {
     private static final int MAX_FEED_SIZE = 5_000_000;
 
     private static final Pattern IMAGE_SRC_PATTERN = Pattern.compile(
-            "<img[^>]+(?:src|data-src|data-lazy-src|data-original)\\s*=\\s*[\"']([^\"']+)[\"']",
+            "<img[^>]+(?:src|data-src|data-lazy-src|data-original)\\s*=\\s*[\\\"']([^\\\"']+)[\\\"']",
             Pattern.CASE_INSENSITIVE);
 
     private final WebClient webClient;
@@ -108,7 +108,8 @@ public class RssNewsFetcherService {
             factory.setExpandEntityReferences(false);
 
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+            Document document = builder.parse(new ByteArrayInputStream(
+                    sanitizeCommonHtmlEntities(xml).getBytes(StandardCharsets.UTF_8)));
             document.getDocumentElement().normalize();
 
             NodeList items = document.getElementsByTagName("item");
@@ -330,6 +331,25 @@ public class RssNewsFetcherService {
 
     private String cleanUrl(String value) {
         return value == null ? null : value.replace("&amp;", "&").trim();
+    }
+
+    private String sanitizeCommonHtmlEntities(String xml) {
+        if (xml == null || xml.isEmpty()) return xml;
+
+        return xml
+                .replace("&hellip;", "&#8230;")
+                .replace("&nbsp;", "&#160;")
+                .replace("&mdash;", "&#8212;")
+                .replace("&ndash;", "&#8211;")
+                .replace("&ldquo;", "&#8220;")
+                .replace("&rdquo;", "&#8221;")
+                .replace("&lsquo;", "&#8216;")
+                .replace("&rsquo;", "&#8217;")
+                .replace("&bull;", "&#8226;")
+                .replace("&middot;", "&#183;")
+                .replace("&copy;", "&#169;")
+                .replace("&reg;", "&#174;")
+                .replace("&trade;", "&#8482;");
     }
 
     private boolean blank(String value) {
