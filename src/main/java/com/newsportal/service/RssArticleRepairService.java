@@ -1,6 +1,7 @@
 package com.newsportal.service;
 
 import com.newsportal.entity.News;
+import com.newsportal.entity.NewsSourceType;
 import com.newsportal.repository.NewsRepository;
 import com.newsportal.source.MultiSourceNewsFetcherService;
 import com.newsportal.source.NewsSection;
@@ -37,10 +38,10 @@ public class RssArticleRepairService {
 
     /*
      * Safety net for RSS articles that were imported without the final
-     * Ashna generation step. Run frequently enough that a newly imported
-     * story is repaired shortly after the RSS import finishes.
+     * Ashna generation step. Run shortly after startup and then every minute
+     * so existing and newly imported RSS stories are processed quickly.
      */
-    @Scheduled(initialDelay = 30000, fixedDelay = 60000)
+    @Scheduled(initialDelay = 15000, fixedDelay = 60000)
     public void repairScheduled() {
         try {
             int repaired = repairArticles();
@@ -98,11 +99,13 @@ public class RssArticleRepairService {
                 }
 
                 News saved = newsRepository.saveAndFlush(news);
+
+                logger.info("RSS article source restored. Queueing Ashna generation: id={}, title={}",
+                        saved.getId(), saved.getTitle());
+
                 articleGenerationService.generateArticleAsync(saved.getId());
                 repaired++;
 
-                logger.info("RSS article repaired and Ashna generation queued: id={}, title={}",
-                        saved.getId(), saved.getTitle());
             } catch (Exception e) {
                 logger.error("RSS article repair failed: id={}, error={}", news.getId(), e.getMessage(), e);
             }
@@ -117,8 +120,14 @@ public class RssArticleRepairService {
         String sourceName = clean(news.getSourceName());
         String sourceUrl = clean(news.getSourceUrl());
 
-        return sourceName != null && sourceUrl != null &&
-                sourceName.toLowerCase().contains("rss");
+        if (sourceUrl == null) return false;
+
+        // RSS articles do not always have "RSS" in their display source name.
+        // For example, Yahoo Entertainment can be delivered through an RSS feed.
+        // EXTERNAL_API is the source type used by the current RSS importer.
+        if (news.getSourceType() == NewsSourceType.EXTERNAL_API) return true;
+
+        return sourceName != null && sourceName.toLowerCase().contains("rss");
     }
 
     private boolean needsGeneration(News news) {
