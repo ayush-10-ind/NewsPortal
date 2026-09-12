@@ -31,7 +31,19 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    function loadBreakingTickerStyles() {
+        if (!document.querySelector(".breaking-ticker")) return;
+        if (document.querySelector('link[data-breaking-home="true"]')) return;
+
+        const stylesheet = document.createElement("link");
+        stylesheet.rel = "stylesheet";
+        stylesheet.href = "/breaking-home.css";
+        stylesheet.dataset.breakingHome = "true";
+        document.head.appendChild(stylesheet);
+    }
+
     loadHomepagePolish();
+    loadBreakingTickerStyles();
 
     function addWeatherNavigation() {
         const desktopNavigation = document.querySelector(".desktop-navigation");
