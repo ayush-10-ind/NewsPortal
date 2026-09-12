@@ -22,6 +22,7 @@ public class RssArticleRepairService {
     private static final Logger logger = LoggerFactory.getLogger(RssArticleRepairService.class);
     private static final String PLACEHOLDER = "Article content is being prepared.";
     private static final int MAX_REPAIR_BATCH = 20;
+    private static final int MIN_USABLE_SOURCE_LENGTH = 80;
 
     private final NewsRepository newsRepository;
     private final MultiSourceNewsFetcherService multiSourceNewsFetcherService;
@@ -58,11 +59,6 @@ public class RssArticleRepairService {
         if (allNews == null || allNews.isEmpty()) return 0;
 
         Map<String, RssNewsFetcherService.RssArticle> feedArticles = fetchCurrentRssArticles();
-        if (feedArticles.isEmpty()) {
-            logger.warn("RSS repair found articles but no current RSS feed items were available.");
-            return 0;
-        }
-
         int repaired = 0;
 
         for (News news : allNews) {
@@ -77,31 +73,42 @@ public class RssArticleRepairService {
                 rssArticle = feedArticles.get(removeTrailingSlash(sourceUrl));
             }
 
-            if (rssArticle == null) {
-                logger.debug("RSS repair could not match article id={} to a current feed item.", news.getId());
-                continue;
-            }
+            String sourceContent = rssArticle != null
+                    ? clean(rssArticle.getDescription())
+                    : clean(news.getContent());
 
-            String sourceContent = clean(rssArticle.getDescription());
-            if (sourceContent == null) {
-                logger.warn("RSS repair skipped article id={} because the feed has no usable description.", news.getId());
+            boolean usingExistingContent = rssArticle == null;
+
+            // Older stories may have fallen out of the live RSS feed. If the
+            // database still contains a real RSS description, use that as the
+            // factual source for Ashna instead of waiting forever for a match.
+            if (sourceContent == null || sourceContent.length() < MIN_USABLE_SOURCE_LENGTH ||
+                    PLACEHOLDER.equalsIgnoreCase(sourceContent)) {
+                logger.debug("RSS repair skipped article id={} because no usable source content was found.",
+                        news.getId());
                 continue;
             }
 
             try {
                 news.setContent(sourceContent);
 
-                String feedAuthor = clean(rssArticle.getAuthor());
-                if (feedAuthor != null &&
-                        (news.getAuthor() == null || news.getAuthor().isBlank() ||
-                                "Unknown".equalsIgnoreCase(news.getAuthor().trim()))) {
-                    news.setAuthor(feedAuthor);
+                if (rssArticle != null) {
+                    String feedAuthor = clean(rssArticle.getAuthor());
+                    if (feedAuthor != null &&
+                            (news.getAuthor() == null || news.getAuthor().isBlank() ||
+                                    "Unknown".equalsIgnoreCase(news.getAuthor().trim()))) {
+                        news.setAuthor(feedAuthor);
+                    }
                 }
 
                 News saved = newsRepository.saveAndFlush(news);
 
-                logger.info("RSS article source restored. Queueing Ashna generation: id={}, title={}",
-                        saved.getId(), saved.getTitle());
+                logger.info(
+                        "RSS article source ready. Queueing Ashna generation: id={}, title={}, source={}",
+                        saved.getId(),
+                        saved.getTitle(),
+                        usingExistingContent ? "database" : "live-rss"
+                );
 
                 articleGenerationService.generateArticleAsync(saved.getId());
                 repaired++;
