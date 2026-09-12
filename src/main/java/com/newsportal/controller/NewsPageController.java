@@ -115,6 +115,7 @@ public class NewsPageController {
                 break;
 
 
+            case "views":
             case "mostviewed":
 
                 sorting =
@@ -211,17 +212,34 @@ public class NewsPageController {
         );
 
 
+        // These names match newsList.html pagination/form parameters.
+        // Keeping them populated prevents page 2/3/etc. from losing
+        // the currently selected category, search, or sort.
+        model.addAttribute(
+                "keyword",
+                search
+        );
+
+        model.addAttribute(
+                "category",
+                category
+        );
+
+        model.addAttribute(
+                "sortBy",
+                sort
+        );
+
+        // Keep the existing attribute names as well.
         model.addAttribute(
                 "search",
                 search
         );
 
-
         model.addAttribute(
                 "selectedCategory",
                 category
         );
-
 
         model.addAttribute(
                 "selectedSort",
@@ -251,6 +269,12 @@ public class NewsPageController {
 
         model.addAttribute(
                 "trendingNews",
+                trendingPage.getContent()
+        );
+
+        // newsList.html renders the section using the 'mostRead' name.
+        model.addAttribute(
+                "mostRead",
                 trendingPage.getContent()
         );
 
