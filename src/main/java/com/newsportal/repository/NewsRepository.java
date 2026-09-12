@@ -18,8 +18,25 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     // CATEGORY
     // =====================================================
 
+    /**
+     * Returns one copy of each story title inside the selected
+     * category. Older duplicate rows are ignored, so duplicates
+     * cannot consume pagination slots.
+     */
+    @Query("""
+        SELECT n
+        FROM News n
+        WHERE LOWER(TRIM(n.category)) = LOWER(TRIM(:category))
+        AND NOT EXISTS (
+            SELECT n2.id
+            FROM News n2
+            WHERE LOWER(TRIM(n2.category)) = LOWER(TRIM(n.category))
+            AND LOWER(TRIM(n2.title)) = LOWER(TRIM(n.title))
+            AND n2.id < n.id
+        )
+    """)
     Page<News> findByCategoryIgnoreCase(
-            String category,
+            @Param("category") String category,
             Pageable pageable
     );
 
@@ -28,9 +45,29 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     // SEARCH
     // =====================================================
 
+    /**
+     * Returns unique stories for global search. Duplicate copies
+     * of the same title are collapsed before pagination.
+     */
+    @Query("""
+        SELECT n
+        FROM News n
+        WHERE (
+            LOWER(n.title) LIKE LOWER(CONCAT('%', :titleKeyword, '%'))
+            OR
+            LOWER(n.content) LIKE LOWER(CONCAT('%', :contentKeyword, '%'))
+        )
+        AND NOT EXISTS (
+            SELECT n2.id
+            FROM News n2
+            WHERE LOWER(TRIM(n2.category)) = LOWER(TRIM(n.category))
+            AND LOWER(TRIM(n2.title)) = LOWER(TRIM(n.title))
+            AND n2.id < n.id
+        )
+    """)
     Page<News> findByTitleContainingIgnoreCaseOrContentContainingIgnoreCase(
-            String titleKeyword,
-            String contentKeyword,
+            @Param("titleKeyword") String titleKeyword,
+            @Param("contentKeyword") String contentKeyword,
             Pageable pageable
     );
 
@@ -42,11 +79,18 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     @Query("""
         SELECT n
         FROM News n
-        WHERE LOWER(n.category) = LOWER(:category)
+        WHERE LOWER(TRIM(n.category)) = LOWER(TRIM(:category))
         AND (
             LOWER(n.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
             OR
             LOWER(n.content) LIKE LOWER(CONCAT('%', :keyword, '%'))
+        )
+        AND NOT EXISTS (
+            SELECT n2.id
+            FROM News n2
+            WHERE LOWER(TRIM(n2.category)) = LOWER(TRIM(n.category))
+            AND LOWER(TRIM(n2.title)) = LOWER(TRIM(n.title))
+            AND n2.id < n.id
         )
     """)
     Page<News> findByCategoryAndKeyword(
@@ -90,6 +134,23 @@ public interface NewsRepository extends JpaRepository<News, Long> {
 
     Optional<News> findBySourceUrl(
             String sourceUrl
+    );
+
+
+    /**
+     * Detects a duplicate story using normalized title + category.
+     * This catches the same story arriving from different publishers
+     * or feeds with different source URLs.
+     */
+    @Query("""
+        SELECT CASE WHEN COUNT(n) > 0 THEN true ELSE false END
+        FROM News n
+        WHERE LOWER(TRIM(n.title)) = LOWER(TRIM(:title))
+        AND LOWER(TRIM(n.category)) = LOWER(TRIM(:category))
+    """)
+    boolean existsByTitleAndCategoryIgnoreCase(
+            @Param("title") String title,
+            @Param("category") String category
     );
 
 
