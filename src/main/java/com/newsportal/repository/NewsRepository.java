@@ -14,15 +14,6 @@ import java.util.Optional;
 
 public interface NewsRepository extends JpaRepository<News, Long> {
 
-    // =====================================================
-    // CATEGORY
-    // =====================================================
-
-    /**
-     * Returns one copy of each story title inside the selected
-     * category. Older duplicate rows are ignored, so duplicates
-     * cannot consume pagination slots.
-     */
     @Query("""
         SELECT n
         FROM News n
@@ -40,15 +31,6 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             Pageable pageable
     );
 
-
-    // =====================================================
-    // SEARCH
-    // =====================================================
-
-    /**
-     * Returns unique stories for global search. Duplicate copies
-     * of the same title are collapsed before pagination.
-     */
     @Query("""
         SELECT n
         FROM News n
@@ -70,11 +52,6 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             @Param("contentKeyword") String contentKeyword,
             Pageable pageable
     );
-
-
-    // =====================================================
-    // CATEGORY + SEARCH
-    // =====================================================
 
     @Query("""
         SELECT n
@@ -99,49 +76,23 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             Pageable pageable
     );
 
-
-    // =====================================================
-    // LATEST NEWS
-    // =====================================================
-
     Page<News> findAllByOrderByPublishedDateDesc(
             Pageable pageable
     );
 
-
-    // =====================================================
-    // MOST VIEWED
-    // =====================================================
-
     Page<News> findAllByOrderByViewCountDesc(
             Pageable pageable
     );
-
-
-    // =====================================================
-    // RELATED NEWS
-    // =====================================================
 
     List<News> findTop3ByCategoryIgnoreCaseAndIdNotOrderByPublishedDateDesc(
             String category,
             Long id
     );
 
-
-    // =====================================================
-    // EXTERNAL NEWS DUPLICATE CHECK
-    // =====================================================
-
     Optional<News> findBySourceUrl(
             String sourceUrl
     );
 
-
-    /**
-     * Detects a duplicate story using normalized title + category.
-     * This catches the same story arriving from different publishers
-     * or feeds with different source URLs.
-     */
     @Query("""
         SELECT CASE WHEN COUNT(n) > 0 THEN true ELSE false END
         FROM News n
@@ -153,38 +104,23 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             @Param("category") String category
     );
 
-
-    // =====================================================
-    // FIND NEWS OLDER THAN 7 DAYS
-    // =====================================================
-
     List<News> findByPublishedDateBefore(
             LocalDate cutoffDate
     );
-
-
-    // =====================================================
-    // IMAGE MIGRATION
-    // =====================================================
 
     List<News> findTop5ByImageUrlStartingWithOrderByIdAsc(
             String imagePrefix
     );
 
-
     long countByImageUrlStartingWith(
             String imagePrefix
     );
 
-
-    // =====================================================
-    // IMAGE REPAIR
-    //
-    // Retry articles that currently use the generated fallback
-    // image but still have an external source article available.
-    // =====================================================
-
     List<News> findTop5ByImageUrlStartingWithAndSourceUrlIsNotNullOrderByIdAsc(
+            String imagePrefix
+    );
+
+    List<News> findTop25ByImageUrlStartingWithAndSourceUrlIsNotNullOrderByPublishedDateDesc(
             String imagePrefix
     );
 }
