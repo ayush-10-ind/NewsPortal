@@ -19,9 +19,8 @@ import java.util.Map;
 public class RssArticleRepairService {
 
     private static final Logger logger = LoggerFactory.getLogger(RssArticleRepairService.class);
-
     private static final String PLACEHOLDER = "Article content is being prepared.";
-    private static final int MAX_REPAIR_BATCH = 10;
+    private static final int MAX_REPAIR_BATCH = 20;
 
     private final NewsRepository newsRepository;
     private final MultiSourceNewsFetcherService multiSourceNewsFetcherService;
@@ -36,12 +35,12 @@ public class RssArticleRepairService {
         this.articleGenerationService = articleGenerationService;
     }
 
-    /**
-     * Repairs RSS articles that were imported without the final Ashna
-     * article-generation step. The job also restores the original RSS
-     * description before sending it to the final generation service.
+    /*
+     * Safety net for RSS articles that were imported without the final
+     * Ashna generation step. Run frequently enough that a newly imported
+     * story is repaired shortly after the RSS import finishes.
      */
-    @Scheduled(initialDelay = 30000, fixedDelay = 600000)
+    @Scheduled(initialDelay = 30000, fixedDelay = 60000)
     public void repairScheduled() {
         try {
             int repaired = repairArticles();
@@ -55,9 +54,7 @@ public class RssArticleRepairService {
 
     public int repairArticles() {
         List<News> allNews = newsRepository.findAll();
-        if (allNews == null || allNews.isEmpty()) {
-            return 0;
-        }
+        if (allNews == null || allNews.isEmpty()) return 0;
 
         Map<String, RssNewsFetcherService.RssArticle> feedArticles = fetchCurrentRssArticles();
         if (feedArticles.isEmpty()) {
@@ -68,18 +65,11 @@ public class RssArticleRepairService {
         int repaired = 0;
 
         for (News news : allNews) {
-            if (repaired >= MAX_REPAIR_BATCH) {
-                break;
-            }
-
-            if (!isRssArticle(news) || !needsGeneration(news)) {
-                continue;
-            }
+            if (repaired >= MAX_REPAIR_BATCH) break;
+            if (!isRssArticle(news) || !needsGeneration(news)) continue;
 
             String sourceUrl = normalizeUrl(news.getSourceUrl());
-            if (sourceUrl == null) {
-                continue;
-            }
+            if (sourceUrl == null) continue;
 
             RssNewsFetcherService.RssArticle rssArticle = feedArticles.get(sourceUrl);
             if (rssArticle == null) {
@@ -122,9 +112,7 @@ public class RssArticleRepairService {
     }
 
     private boolean isRssArticle(News news) {
-        if (news == null) {
-            return false;
-        }
+        if (news == null) return false;
 
         String sourceName = clean(news.getSourceName());
         String sourceUrl = clean(news.getSourceUrl());
@@ -136,19 +124,9 @@ public class RssArticleRepairService {
     private boolean needsGeneration(News news) {
         String content = clean(news.getContent());
 
-        if (content == null || content.isBlank()) {
-            return true;
-        }
-
-        if (PLACEHOLDER.equalsIgnoreCase(content)) {
-            return true;
-        }
-
-        // The final Ashna article is expected to be substantially longer
-        // than an RSS summary and contain multiple paragraphs.
-        if (content.length() < 1500) {
-            return true;
-        }
+        if (content == null || content.isBlank()) return true;
+        if (PLACEHOLDER.equalsIgnoreCase(content)) return true;
+        if (content.length() < 1500) return true;
 
         return countParagraphBreaks(content) < 3;
     }
@@ -156,9 +134,7 @@ public class RssArticleRepairService {
     private int countParagraphBreaks(String content) {
         int count = 0;
         for (int i = 0; i < content.length() - 1; i++) {
-            if (content.charAt(i) == '\n' && content.charAt(i + 1) == '\n') {
-                count++;
-            }
+            if (content.charAt(i) == '\n' && content.charAt(i + 1) == '\n') count++;
         }
         return count;
     }
@@ -171,19 +147,13 @@ public class RssArticleRepairService {
                 List<RssNewsFetcherService.RssArticle> articles =
                         multiSourceNewsFetcherService.fetchRssForSection(section);
 
-                if (articles == null) {
-                    continue;
-                }
+                if (articles == null) continue;
 
                 for (RssNewsFetcherService.RssArticle article : articles) {
-                    if (article == null) {
-                        continue;
-                    }
+                    if (article == null) continue;
 
                     String url = normalizeUrl(article.getUrl());
-                    if (url == null) {
-                        continue;
-                    }
+                    if (url == null) continue;
 
                     result.put(url, article);
                     result.put(removeTrailingSlash(url), article);
@@ -203,9 +173,7 @@ public class RssArticleRepairService {
     }
 
     private String removeTrailingSlash(String value) {
-        if (value == null) {
-            return null;
-        }
+        if (value == null) return null;
 
         String result = value.trim();
         while (result.length() > 1 && result.endsWith("/")) {
@@ -215,10 +183,7 @@ public class RssArticleRepairService {
     }
 
     private String clean(String value) {
-        if (value == null) {
-            return null;
-        }
-
+        if (value == null) return null;
         String cleaned = value.trim();
         return cleaned.isBlank() ? null : cleaned;
     }
