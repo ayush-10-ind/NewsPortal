@@ -55,7 +55,7 @@ public class WebClientAPIService {
         );
 
         try {
-            JsonNode response = webClient
+            JsonNode ashnaResponse = webClient
                     .post()
                     .uri("/chat/completions")
                     .header("Authorization", "Bearer " + ashnaApiKey)
@@ -76,11 +76,11 @@ public class WebClientAPIService {
                     .bodyToMono(JsonNode.class)
                     .block();
 
-            if (response == null) {
+            if (ashnaResponse == null) {
                 throw new RuntimeException("Ashna returned an empty response.");
             }
 
-            JsonNode contentNode = response
+            JsonNode contentNode = ashnaResponse
                     .path("choices")
                     .path(0)
                     .path("message")
