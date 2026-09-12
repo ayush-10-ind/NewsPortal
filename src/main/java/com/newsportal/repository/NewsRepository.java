@@ -104,9 +104,6 @@ public interface NewsRepository extends JpaRepository<News, Long> {
 
     // =====================================================
     // IMAGE MIGRATION
-    //
-    // Only fetch a small number of old local-image records.
-    // This avoids loading the entire news table into memory.
     // =====================================================
 
     List<News> findTop5ByImageUrlStartingWithOrderByIdAsc(
@@ -114,11 +111,19 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     );
 
 
+    long countByImageUrlStartingWith(
+            String imagePrefix
+    );
+
+
     // =====================================================
-    // IMAGE MIGRATION COUNT
+    // IMAGE REPAIR
+    //
+    // Retry articles that currently use the generated fallback
+    // image but still have an external source article available.
     // =====================================================
 
-    long countByImageUrlStartingWith(
+    List<News> findTop5ByImageUrlStartingWithAndSourceUrlIsNotNullOrderByIdAsc(
             String imagePrefix
     );
 }
