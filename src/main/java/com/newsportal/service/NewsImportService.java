@@ -182,6 +182,21 @@ public class NewsImportService {
                     finalTitle = analysis.getHeadline().trim();
                 }
 
+                // =================================================
+                // DUPLICATE STORY CHECK
+                // =================================================
+                // A story can arrive from different providers with
+                // different URLs. Source URL alone is therefore not
+                // enough. Collapse identical normalized titles inside
+                // the same category before saving.
+                if (newsRepository.existsByTitleAndCategoryIgnoreCase(
+                        finalTitle,
+                        category
+                )) {
+                    existingCount++;
+                    continue;
+                }
+
                 String finalContent = initialContent;
                 if (analysis != null &&
                         analysis.getContent() != null &&
