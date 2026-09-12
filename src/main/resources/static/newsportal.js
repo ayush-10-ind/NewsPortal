@@ -145,10 +145,6 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    /* =========================================================
-       IMAGE ERROR HANDLING
-       ========================================================= */
-
     function handleImageError(image) {
         if (!image || image.dataset.fallbackHandled) return;
 
@@ -173,12 +169,12 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        /*
-         * If a template has no fallback element, create one instead of
-         * leaving a completely blank image area.
-         */
         const generatedFallback = document.createElement("div");
-        generatedFallback.className = "image-fallback generated-image-fallback";
+        generatedFallback.className = parent.classList.contains("article-hero-image")
+                ? "article-image-fallback generated-image-fallback"
+                : parent.classList.contains("article-related-image")
+                        ? "article-related-fallback generated-image-fallback"
+                        : "image-fallback generated-image-fallback";
         generatedFallback.textContent = "AGNIPRESS";
         parent.appendChild(generatedFallback);
     }
