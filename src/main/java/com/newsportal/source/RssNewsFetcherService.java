@@ -3,388 +3,280 @@ package com.newsportal.source;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 @Service
 public class RssNewsFetcherService {
 
     private static final Logger logger = LoggerFactory.getLogger(RssNewsFetcherService.class);
-    private static final Duration RSS_TIMEOUT = Duration.ofSeconds(8);
-    private static final int MAX_FEED_SIZE = 5_000_000;
 
-    private static final Pattern IMAGE_SRC_PATTERN = Pattern.compile(
-            "<img[^>]+(?:src|data-src|data-lazy-src|data-original)\\s*=\\s*[\\\"']([^\\\"']+)[\\\"']",
-            Pattern.CASE_INSENSITIVE);
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(8);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
 
-    private final WebClient webClient;
+    private static final Pattern HTML_ENTITY_PATTERN =
+            Pattern.compile("&(?:nbsp|amp|quot|apos|lt|gt|hellip|ndash|mdash|rsquo|lsquo|rdquo|ldquo|trade|copy|reg|bull|middot|laquo|raquo|#\\d+|#x[0-9a-fA-F]+);");
 
-    public RssNewsFetcherService(WebClient.Builder webClientBuilder) {
-        this.webClient = webClientBuilder
-                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(MAX_FEED_SIZE))
-                .build();
-    }
+    private static final Pattern BARE_AMPERSAND_PATTERN =
+            Pattern.compile("&(?!#\\d+;|#x[0-9a-fA-F]+;|[A-Za-z][A-Za-z0-9]{1,31};)");
+
+    private final HttpClient httpClient = HttpClient.newBuilder()
+            .connectTimeout(CONNECT_TIMEOUT)
+            .followRedirects(HttpClient.Redirect.NORMAL)
+            .build();
 
     public List<RssArticle> fetchFeed(NewsSource source) {
-        List<RssArticle> articles = new ArrayList<>();
-
-        if (source == null || !source.isUsable()) {
-            logger.warn("RSS fetch skipped: source is null or unusable");
-            return articles;
+        if (source == null || source.getEndpoint() == null || source.getEndpoint().isBlank()) {
+            return List.of();
         }
 
-        if (source.getProviderType() == null || !source.getProviderType().equalsIgnoreCase("RSS")) {
-            logger.warn("RSS fetch skipped: provider is not RSS: {}", source.getName());
-            return articles;
-        }
-
-        String endpoint = source.getEndpoint();
-        if (endpoint == null || endpoint.isBlank()) {
-            logger.warn("RSS fetch skipped: empty endpoint for {}", source.getName());
-            return articles;
-        }
-
+        String endpoint = source.getEndpoint().trim();
         logger.info("Fetching RSS feed: source={}, endpoint={}", source.getName(), endpoint);
 
         try {
-            String xml = webClient.get()
-                    .uri(endpoint)
-                    .header("User-Agent", "AgniPress-RSSFetcher/1.0")
-                    .header("Accept", "application/rss+xml, application/atom+xml, application/xml, text/xml")
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .timeout(RSS_TIMEOUT)
-                    .block();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(endpoint))
+                    .timeout(REQUEST_TIMEOUT)
+                    .header("User-Agent", "Mozilla/5.0 (compatible; AgniPress/1.0; +https://agnipress.app)")
+                    .header("Accept", "application/rss+xml, application/atom+xml, application/xml, text/xml, */*")
+                    .GET()
+                    .build();
 
-            if (xml == null || xml.isBlank()) {
-                logger.warn("RSS fetch returned empty response: {}", source.getName());
-                return articles;
+            HttpResponse<String> response = httpClient.send(
+                    request,
+                    HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8)
+            );
+
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                logger.warn("RSS fetch failed: source={}, errorType=HTTP{}, message={}",
+                        source.getName(), response.statusCode(), "HTTP request failed");
+                return List.of();
             }
 
-            if (xml.length() > MAX_FEED_SIZE) {
-                logger.warn("RSS feed exceeded {} bytes and will be truncated: {}", MAX_FEED_SIZE, source.getName());
-                xml = xml.substring(0, MAX_FEED_SIZE);
-            }
-
-            articles = parseFeed(xml, source);
+            String xml = sanitizeXml(response.body());
+            List<RssArticle> articles = parseFeed(xml, source.getName());
             logger.info("RSS feed fetched: source={}, articles={}", source.getName(), articles.size());
             return articles;
 
         } catch (Exception e) {
-            logger.error("RSS fetch failed: source={}, errorType={}, message={}",
+            logger.warn("RSS fetch failed: source={}, errorType={}, message={}",
                     source.getName(), e.getClass().getSimpleName(), e.getMessage());
-            return articles;
+            return List.of();
         }
     }
 
-    private List<RssArticle> parseFeed(String xml, NewsSource source) {
+    private List<RssArticle> parseFeed(String xml, String sourceName) {
         List<RssArticle> articles = new ArrayList<>();
 
         try {
             DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-
-            // Legitimate feeds such as Indian Express can contain DOCTYPE.
-            // Keep external entities and external DTD loading disabled.
-            factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
+            factory.setNamespaceAware(true);
+            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
             factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
             factory.setXIncludeAware(false);
             factory.setExpandEntityReferences(false);
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(new ByteArrayInputStream(
-                    sanitizeCommonHtmlEntities(xml).getBytes(StandardCharsets.UTF_8)));
+            Document document = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
             document.getDocumentElement().normalize();
 
-            NodeList items = document.getElementsByTagName("item");
-            if (items.getLength() > 0) {
-                for (int i = 0; i < items.getLength(); i++) {
-                    if (items.item(i).getNodeType() == Node.ELEMENT_NODE) {
-                        RssArticle article = parseRssItem((Element) items.item(i), source);
-                        if (article != null) articles.add(article);
+            NodeList itemNodes = document.getElementsByTagName("item");
+            if (itemNodes.getLength() == 0) {
+                itemNodes = document.getElementsByTagNameNS("*", "entry");
+            }
+
+            for (int i = 0; i < itemNodes.getLength(); i++) {
+                Node node = itemNodes.item(i);
+                if (!(node instanceof Element element)) continue;
+
+                String title = firstText(element, "title");
+                String description = firstText(element, "description");
+                if (description == null) description = firstText(element, "summary");
+                if (description == null) description = firstText(element, "content");
+
+                String url = firstText(element, "link");
+                if (url == null) {
+                    NodeList links = element.getElementsByTagNameNS("*", "link");
+                    for (int j = 0; j < links.getLength(); j++) {
+                        Node link = links.item(j);
+                        if (link instanceof Element linkElement) {
+                            String href = linkElement.getAttribute("href");
+                            if (href != null && !href.isBlank()) {
+                                url = href;
+                                break;
+                            }
+                        }
                     }
                 }
-                return articles;
-            }
 
-            NodeList entries = document.getElementsByTagName("entry");
-            for (int i = 0; i < entries.getLength(); i++) {
-                if (entries.item(i).getNodeType() == Node.ELEMENT_NODE) {
-                    RssArticle article = parseAtomEntry((Element) entries.item(i), source);
-                    if (article != null) articles.add(article);
+                String author = firstText(element, "author");
+                if (author == null) author = firstText(element, "creator");
+                if (author == null) author = firstText(element, "name");
+
+                String published = firstText(element, "pubDate");
+                if (published == null) published = firstText(element, "published");
+                if (published == null) published = firstText(element, "updated");
+
+                String imageUrl = extractImage(element, description);
+
+                if (title == null || title.isBlank() || url == null || url.isBlank()) {
+                    continue;
                 }
-            }
 
-            if (articles.isEmpty()) {
-                logger.warn("RSS parse found no <item> or <entry> elements: {}", source.getName());
+                articles.add(new RssArticle(
+                        cleanText(title),
+                        cleanText(description),
+                        cleanUrl(url),
+                        cleanText(author),
+                        cleanText(published),
+                        cleanUrl(imageUrl)
+                ));
             }
 
         } catch (Exception e) {
             logger.error("RSS XML parse failed: source={}, errorType={}, message={}",
-                    source.getName(), e.getClass().getSimpleName(), e.getMessage());
+                    sourceName, e.getClass().getSimpleName(), e.getMessage());
         }
 
         return articles;
     }
 
-    private RssArticle parseRssItem(Element item, NewsSource source) {
-        String title = childText(item, "title");
-        String link = childText(item, "link");
-        String description = childText(item, "description");
-        if (blank(description)) description = childText(item, "content:encoded");
+    private String firstText(Element parent, String localName) {
+        NodeList nodes = parent.getElementsByTagNameNS("*", localName);
+        if (nodes.getLength() == 0) {
+            nodes = parent.getElementsByTagName(localName);
+        }
+        if (nodes.getLength() == 0) return null;
 
-        String published = childText(item, "pubDate");
-        if (blank(published)) published = childText(item, "published");
-
-        String author = childText(item, "author");
-        if (blank(author)) author = childText(item, "dc:creator");
-
-        if (blank(title) || blank(link)) return null;
-
-        return new RssArticle(
-                cleanText(title), cleanUrl(link), cleanText(description), cleanText(author),
-                cleanText(published), source.getName(), source.getSection(), extractRssImage(item));
+        Node node = nodes.item(0);
+        String value = node.getTextContent();
+        return value == null || value.isBlank() ? null : value;
     }
 
-    private RssArticle parseAtomEntry(Element entry, NewsSource source) {
-        String title = childText(entry, "title");
-        String link = extractAtomLink(entry);
-        String description = childText(entry, "summary");
-        if (blank(description)) description = childText(entry, "content");
-
-        String published = childText(entry, "published");
-        if (blank(published)) published = childText(entry, "updated");
-
-        if (blank(title) || blank(link)) return null;
-
-        return new RssArticle(
-                cleanText(title), cleanUrl(link), cleanText(description),
-                cleanText(extractAtomAuthor(entry)), cleanText(published),
-                source.getName(), source.getSection(), extractAtomImage(entry));
-    }
-
-    private String extractRssImage(Element item) {
-        String image = imageFromTag(item, "media:content");
-        if (validImage(image)) return cleanUrl(image);
-
-        image = imageFromTag(item, "media:thumbnail");
-        if (validImage(image)) return cleanUrl(image);
-
-        NodeList children = item.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node node = children.item(i);
-            if (node.getNodeType() != Node.ELEMENT_NODE) continue;
-            Element element = (Element) node;
-            if ("enclosure".equalsIgnoreCase(element.getNodeName()) ||
-                    "enclosure".equalsIgnoreCase(element.getLocalName())) {
-                String url = element.getAttribute("url");
-                String type = element.getAttribute("type");
-                if (validImage(url) || (type != null && type.toLowerCase().startsWith("image/") && !blank(url))) {
-                    return cleanUrl(url);
+    private String extractImage(Element item, String description) {
+        String[] imageTags = {"media:content", "media:thumbnail", "enclosure", "image"};
+        for (String tag : imageTags) {
+            NodeList nodes = item.getElementsByTagName(tag);
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                if (node instanceof Element element) {
+                    String url = element.getAttribute("url");
+                    if (url == null || url.isBlank()) url = element.getAttribute("href");
+                    if (looksLikeImage(url)) return url;
                 }
             }
         }
 
-        image = imageFromTag(item, "image");
-        if (validImage(image)) return cleanUrl(image);
-
-        image = imageFromHtml(childText(item, "content:encoded"));
-        if (validImage(image)) return cleanUrl(image);
-
-        return cleanUrl(imageFromHtml(childText(item, "description")));
-    }
-
-    private String extractAtomImage(Element entry) {
-        String image = imageFromTag(entry, "media:content");
-        if (validImage(image)) return cleanUrl(image);
-
-        image = imageFromTag(entry, "media:thumbnail");
-        if (validImage(image)) return cleanUrl(image);
-
-        NodeList children = entry.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node node = children.item(i);
-            if (node.getNodeType() != Node.ELEMENT_NODE) continue;
-            Element element = (Element) node;
-            if (!"link".equalsIgnoreCase(element.getNodeName()) &&
-                    !"link".equalsIgnoreCase(element.getLocalName())) continue;
-
-            if ("enclosure".equalsIgnoreCase(element.getAttribute("rel"))) {
-                String href = element.getAttribute("href");
-                String type = element.getAttribute("type");
-                if (validImage(href) || (type != null && type.toLowerCase().startsWith("image/") && !blank(href))) {
-                    return cleanUrl(href);
-                }
-            }
+        if (description != null) {
+            Matcher matcher = Pattern.compile(
+                    "<img[^>]+(?:src|data-src|data-lazy-src|data-original)\\s*=\\s*[\"']([^\"']+)[\"']",
+                    Pattern.CASE_INSENSITIVE).matcher(description);
+            if (matcher.find()) return matcher.group(1);
         }
 
-        String content = childText(entry, "content");
-        image = imageFromHtml(content);
-        if (validImage(image)) return cleanUrl(image);
-
-        return cleanUrl(imageFromHtml(childText(entry, "summary")));
-    }
-
-    private String imageFromTag(Element parent, String tagName) {
-        NodeList nodes = parent.getElementsByTagName(tagName);
-        for (int i = 0; i < nodes.getLength(); i++) {
-            if (nodes.item(i).getNodeType() != Node.ELEMENT_NODE) continue;
-            Element element = (Element) nodes.item(i);
-            String url = element.getAttribute("url");
-            if (blank(url)) url = element.getAttribute("href");
-            if (blank(url)) url = element.getTextContent();
-            if (validImage(url)) return url;
-        }
         return null;
     }
 
-    private String imageFromHtml(String html) {
-        if (blank(html)) return null;
-        Matcher matcher = IMAGE_SRC_PATTERN.matcher(html);
-        if (matcher.find() && validImage(matcher.group(1))) return matcher.group(1);
-        return null;
+    private boolean looksLikeImage(String value) {
+        if (value == null || value.isBlank()) return false;
+        String lower = value.toLowerCase(Locale.ROOT);
+        return lower.matches(".*\\.(jpg|jpeg|png|webp|gif|avif)(?:[?#].*)?$") || lower.contains("image");
     }
 
-    private String childText(Element parent, String tagName) {
-        NodeList children = parent.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node node = children.item(i);
-            if (node.getNodeType() != Node.ELEMENT_NODE) continue;
-            Element element = (Element) node;
-            String nodeName = element.getNodeName();
-            String localName = element.getLocalName();
-            if (tagName.equalsIgnoreCase(nodeName) ||
-                    (localName != null && tagName.equalsIgnoreCase(localName))) {
-                return element.getTextContent();
-            }
-        }
-        return null;
-    }
+    private String sanitizeXml(String xml) {
+        if (xml == null) return "";
 
-    private String extractAtomLink(Element entry) {
-        NodeList children = entry.getChildNodes();
-        String alternate = null;
-        for (int i = 0; i < children.getLength(); i++) {
-            Node node = children.item(i);
-            if (node.getNodeType() != Node.ELEMENT_NODE) continue;
-            Element link = (Element) node;
-            if (!"link".equalsIgnoreCase(link.getNodeName()) &&
-                    !"link".equalsIgnoreCase(link.getLocalName())) continue;
-            String href = link.getAttribute("href");
-            if (blank(href)) continue;
-            String rel = link.getAttribute("rel");
-            if (blank(rel) || "alternate".equalsIgnoreCase(rel)) return href;
-            if (alternate == null) alternate = href;
-        }
-        return alternate;
-    }
+        String result = HTML_ENTITY_PATTERN.matcher(xml).replaceAll(match -> {
+            return switch (match.group().toLowerCase(Locale.ROOT)) {
+                case "&nbsp;" -> "&#160;";
+                case "&amp;" -> "&#38;";
+                case "&quot;" -> "&#34;";
+                case "&apos;" -> "&#39;";
+                case "&lt;" -> "&#60;";
+                case "&gt;" -> "&#62;";
+                case "&hellip;" -> "&#8230;";
+                case "&ndash;" -> "&#8211;";
+                case "&mdash;" -> "&#8212;";
+                case "&rsquo;" -> "&#8217;";
+                case "&lsquo;" -> "&#8216;";
+                case "&rdquo;" -> "&#8221;";
+                case "&ldquo;" -> "&#8220;";
+                case "&trade;" -> "&#8482;";
+                case "&copy;" -> "&#169;";
+                case "&reg;" -> "&#174;";
+                case "&bull;" -> "&#8226;";
+                case "&middot;" -> "&#183;";
+                case "&laquo;" -> "&#171;";
+                case "&raquo;" -> "&#187;";
+                default -> match.group();
+            };
+        });
 
-    private String extractAtomAuthor(Element entry) {
-        NodeList children = entry.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            Node node = children.item(i);
-            if (node.getNodeType() != Node.ELEMENT_NODE) continue;
-            Element author = (Element) node;
-            if (!"author".equalsIgnoreCase(author.getNodeName()) &&
-                    !"author".equalsIgnoreCase(author.getLocalName())) continue;
-            String name = childText(author, "name");
-            return blank(name) ? author.getTextContent() : name;
-        }
-        return null;
-    }
-
-    private boolean validImage(String url) {
-        if (blank(url)) return false;
-        String value = url.trim();
-        return (value.startsWith("http://") || value.startsWith("https://")) &&
-                !value.toLowerCase().contains("data:image");
+        // RSS feeds often contain literal '&' characters in titles/descriptions.
+        // They are legal in HTML but illegal in XML unless escaped. Preserve
+        // already-valid entities and numeric references, and escape the rest.
+        result = BARE_AMPERSAND_PATTERN.matcher(result).replaceAll("&amp;");
+        return result;
     }
 
     private String cleanText(String value) {
         if (value == null) return null;
-        return value.replaceAll("<[^>]+>", " ")
-                .replace("&amp;", "&")
-                .replace("&quot;", "\"")
-                .replace("&#39;", "'")
-                .replace("&apos;", "'")
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replaceAll("\\s+", " ")
-                .trim();
+        String cleaned = value.replace("\\r", "").trim();
+        return cleaned.isBlank() ? null : cleaned;
     }
 
     private String cleanUrl(String value) {
-        return value == null ? null : value.replace("&amp;", "&").trim();
-    }
-
-    private String sanitizeCommonHtmlEntities(String xml) {
-        if (xml == null || xml.isEmpty()) return xml;
-
-        return xml
-                .replace("&hellip;", "&#8230;")
-                .replace("&nbsp;", "&#160;")
-                .replace("&mdash;", "&#8212;")
-                .replace("&ndash;", "&#8211;")
-                .replace("&ldquo;", "&#8220;")
-                .replace("&rdquo;", "&#8221;")
-                .replace("&lsquo;", "&#8216;")
-                .replace("&rsquo;", "&#8217;")
-                .replace("&bull;", "&#8226;")
-                .replace("&middot;", "&#183;")
-                .replace("&copy;", "&#169;")
-                .replace("&reg;", "&#174;")
-                .replace("&trade;", "&#8482;");
-    }
-
-    private boolean blank(String value) {
-        return value == null || value.isBlank();
+        if (value == null) return null;
+        String cleaned = value.trim();
+        return cleaned.isBlank() ? null : cleaned;
     }
 
     public static class RssArticle {
         private final String title;
-        private final String url;
         private final String description;
+        private final String url;
         private final String author;
-        private final String publishedDate;
-        private final String sourceName;
-        private final NewsSection section;
+        private final String publishedAt;
         private final String imageUrl;
 
-        public RssArticle(String title, String url, String description, String author,
-                          String publishedDate, String sourceName, NewsSection section, String imageUrl) {
+        public RssArticle(String title, String description, String url,
+                          String author, String publishedAt, String imageUrl) {
             this.title = title;
-            this.url = url;
             this.description = description;
+            this.url = url;
             this.author = author;
-            this.publishedDate = publishedDate;
-            this.sourceName = sourceName;
-            this.section = section;
+            this.publishedAt = publishedAt;
             this.imageUrl = imageUrl;
         }
 
         public String getTitle() { return title; }
-        public String getUrl() { return url; }
         public String getDescription() { return description; }
+        public String getUrl() { return url; }
         public String getAuthor() { return author; }
-        public String getPublishedDate() { return publishedDate; }
-        public String getSourceName() { return sourceName; }
-        public NewsSection getSection() { return section; }
+        public String getPublishedAt() { return publishedAt; }
         public String getImageUrl() { return imageUrl; }
     }
 }
