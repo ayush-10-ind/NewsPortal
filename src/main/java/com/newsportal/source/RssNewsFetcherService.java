@@ -68,14 +68,11 @@ public class RssNewsFetcherService {
 
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 logger.warn("RSS fetch failed: source={}, errorType=HTTP{}, message={}",
-                        source.getName(), response.statusCode(), "HTTP request failed");
+                        source.getName(), response.statusCode(), "non-success response");
                 return List.of();
             }
 
-            String xml = sanitizeXml(response.body());
-            List<RssArticle> articles = parseFeed(xml, source.getName());
-            logger.info("RSS feed fetched: source={}, articles={}", source.getName(), articles.size());
-            return articles;
+            return parseFeed(source.getName(), sanitizeXml(response.body()));
 
         } catch (Exception e) {
             logger.warn("RSS fetch failed: source={}, errorType={}, message={}",
@@ -84,7 +81,7 @@ public class RssNewsFetcherService {
         }
     }
 
-    private List<RssArticle> parseFeed(String xml, String sourceName) {
+    private List<RssArticle> parseFeed(String sourceName, String xml) {
         List<RssArticle> articles = new ArrayList<>();
 
         try {
@@ -96,20 +93,18 @@ public class RssNewsFetcherService {
             factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
             factory.setXIncludeAware(false);
             factory.setExpandEntityReferences(false);
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-            factory.setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
 
             DocumentBuilder builder = factory.newDocumentBuilder();
             Document document = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-            document.getDocumentElement().normalize();
+            Element root = document.getDocumentElement();
 
-            NodeList itemNodes = document.getElementsByTagName("item");
-            if (itemNodes.getLength() == 0) {
-                itemNodes = document.getElementsByTagNameNS("*", "entry");
+            NodeList items = root.getElementsByTagName("item");
+            if (items.getLength() == 0) {
+                items = root.getElementsByTagNameNS("*", "entry");
             }
 
-            for (int i = 0; i < itemNodes.getLength(); i++) {
-                Node node = itemNodes.item(i);
+            for (int i = 0; i < items.getLength(); i++) {
+                Node node = items.item(i);
                 if (!(node instanceof Element element)) continue;
 
                 String title = firstText(element, "title");
@@ -235,9 +230,6 @@ public class RssNewsFetcherService {
             };
         });
 
-        // RSS feeds often contain literal '&' characters in titles/descriptions.
-        // They are legal in HTML but illegal in XML unless escaped. Preserve
-        // already-valid entities and numeric references, and escape the rest.
         result = BARE_AMPERSAND_PATTERN.matcher(result).replaceAll("&amp;");
         return result;
     }
@@ -277,6 +269,7 @@ public class RssNewsFetcherService {
         public String getUrl() { return url; }
         public String getAuthor() { return author; }
         public String getPublishedAt() { return publishedAt; }
+        public String getPublishedDate() { return publishedAt; }
         public String getImageUrl() { return imageUrl; }
     }
 }
