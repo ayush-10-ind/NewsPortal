@@ -2,20 +2,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
     "use strict";
 
-
-    /* =========================================================
-       AGNIPRESS HOMEPAGE POLISH
-       ========================================================= */
-
     function loadHomepagePolish() {
-
-        if (!document.querySelector(".home-hero")) {
-            return;
-        }
-
-        if (document.querySelector('link[data-home-polish="true"]')) {
-            return;
-        }
+        if (!document.querySelector(".home-hero")) return;
+        if (document.querySelector('link[data-home-polish="true"]')) return;
 
         const stylesheet = document.createElement("link");
         stylesheet.rel = "stylesheet";
@@ -44,24 +33,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
     loadHomepagePolish();
 
-
-    /* =========================================================
-       WEATHER NAVIGATION
-       ========================================================= */
-
     function addWeatherNavigation() {
-
-        const desktopNavigation =
-            document.querySelector(".desktop-navigation");
-
-        if (!desktopNavigation) {
-            console.warn("AgniPress: .desktop-navigation not found.");
-            return;
-        }
-
-        if (desktopNavigation.querySelector(".weather-nav-link")) {
-            return;
-        }
+        const desktopNavigation = document.querySelector(".desktop-navigation");
+        if (!desktopNavigation) return;
+        if (desktopNavigation.querySelector(".weather-nav-link")) return;
 
         const weatherLink = document.createElement("a");
         weatherLink.href = "/weather";
@@ -80,13 +55,10 @@ document.addEventListener("DOMContentLoaded", function () {
         weatherLink.appendChild(weatherLogo);
         weatherLink.appendChild(weatherText);
 
-        const navigationLinks = Array.from(
-            desktopNavigation.querySelectorAll("a")
-        );
-
-        const sportsLink = navigationLinks.find(function (link) {
-            return link.textContent.trim().toUpperCase() === "SPORTS";
-        });
+        const sportsLink = Array.from(desktopNavigation.querySelectorAll("a"))
+            .find(function (link) {
+                return link.textContent.trim().toUpperCase() === "SPORTS";
+            });
 
         if (sportsLink) {
             sportsLink.insertAdjacentElement("afterend", weatherLink);
@@ -95,11 +67,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         const mobileNavigation = document.querySelector(".mobile-navigation");
-
-        if (
-            mobileNavigation &&
-            !mobileNavigation.querySelector('a[href="/weather"]')
-        ) {
+        if (mobileNavigation && !mobileNavigation.querySelector('a[href="/weather"]')) {
             const mobileWeather = document.createElement("a");
             mobileWeather.href = "/weather";
             mobileWeather.className = "weather-mobile-link";
@@ -112,84 +80,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
     addWeatherNavigation();
 
-
-    /* =========================================================
-       CURRENT DATE
-       ========================================================= */
-
     const currentDate = document.getElementById("currentDate");
-
     if (currentDate) {
         const now = new Date();
-        const options = {
+        currentDate.textContent = now.toLocaleDateString("en-IN", {
             day: "2-digit",
             month: "short",
             year: "numeric"
-        };
-
-        currentDate.textContent = now
-            .toLocaleDateString("en-IN", options)
-            .toUpperCase();
+        }).toUpperCase();
     }
 
-
-    /* =========================================================
-       IST CLOCK
-       ========================================================= */
-
     const istClock = document.getElementById("istClock");
-
     function updateISTClock() {
-        if (!istClock) {
-            return;
-        }
-
-        const now = new Date();
-
-        const time = now.toLocaleTimeString("en-IN", {
+        if (!istClock) return;
+        istClock.textContent = new Date().toLocaleTimeString("en-IN", {
             timeZone: "Asia/Kolkata",
             hour: "2-digit",
             minute: "2-digit",
             second: "2-digit",
             hour12: false
-        });
-
-        istClock.textContent = time + " IST";
+        }) + " IST";
     }
 
     updateISTClock();
     setInterval(updateISTClock, 1000);
 
-
-    /* =========================================================
-       BREAKING NEWS ANIMATION
-       ========================================================= */
-
     const breakingTrack = document.getElementById("breakingTrack");
-
     if (breakingTrack) {
-
         let position = 0;
         let animationFrame;
         let paused = false;
 
         function animateBreakingNews() {
-
-            if (paused) {
-                return;
-            }
-
+            if (paused) return;
             position -= 0.35;
-
             const firstWidth = breakingTrack.scrollWidth / 2;
-
-            if (firstWidth > 0 && Math.abs(position) >= firstWidth) {
-                position = 0;
-            }
-
-            breakingTrack.style.transform =
-                "translate3d(" + position + "px,0,0)";
-
+            if (firstWidth > 0 && Math.abs(position) >= firstWidth) position = 0;
+            breakingTrack.style.transform = "translate3d(" + position + "px,0,0)";
             animationFrame = requestAnimationFrame(animateBreakingNews);
         }
 
@@ -201,9 +128,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         breakingTrack.addEventListener("mouseleave", function () {
-            if (!paused) {
-                return;
-            }
+            if (!paused) return;
             paused = false;
             animateBreakingNews();
         });
@@ -214,57 +139,61 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         breakingTrack.addEventListener("focusout", function () {
-            if (!paused) {
-                return;
-            }
+            if (!paused) return;
             paused = false;
             animateBreakingNews();
         });
     }
 
-
     /* =========================================================
        IMAGE ERROR HANDLING
        ========================================================= */
 
-    const images = document.querySelectorAll("img");
+    function handleImageError(image) {
+        if (!image || image.dataset.fallbackHandled) return;
 
-    images.forEach(function (image) {
+        image.dataset.fallbackHandled = "true";
+        image.style.display = "none";
 
+        const parent = image.parentElement;
+        if (!parent) return;
+
+        parent.classList.add("image-error");
+
+        const fallback = parent.querySelector(
+            ".home-image-fallback, " +
+            ".home-featured-fallback, " +
+            ".image-fallback, " +
+            ".article-image-fallback, " +
+            ".article-related-fallback"
+        );
+
+        if (fallback) {
+            fallback.style.display = "flex";
+            return;
+        }
+
+        /*
+         * If a template has no fallback element, create one instead of
+         * leaving a completely blank image area.
+         */
+        const generatedFallback = document.createElement("div");
+        generatedFallback.className = "image-fallback generated-image-fallback";
+        generatedFallback.textContent = "AGNIPRESS";
+        parent.appendChild(generatedFallback);
+    }
+
+    document.querySelectorAll("img").forEach(function (image) {
         image.addEventListener("error", function () {
-
-            if (image.dataset.fallbackHandled) {
-                return;
-            }
-
-            image.dataset.fallbackHandled = "true";
-            image.style.display = "none";
-
-            const parent = image.parentElement;
-
-            if (!parent) {
-                return;
-            }
-
-            parent.classList.add("image-error");
-
-            const fallback = parent.querySelector(
-                ".home-image-fallback, .home-featured-fallback, .image-fallback"
-            );
-
-            if (fallback) {
-                fallback.style.display = "flex";
-            }
+            handleImageError(image);
         });
+
+        if (image.complete && image.naturalWidth === 0 && image.currentSrc) {
+            handleImageError(image);
+        }
     });
 
-
-    /* =========================================================
-       SMOOTH PAGE TRANSITIONS
-       ========================================================= */
-
     document.querySelectorAll('a[href="/weather"]').forEach(function (link) {
-
         link.addEventListener("click", function () {
             document.body.classList.add("page-leaving");
         });
