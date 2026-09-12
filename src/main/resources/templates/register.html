@@ -7,11 +7,10 @@
     <title>Join AgniPress</title>
     <link rel="stylesheet" th:href="@{/newsportal.css}">
     <link rel="stylesheet" th:href="@{/register-guide.css?v=20260912-12}">
-    <link rel="stylesheet" th:href="@{/register-3d.css?v=20260912-05}">
+    <link rel="stylesheet" th:href="@{/register-3d.css?v=20260912-06}">
 </head>
 <body>
 <div th:replace="~{fragments/navbar :: navbar}"></div>
-
 <main class="auth-page">
     <div class="auth-container">
         <section class="auth-intro">
@@ -21,70 +20,38 @@
             <div class="auth-intro-line"></div>
             <span class="auth-edition">AGNIPRESS / MEMBER EDITION</span>
         </section>
-
         <section class="auth-form-section register-page-form-section">
             <aside class="register-guide" aria-live="polite">
                 <div class="register-guide-topline">
                     <div class="register-guide-bubble">Hi there. Let's create your account.</div>
-                    <button class="register-guide-toggle" type="button" aria-label="Turn guide sounds on or off">
-                        <span>♪</span>
-                        <span class="register-guide-toggle-label">SOUND OFF</span>
-                    </button>
+                    <button class="register-guide-toggle" type="button" aria-label="Turn guide sounds on or off"><span>♪</span><span class="register-guide-toggle-label">SOUND OFF</span></button>
                 </div>
-
                 <div class="cat-stage" aria-label="Interactive 3D AgniPress newsroom cat guide">
                     <canvas id="cat-3d-canvas" aria-label="Interactive 3D newsroom cat"></canvas>
                     <div class="cat-stage-hint">move your cursor · the newsroom cat is watching</div>
                 </div>
             </aside>
-
             <div class="auth-form-header">
                 <span class="auth-form-kicker">NEW MEMBER</span>
                 <h2>Create account</h2>
                 <p>Join the AgniPress newsroom community.</p>
             </div>
-
             <div th:if="${error}" class="auth-error" th:text="${error}">Registration failed.</div>
-
             <form th:action="@{/register}" th:object="${registerRequest}" method="post" class="auth-form register-form-force" novalidate>
-                <div class="auth-field">
-                    <label for="name">FULL NAME</label>
-                    <input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required>
-                    <div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div>
-                </div>
-
-                <div class="auth-field">
-                    <label for="username">USERNAME</label>
-                    <input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required>
-                    <small>This username must be unique.</small>
-                    <div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div>
-                </div>
-
-                <div class="auth-field">
-                    <label for="email">EMAIL ADDRESS</label>
-                    <input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required>
-                    <small>We will send a verification link to this email. You will create your password after verification.</small>
-                    <div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div>
-                </div>
-
+                <div class="auth-field"><label for="name">FULL NAME</label><input id="name" type="text" th:field="*{name}" placeholder="Your name" autocomplete="name" required><div th:if="${#fields.hasErrors('name')}" class="auth-error" th:errors="*{name}"></div></div>
+                <div class="auth-field"><label for="username">USERNAME</label><input id="username" type="text" th:field="*{username}" placeholder="Choose a unique username" autocomplete="username" required><small>This username must be unique.</small><div th:if="${#fields.hasErrors('username')}" class="auth-error" th:errors="*{username}"></div></div>
+                <div class="auth-field"><label for="email">EMAIL ADDRESS</label><input id="email" type="email" th:field="*{email}" placeholder="you@example.com" autocomplete="email" required><small>We will send a verification link to this email. You will create your password after verification.</small><div th:if="${#fields.hasErrors('email')}" class="auth-error" th:errors="*{email}"></div></div>
                 <button type="submit" class="auth-submit">SEND VERIFICATION EMAIL <span>→</span></button>
             </form>
-
             <div class="auth-footer"><span>ALREADY A MEMBER?</span><a th:href="@{/login}">SIGN IN</a></div>
         </section>
     </div>
 </main>
-
-<footer class="site-footer">
-    <div class="editorial-container footer-grid">
-        <div><div class="footer-brand">AGNIPRESS</div><p>Independent reporting and stories shaping the day ahead.</p></div>
-        <div class="footer-links">
-            <a th:href="@{/}">HOME</a><a th:href="@{/newsList}">NEWS</a><a th:href="@{/newsList(category='India')}">INDIA</a><a th:href="@{/newsList(category='World')}">WORLD</a><a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a>
-        </div>
-    </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.186.0/build/three.min.js"></script>
-<script th:src="@{/register-guide.js?v=20260912-16}"></script>
+<footer class="site-footer"><div class="editorial-container footer-grid"><div><div class="footer-brand">AGNIPRESS</div><p>Independent reporting and stories shaping the day ahead.</p></div><div class="footer-links"><a th:href="@{/}">HOME</a><a th:href="@{/newsList}">NEWS</a><a th:href="@{/newsList(category='India')}">INDIA</a><a th:href="@{/newsList(category='World')}">WORLD</a><a th:href="@{/newsList(category='Technology')}">TECHNOLOGY</a></div></div></footer>
+<script type="module">
+    import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.min.js";
+    window.THREE = THREE;
+</script>
+<script th:src="@{/register-guide.js?v=20260912-17}"></script>
 </body>
 </html>
