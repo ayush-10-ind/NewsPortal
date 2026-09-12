@@ -1,0 +1,124 @@
+/* =========================================================
+   AGNIPRESS HOMEPAGE BREAKING TICKER
+   ========================================================= */
+
+.breaking-ticker {
+    width: 100%;
+    min-height: 64px;
+    display: flex;
+    align-items: stretch;
+    overflow: hidden;
+    background: var(--paper-light, #faf9f5);
+    border-top: 1px solid var(--line, #d8d4cb);
+    border-bottom: 1px solid var(--line, #d8d4cb);
+}
+
+.breaking-live {
+    flex: 0 0 92px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: 0 16px;
+    border-right: 1px solid var(--line, #d8d4cb);
+}
+
+.live-word {
+    color: var(--accent, #b4482f);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+.live-time {
+    color: var(--muted, #73716b);
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.breaking-title {
+    flex: 0 0 145px;
+    display: flex;
+    align-items: center;
+    padding: 0 18px;
+    border-right: 1px solid var(--line, #d8d4cb);
+    color: var(--ink, #11110f);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    white-space: nowrap;
+}
+
+.breaking-window {
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+}
+
+.breaking-ticker .breaking-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    white-space: nowrap;
+    will-change: transform;
+}
+
+.breaking-ticker .breaking-story {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 22px;
+    color: var(--ink, #11110f);
+    text-decoration: none;
+}
+
+.breaking-ticker .breaking-category {
+    color: var(--accent, #b4482f);
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.breaking-ticker .breaking-headline {
+    font-family: var(--serif, Georgia, serif);
+    font-size: 14px;
+}
+
+.breaking-ticker .breaking-arrow {
+    font-size: 14px;
+}
+
+.breaking-ticker .breaking-divider {
+    color: var(--line, #d8d4cb);
+    font-size: 15px;
+}
+
+.breaking-ticker .breaking-story:hover .breaking-headline {
+    color: var(--accent, #b4482f);
+}
+
+@media (max-width: 700px) {
+    .breaking-ticker {
+        min-height: 56px;
+    }
+
+    .breaking-live {
+        flex-basis: 70px;
+        padding: 0 10px;
+    }
+
+    .breaking-title {
+        display: none;
+    }
+
+    .breaking-ticker .breaking-story {
+        padding: 0 14px;
+    }
+
+    .breaking-ticker .breaking-headline {
+        font-size: 13px;
+    }
+}
