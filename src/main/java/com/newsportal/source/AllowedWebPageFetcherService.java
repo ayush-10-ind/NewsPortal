@@ -26,16 +26,19 @@ public class AllowedWebPageFetcherService {
 
     private static final Duration FETCH_TIMEOUT = Duration.ofSeconds(8);
     private static final int MAX_CONTENT_LENGTH = 500_000;
+    private static final String DEFAULT_ALLOWED_DOMAINS =
+            "indianexpress.com,wired.com,arstechnica.com,nasa.gov,pib.gov.in";
 
     private final WebClient webClient;
     private final Set<String> allowedDomains;
 
     public AllowedWebPageFetcherService(
             WebClient.Builder webClientBuilder,
-            @Value("${news.fetcher.allowed-domains:}") String configuredDomains) {
+            @Value("${news.fetcher.allowed-domains:" + DEFAULT_ALLOWED_DOMAINS + "}") String configuredDomains) {
 
         this.webClient = webClientBuilder
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.TEXT_HTML_VALUE)
+                .defaultHeader(HttpHeaders.ACCEPT_LANGUAGE, "en-US,en;q=0.9")
                 .build();
 
         this.allowedDomains = parseAllowedDomains(configuredDomains);
