@@ -39,6 +39,16 @@ public class RssNewsFetcherService {
     private static final Pattern BARE_AMPERSAND_PATTERN =
             Pattern.compile("&(?!#\\d+;|#x[0-9a-fA-F]+;|[A-Za-z][A-Za-z0-9]{1,31};)");
 
+    /*
+     * Some publisher feeds place raw HTML inside description/summary fields
+     * without wrapping it in CDATA. A raw <link crossorigin ...> tag is not
+     * valid RSS XML and can abort the entire feed. Remove HTML link/meta tags
+     * before XML parsing; article image extraction still handles image markup
+     * from valid RSS descriptions.
+     */
+    private static final Pattern RAW_HTML_LINK_TAG_PATTERN =
+            Pattern.compile("<\\s*(?:link|meta)\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(CONNECT_TIMEOUT)
             .followRedirects(HttpClient.Redirect.NORMAL)
@@ -50,7 +60,7 @@ public class RssNewsFetcherService {
         }
 
         String endpoint = source.getEndpoint().trim();
-        logger.info("Fetching RSS feed: source={}, endpoint={}", source.getName(), endpoint);
+        logger.debug("Fetching RSS feed: source={}, endpoint={}", source.getName(), endpoint);
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -204,7 +214,9 @@ public class RssNewsFetcherService {
     private String sanitizeXml(String xml) {
         if (xml == null) return "";
 
-        String result = HTML_ENTITY_PATTERN.matcher(xml).replaceAll(match -> {
+        String result = RAW_HTML_LINK_TAG_PATTERN.matcher(xml).replaceAll("");
+
+        result = HTML_ENTITY_PATTERN.matcher(result).replaceAll(match -> {
             return switch (match.group().toLowerCase(Locale.ROOT)) {
                 case "&nbsp;" -> "&#160;";
                 case "&amp;" -> "&#38;";
@@ -236,7 +248,7 @@ public class RssNewsFetcherService {
 
     private String cleanText(String value) {
         if (value == null) return null;
-        String cleaned = value.replace("\\r", "").trim();
+        String cleaned = value.replace("\r", "").trim();
         return cleaned.isBlank() ? null : cleaned;
     }
 
