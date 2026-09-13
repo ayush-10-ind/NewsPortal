@@ -15,7 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 /**
- * Loads AgniPress' shared responsive stylesheet into rendered HTML pages.
+ * Loads AgniPress' shared responsive stylesheets into rendered HTML pages.
  * This keeps mobile styling centralized instead of duplicating media queries
  * across individual Thymeleaf templates.
  */
@@ -26,6 +26,10 @@ public class ResponsiveStylesheetFilter extends OncePerRequestFilter {
     private static final String RESPONSIVE_LINK =
             "<link id=\"agnipress-responsive-css\" rel=\"stylesheet\" " +
             "href=\"/responsive.css?v=20260913\">";
+
+    private static final String MOBILE_POLISH_LINK =
+            "<link id=\"agnipress-mobile-polish-css\" rel=\"stylesheet\" " +
+            "href=\"/mobile-polish.css?v=20260913\">";
 
     @Override
     protected void doFilterInternal(
@@ -51,12 +55,22 @@ public class ResponsiveStylesheetFilter extends OncePerRequestFilter {
 
             String html = new String(body, charset);
 
-            if (!html.contains("id=\"agnipress-responsive-css\"")) {
-                int headEnd = html.toLowerCase().indexOf("</head>");
+            int headEnd = html.toLowerCase().indexOf("</head>");
 
-                if (headEnd >= 0) {
+            if (headEnd >= 0) {
+                StringBuilder injected = new StringBuilder();
+
+                if (!html.contains("id=\"agnipress-responsive-css\"")) {
+                    injected.append(RESPONSIVE_LINK);
+                }
+
+                if (!html.contains("id=\"agnipress-mobile-polish-css\"")) {
+                    injected.append(MOBILE_POLISH_LINK);
+                }
+
+                if (!injected.isEmpty()) {
                     html = html.substring(0, headEnd)
-                            + RESPONSIVE_LINK
+                            + injected
                             + html.substring(headEnd);
                     body = html.getBytes(charset);
                 }
