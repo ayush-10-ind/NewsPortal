@@ -42,12 +42,11 @@ public class RssNewsFetcherService {
     /*
      * Some publisher feeds place raw HTML inside description/summary fields
      * without wrapping it in CDATA. A raw <link crossorigin ...> tag is not
-     * valid RSS XML and can abort the entire feed. Remove HTML link/meta tags
-     * before XML parsing; article image extraction still handles image markup
-     * from valid RSS descriptions.
+     * valid RSS XML and can abort the entire feed. Only remove link tags that
+     * clearly belong to embedded HTML; never remove normal RSS <link> elements.
      */
     private static final Pattern RAW_HTML_LINK_TAG_PATTERN =
-            Pattern.compile("<\\s*(?:link|meta)\\b[^>]*>", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("<\\s*link\\b(?=[^>]*\\bcrossorigin\\b)[^>]*>", Pattern.CASE_INSENSITIVE);
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(CONNECT_TIMEOUT)
