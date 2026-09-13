@@ -24,7 +24,10 @@ public class RssArticleRepairService {
 
     private static final Logger logger = LoggerFactory.getLogger(RssArticleRepairService.class);
     private static final String PLACEHOLDER = "Article content is being prepared.";
-    private static final int MAX_REPAIR_BATCH = 50;
+
+    // Keep the repair worker deliberately small so background recovery cannot
+    // compete with normal page requests for CPU, memory, network, or DB time.
+    private static final int MAX_REPAIR_BATCH = 10;
     private static final int MIN_USABLE_SOURCE_LENGTH = 80;
 
     private final NewsRepository newsRepository;
@@ -43,7 +46,9 @@ public class RssArticleRepairService {
         this.webArticleContentExtractorService = webArticleContentExtractorService;
     }
 
-    @Scheduled(initialDelay = 20000, fixedDelay = 120000)
+    // Run less aggressively in production. The repair worker is a safety net,
+    // not part of the normal request path.
+    @Scheduled(initialDelay = 30000, fixedDelay = 600000)
     public void repairScheduled() {
         try {
             int repaired = repairArticles();
