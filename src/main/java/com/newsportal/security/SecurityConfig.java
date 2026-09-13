@@ -37,6 +37,7 @@ public class SecurityConfig {
                     "/css/**",
                     "/newsportal.css",
                     "/responsive.css",
+                    "/mobile-polish.css",
                     "/register-guide.css",
                     "/js/**",
                     "/newsportal.js",
