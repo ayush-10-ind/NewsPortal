@@ -1,0 +1,300 @@
+/* =========================================================
+   AGNIPRESS WEATHER CENTER - MOBILE RESPONSIVE FIXES
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+    .weather-page {
+        width: calc(100% - 24px) !important;
+        padding: 12px 0 45px !important;
+        overflow-x: hidden !important;
+    }
+
+    /* ---------- HEADER ---------- */
+
+    .weather-header {
+        min-height: 0 !important;
+        padding: 10px 0 12px !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto !important;
+        grid-template-areas:
+            "brand back"
+            "title title" !important;
+        column-gap: 12px !important;
+        row-gap: 9px !important;
+    }
+
+    .weather-header .brand {
+        grid-area: brand !important;
+        min-width: 0 !important;
+        gap: 7px !important;
+    }
+
+    .weather-header .brand-mark {
+        width: 35px !important;
+        height: 32px !important;
+    }
+
+    .weather-header .brand-mark .stripe {
+        width: 30px !important;
+        height: 4px !important;
+    }
+
+    .weather-header .brand-mark .stripe-orange {
+        top: 4px !important;
+    }
+
+    .weather-header .brand-mark .stripe-white {
+        top: 13px !important;
+    }
+
+    .weather-header .brand-mark .stripe-green {
+        top: 22px !important;
+    }
+
+    .weather-header .brand-name {
+        font-size: 24px !important;
+    }
+
+    .weather-header .header-title {
+        grid-area: title !important;
+        position: static !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        text-align: center !important;
+    }
+
+    .weather-header .header-title .eyebrow {
+        font-size: 8px !important;
+        margin-bottom: 2px !important;
+    }
+
+    .weather-header .header-title h1 {
+        font-size: clamp(27px, 8vw, 38px) !important;
+        line-height: 1 !important;
+        white-space: nowrap !important;
+    }
+
+    .weather-header .back-link {
+        grid-area: back !important;
+        margin-left: 0 !important;
+        align-self: center !important;
+        font-size: 8px !important;
+        letter-spacing: .7px !important;
+        max-width: 78px !important;
+        text-align: right !important;
+        line-height: 1.2 !important;
+    }
+
+    /* ---------- LOCATION + REFRESH ---------- */
+
+    .location-heading {
+        padding: 28px 0 18px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    .location-heading > div {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .location-heading h2 {
+        max-width: 100% !important;
+        overflow-wrap: anywhere !important;
+        font-size: clamp(46px, 14vw, 72px) !important;
+        line-height: .92 !important;
+        letter-spacing: -2.5px !important;
+    }
+
+    .location-heading > div > p:last-child {
+        margin-top: 7px !important;
+    }
+
+    .refresh-button {
+        position: static !important;
+        align-self: flex-start !important;
+        min-height: 38px !important;
+        padding: 8px 12px !important;
+        font-size: 8px !important;
+        letter-spacing: .6px !important;
+    }
+
+    /* ---------- WEATHER HERO ---------- */
+
+    .weather-scene {
+        height: 270px !important;
+        min-height: 270px !important;
+        margin-top: 8px !important;
+        border-radius: 15px !important;
+    }
+
+    .scene-content {
+        padding: 0 22px !important;
+    }
+
+    .scene-weather {
+        max-width: 55% !important;
+    }
+
+    .scene-weather .eyebrow {
+        font-size: 8px !important;
+    }
+
+    .temperature {
+        white-space: nowrap !important;
+    }
+
+    .temperature span:first-child {
+        font-size: 62px !important;
+    }
+
+    .temperature span:last-child {
+        font-size: 22px !important;
+        vertical-align: top !important;
+    }
+
+    .scene-weather h3 {
+        font-size: 30px !important;
+        line-height: 1 !important;
+    }
+
+    .scene-weather p:last-child {
+        font-size: 12px !important;
+        line-height: 1.25 !important;
+    }
+
+    .weather-icon {
+        width: 105px !important;
+        height: 105px !important;
+        max-width: 105px !important;
+        max-height: 105px !important;
+    }
+
+    .cloud-one {
+        left: 42% !important;
+        transform: scale(.78) !important;
+    }
+
+    .cloud-two {
+        left: 66% !important;
+        transform: scale(.48) !important;
+    }
+
+    .sun {
+        width: 58px !important;
+        height: 58px !important;
+        right: 13% !important;
+        top: 28px !important;
+    }
+
+    .moon {
+        width: 55px !important;
+        height: 55px !important;
+        right: 13% !important;
+        top: 28px !important;
+    }
+
+    /* ---------- WEATHER DETAILS ---------- */
+
+    .weather-details {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .weather-details .detail {
+        min-width: 0 !important;
+        padding: 18px !important;
+    }
+
+    .weather-details .detail span {
+        font-size: 8px !important;
+        letter-spacing: 1.1px !important;
+    }
+
+    .weather-details .detail strong {
+        display: block !important;
+        margin-top: 8px !important;
+        font-size: 20px !important;
+        overflow-wrap: anywhere !important;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .weather-page {
+        width: calc(100% - 20px) !important;
+    }
+
+    .weather-header .brand-name {
+        font-size: 22px !important;
+    }
+
+    .weather-header .header-title h1 {
+        font-size: 28px !important;
+    }
+
+    .weather-header .back-link {
+        max-width: 68px !important;
+        font-size: 7px !important;
+    }
+
+    .location-heading {
+        padding-top: 24px !important;
+    }
+
+    .location-heading h2 {
+        font-size: clamp(42px, 13.5vw, 58px) !important;
+    }
+
+    .refresh-button {
+        min-height: 36px !important;
+        padding: 7px 11px !important;
+    }
+
+    .weather-scene {
+        height: 250px !important;
+        min-height: 250px !important;
+    }
+
+    .scene-content {
+        padding: 0 17px !important;
+    }
+
+    .scene-weather {
+        max-width: 58% !important;
+    }
+
+    .temperature span:first-child {
+        font-size: 56px !important;
+    }
+
+    .temperature span:last-child {
+        font-size: 19px !important;
+    }
+
+    .scene-weather h3 {
+        font-size: 27px !important;
+    }
+
+    .scene-weather p:last-child {
+        font-size: 11px !important;
+    }
+
+    .weather-icon {
+        width: 90px !important;
+        height: 90px !important;
+        max-width: 90px !important;
+        max-height: 90px !important;
+    }
+
+    .weather-details .detail {
+        padding: 16px 14px !important;
+    }
+
+    .weather-details .detail strong {
+        font-size: 18px !important;
+    }
+}
