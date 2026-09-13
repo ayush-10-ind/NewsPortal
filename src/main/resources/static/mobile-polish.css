@@ -1,0 +1,210 @@
+/* =========================================================
+   AGNIPRESS MOBILE POLISH
+   Navbar + breaking ticker for phone screens
+   ========================================================= */
+
+@media (max-width: 768px) {
+
+    /* ---------- NAVBAR ---------- */
+
+    .editorial-nav .nav-inner {
+        width: calc(100% - 20px) !important;
+        min-height: 62px !important;
+        gap: 8px !important;
+    }
+
+    .editorial-nav .brand {
+        min-width: 0 !important;
+        gap: 8px !important;
+    }
+
+    .editorial-nav .brand-name {
+        font-size: 18px !important;
+    }
+
+    .editorial-nav .agni-logo {
+        width: 32px !important;
+        height: 32px !important;
+        transform: scale(.88) !important;
+        transform-origin: left center !important;
+    }
+
+    .editorial-nav .nav-actions {
+        margin-left: auto !important;
+        gap: 8px !important;
+    }
+
+    /* Keep LOGIN visible on phones. */
+    .editorial-nav .nav-login {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 52px !important;
+        height: 34px !important;
+        padding: 0 9px !important;
+        border: 1px solid #11110f !important;
+        background: transparent !important;
+        color: #11110f !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 9px !important;
+        font-weight: 800 !important;
+        letter-spacing: .8px !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+    }
+
+    .editorial-nav .nav-login:hover {
+        background: #11110f !important;
+        color: #f5f2eb !important;
+    }
+
+    .editorial-nav .nav-search {
+        width: 30px !important;
+        height: 34px !important;
+    }
+
+    .editorial-nav .nav-search svg {
+        width: 17px !important;
+        height: 17px !important;
+    }
+
+    .editorial-nav .mobile-menu-button {
+        width: 36px !important;
+        height: 36px !important;
+        margin-left: 0 !important;
+    }
+
+    /* ---------- BREAKING TICKER ---------- */
+
+    .breaking-ticker {
+        min-height: 50px !important;
+        height: 50px !important;
+        display: grid !important;
+        grid-template-columns: 62px minmax(0, 1fr) !important;
+        align-items: stretch !important;
+    }
+
+    .breaking-live {
+        min-width: 62px !important;
+        flex: none !important;
+        padding: 0 8px !important;
+        justify-content: center !important;
+        gap: 1px !important;
+        border-right: 1px solid var(--line, #d8d4cb) !important;
+    }
+
+    .live-word {
+        font-size: 8px !important;
+        letter-spacing: 1px !important;
+    }
+
+    .live-time {
+        font-size: 8px !important;
+        letter-spacing: .4px !important;
+        white-space: nowrap !important;
+    }
+
+    /* The desktop BREAKING NEWS label wastes precious phone width. */
+    .breaking-title {
+        display: none !important;
+    }
+
+    .breaking-window {
+        min-width: 0 !important;
+        width: 100% !important;
+        overflow: hidden !important;
+    }
+
+    .breaking-ticker .breaking-track {
+        min-width: max-content !important;
+        height: 50px !important;
+    }
+
+    .breaking-ticker .breaking-story {
+        height: 50px !important;
+        max-width: 340px !important;
+        padding: 0 12px !important;
+        gap: 7px !important;
+        overflow: hidden !important;
+    }
+
+    .breaking-ticker .breaking-category {
+        flex-shrink: 0 !important;
+        font-size: 7px !important;
+        letter-spacing: .7px !important;
+        max-width: 58px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .breaking-ticker .breaking-headline {
+        display: block !important;
+        max-width: 235px !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+    }
+
+    .breaking-ticker .breaking-arrow {
+        flex-shrink: 0 !important;
+        font-size: 12px !important;
+    }
+
+    .breaking-ticker .breaking-divider {
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+
+    .editorial-nav .brand-name {
+        font-size: 17px !important;
+    }
+
+    .editorial-nav .nav-actions {
+        gap: 6px !important;
+    }
+
+    .editorial-nav .nav-login {
+        min-width: 48px !important;
+        height: 32px !important;
+        padding: 0 7px !important;
+        font-size: 8px !important;
+    }
+
+    .editorial-nav .nav-search {
+        width: 28px !important;
+    }
+
+    .editorial-nav .mobile-menu-button {
+        width: 34px !important;
+        height: 34px !important;
+    }
+
+    .breaking-ticker {
+        min-height: 48px !important;
+        height: 48px !important;
+        grid-template-columns: 58px minmax(0, 1fr) !important;
+    }
+
+    .breaking-live {
+        min-width: 58px !important;
+    }
+
+    .breaking-ticker .breaking-track,
+    .breaking-ticker .breaking-story {
+        height: 48px !important;
+    }
+
+    .breaking-ticker .breaking-story {
+        padding: 0 10px !important;
+        max-width: 320px !important;
+    }
+
+    .breaking-ticker .breaking-headline {
+        max-width: 210px !important;
+        font-size: 11.5px !important;
+    }
+}
