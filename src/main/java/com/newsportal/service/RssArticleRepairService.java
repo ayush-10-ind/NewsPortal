@@ -6,6 +6,7 @@ import com.newsportal.repository.NewsRepository;
 import com.newsportal.source.MultiSourceNewsFetcherService;
 import com.newsportal.source.NewsSection;
 import com.newsportal.source.RssNewsFetcherService;
+import com.newsportal.source.WebArticleContentExtractorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,14 +30,17 @@ public class RssArticleRepairService {
     private final NewsRepository newsRepository;
     private final MultiSourceNewsFetcherService multiSourceNewsFetcherService;
     private final NewsArticleGenerationService articleGenerationService;
+    private final WebArticleContentExtractorService webArticleContentExtractorService;
 
     public RssArticleRepairService(
             NewsRepository newsRepository,
             MultiSourceNewsFetcherService multiSourceNewsFetcherService,
-            NewsArticleGenerationService articleGenerationService) {
+            NewsArticleGenerationService articleGenerationService,
+            WebArticleContentExtractorService webArticleContentExtractorService) {
         this.newsRepository = newsRepository;
         this.multiSourceNewsFetcherService = multiSourceNewsFetcherService;
         this.articleGenerationService = articleGenerationService;
+        this.webArticleContentExtractorService = webArticleContentExtractorService;
     }
 
     @Scheduled(initialDelay = 20000, fixedDelay = 120000)
@@ -60,6 +64,7 @@ public class RssArticleRepairService {
         fetchCurrentRssArticles(feedByUrl, feedByTitle);
 
         int repaired = 0;
+        int webFallbacks = 0;
 
         for (News news : allNews) {
             if (repaired >= MAX_REPAIR_BATCH) break;
@@ -70,12 +75,42 @@ public class RssArticleRepairService {
 
             String sourceContent = rssArticle != null
                     ? clean(rssArticle.getDescription())
-                    : clean(news.getContent());
+                    : null;
 
-            boolean usingExistingContent = rssArticle == null;
+            String sourceType = "live-rss";
 
-            if (sourceContent == null || sourceContent.length() < MIN_USABLE_SOURCE_LENGTH ||
-                    PLACEHOLDER.equalsIgnoreCase(sourceContent)) {
+            if (!isUsableSourceContent(sourceContent)) {
+                String existingContent = clean(news.getContent());
+                if (isUsableSourceContent(existingContent)) {
+                    sourceContent = existingContent;
+                    sourceType = "database";
+                }
+            }
+
+            if (!isUsableSourceContent(sourceContent)) {
+                logger.info(
+                        "RSS source unavailable/incomplete. Trying publisher page fallback: id={}, title={}, url={}",
+                        news.getId(),
+                        news.getTitle(),
+                        news.getSourceUrl()
+                );
+
+                sourceContent = clean(
+                        webArticleContentExtractorService.fetchArticleText(news.getSourceUrl())
+                );
+
+                if (isUsableSourceContent(sourceContent)) {
+                    sourceType = "publisher-page";
+                    webFallbacks++;
+                    logger.info(
+                            "Publisher page fallback succeeded: id={}, extractedChars={}",
+                            news.getId(),
+                            sourceContent.length()
+                    );
+                }
+            }
+
+            if (!isUsableSourceContent(sourceContent)) {
                 logger.debug("RSS repair skipped article id={} because no usable source content was found.",
                         news.getId());
                 continue;
@@ -96,7 +131,7 @@ public class RssArticleRepairService {
                 News saved = newsRepository.saveAndFlush(news);
 
                 logger.info("RSS article source ready. Queueing Ashna generation: id={}, title={}, source={}",
-                        saved.getId(), saved.getTitle(), usingExistingContent ? "database" : "live-rss");
+                        saved.getId(), saved.getTitle(), sourceType);
 
                 articleGenerationService.generateArticleAsync(saved.getId());
                 repaired++;
@@ -105,6 +140,10 @@ public class RssArticleRepairService {
                 logger.error("RSS article repair failed: id={}, errorType={}, error={}",
                         news.getId(), e.getClass().getSimpleName(), e.getMessage(), e);
             }
+        }
+
+        if (webFallbacks > 0) {
+            logger.info("RSS repair used publisher-page fallback for {} article(s).", webFallbacks);
         }
 
         return repaired;
@@ -128,6 +167,12 @@ public class RssArticleRepairService {
         if (PLACEHOLDER.equalsIgnoreCase(content)) return true;
         if (content.length() < 1500) return true;
         return countParagraphBreaks(content) < 3;
+    }
+
+    private boolean isUsableSourceContent(String content) {
+        return content != null
+                && content.length() >= MIN_USABLE_SOURCE_LENGTH
+                && !PLACEHOLDER.equalsIgnoreCase(content);
     }
 
     private int countParagraphBreaks(String content) {
