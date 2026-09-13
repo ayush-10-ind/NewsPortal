@@ -36,6 +36,7 @@ public class SecurityConfig {
                     "/api/live-channels",
                     "/css/**",
                     "/newsportal.css",
+                    "/responsive.css",
                     "/register-guide.css",
                     "/js/**",
                     "/newsportal.js",
