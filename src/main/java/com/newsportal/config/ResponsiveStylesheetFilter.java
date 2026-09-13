@@ -31,6 +31,10 @@ public class ResponsiveStylesheetFilter extends OncePerRequestFilter {
             "<link id=\"agnipress-mobile-polish-css\" rel=\"stylesheet\" " +
             "href=\"/mobile-polish.css?v=20260913\">";
 
+    private static final String WEATHER_MOBILE_LINK =
+            "<link id=\"agnipress-weather-mobile-css\" rel=\"stylesheet\" " +
+            "href=\"/css/weather-mobile.css?v=20260913\">";
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
@@ -54,7 +58,6 @@ public class ResponsiveStylesheetFilter extends OncePerRequestFilter {
                     : Charset.forName(wrapper.getCharacterEncoding());
 
             String html = new String(body, charset);
-
             int headEnd = html.toLowerCase().indexOf("</head>");
 
             if (headEnd >= 0) {
@@ -66,6 +69,11 @@ public class ResponsiveStylesheetFilter extends OncePerRequestFilter {
 
                 if (!html.contains("id=\"agnipress-mobile-polish-css\"")) {
                     injected.append(MOBILE_POLISH_LINK);
+                }
+
+                if ("/weather".equals(request.getRequestURI())
+                        && !html.contains("id=\"agnipress-weather-mobile-css\"")) {
+                    injected.append(WEATHER_MOBILE_LINK);
                 }
 
                 if (!injected.isEmpty()) {
