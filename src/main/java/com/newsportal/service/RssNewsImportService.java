@@ -6,6 +6,7 @@ import com.newsportal.repository.NewsRepository;
 import com.newsportal.source.MultiSourceNewsFetcherService;
 import com.newsportal.source.NewsSection;
 import com.newsportal.source.RssNewsFetcherService;
+import com.newsportal.source.WebArticleContentExtractorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,16 +33,19 @@ public class RssNewsImportService {
     private final NewsRepository newsRepository;
     private final ArticleImageService articleImageService;
     private final NewsArticleGenerationService articleGenerationService;
+    private final WebArticleContentExtractorService webArticleContentExtractorService;
 
     public RssNewsImportService(
             MultiSourceNewsFetcherService multiSourceNewsFetcherService,
             NewsRepository newsRepository,
             ArticleImageService articleImageService,
-            NewsArticleGenerationService articleGenerationService) {
+            NewsArticleGenerationService articleGenerationService,
+            WebArticleContentExtractorService webArticleContentExtractorService) {
         this.multiSourceNewsFetcherService = multiSourceNewsFetcherService;
         this.newsRepository = newsRepository;
         this.articleImageService = articleImageService;
         this.articleGenerationService = articleGenerationService;
+        this.webArticleContentExtractorService = webArticleContentExtractorService;
     }
 
     public int importSection(NewsSection section) {
@@ -66,6 +70,7 @@ public class RssNewsImportService {
         int rejectedCount = 0;
         int failedCount = 0;
         int fallbackImageCount = 0;
+        int webFallbackCount = 0;
         int generationQueuedCount = 0;
 
         for (RssNewsFetcherService.RssArticle article : articles) {
@@ -92,20 +97,44 @@ public class RssNewsImportService {
                     continue;
                 }
 
-                if (rawContent == null || rawContent.length() < MIN_SOURCE_CONTENT_LENGTH
-                        || PLACEHOLDER.equalsIgnoreCase(rawContent)) {
-                    rejectedCount++;
-                    logger.warn(
-                            "RSS article rejected: no usable source content. Title={}, contentLength={}",
-                            title,
-                            rawContent == null ? 0 : rawContent.length()
-                    );
-                    continue;
-                }
-
                 Optional<News> existingArticle = newsRepository.findBySourceUrl(sourceUrl);
                 if (existingArticle.isPresent()) {
                     duplicateCount++;
+                    continue;
+                }
+
+                String sourceContent = rawContent;
+                boolean usedWebFallback = false;
+
+                if (!isUsableSourceContent(sourceContent)) {
+                    logger.info(
+                            "RSS description unusable. Trying publisher page fallback: title={}, url={}",
+                            title,
+                            sourceUrl
+                    );
+
+                    sourceContent = clean(
+                            webArticleContentExtractorService.fetchArticleText(sourceUrl)
+                    );
+                    usedWebFallback = isUsableSourceContent(sourceContent);
+
+                    if (usedWebFallback) {
+                        webFallbackCount++;
+                        logger.info(
+                                "Publisher page fallback succeeded: title={}, extractedChars={}",
+                                title,
+                                sourceContent.length()
+                        );
+                    }
+                }
+
+                if (!isUsableSourceContent(sourceContent)) {
+                    rejectedCount++;
+                    logger.warn(
+                            "RSS article rejected: no usable source content after RSS + web fallback. Title={}, contentLength={}",
+                            title,
+                            sourceContent == null ? 0 : sourceContent.length()
+                    );
                     continue;
                 }
 
@@ -132,7 +161,7 @@ public class RssNewsImportService {
                 news.setTitle(title);
                 news.setAuthor(author);
                 news.setCategory(category);
-                news.setContent(rawContent);
+                news.setContent(sourceContent);
                 news.setImageUrl(resolvedImage);
                 news.setSourceUrl(sourceUrl);
                 news.setSourceName(sourceName);
@@ -154,17 +183,18 @@ public class RssNewsImportService {
 
                 importedCount++;
 
-                // The RSS description is the factual source. The dedicated
-                // article writer runs asynchronously after the record is safely
-                // persisted, so RSS importing never depends on Ashna being up.
+                // RSS content is preferred. If it is incomplete, the publisher
+                // page is used as factual source material. Ashna writes the
+                // final article asynchronously after the source is persisted.
                 articleGenerationService.generateArticleAsync(savedNews.getId());
                 generationQueuedCount++;
 
                 logger.info(
-                        "RSS article persisted and Ashna generation queued: id={}, title={}, source={}",
+                        "RSS article persisted and Ashna generation queued: id={}, title={}, source={}, webFallback={}",
                         savedNews.getId(),
                         savedNews.getTitle(),
-                        sourceName
+                        sourceName,
+                        usedWebFallback
                 );
 
             } catch (Exception e) {
@@ -181,7 +211,7 @@ public class RssNewsImportService {
         }
 
         logger.info(
-                "RSS import completed: section={}, received={}, imported={}, duplicates={}, rejected={}, failed={}, fallbackImages={}, generationQueued={}",
+                "RSS import completed: section={}, received={}, imported={}, duplicates={}, rejected={}, failed={}, fallbackImages={}, webFallbacks={}, generationQueued={}",
                 sectionName,
                 articles.size(),
                 importedCount,
@@ -189,6 +219,7 @@ public class RssNewsImportService {
                 rejectedCount,
                 failedCount,
                 fallbackImageCount,
+                webFallbackCount,
                 generationQueuedCount
         );
 
@@ -223,6 +254,12 @@ public class RssNewsImportService {
         );
 
         return totalImported;
+    }
+
+    private boolean isUsableSourceContent(String content) {
+        return content != null
+                && content.length() >= MIN_SOURCE_CONTENT_LENGTH
+                && !PLACEHOLDER.equalsIgnoreCase(content);
     }
 
     private String resolveSourceName(String sourceUrl) {
