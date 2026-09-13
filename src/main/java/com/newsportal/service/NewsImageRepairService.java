@@ -7,6 +7,7 @@ import com.newsportal.source.NewsSection;
 import com.newsportal.source.RssNewsFetcherService;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +26,12 @@ public class NewsImageRepairService {
 
     private static final Logger logger = LoggerFactory.getLogger(NewsImageRepairService.class);
     private static final String FALLBACK_PREFIX = "/images/fallback";
-    private static final int BATCH_SIZE = 25;
-    private static final long INITIAL_DELAY_SECONDS = 20;
-    private static final long DELAY_SECONDS = 60;
+
+    // Safety-net worker only. Keep it small and infrequent so RSS providers
+    // cannot consume the web server's CPU, memory, or network capacity.
+    private static final int BATCH_SIZE = 5;
+    private static final long INITIAL_DELAY_SECONDS = 300;
+    private static final long DELAY_SECONDS = 1800;
 
     private final NewsRepository newsRepository;
     private final ArticleImageService articleImageService;
@@ -54,7 +58,13 @@ public class NewsImageRepairService {
     public void initializeRepairMonitor() {
         scheduler.scheduleWithFixedDelay(this::repairCycle,
                 INITIAL_DELAY_SECONDS, DELAY_SECONDS, TimeUnit.SECONDS);
-        logger.info("News image repair monitor initialized");
+        logger.info("News image repair monitor initialized: firstRun={}s, interval={}s, batch={}",
+                INITIAL_DELAY_SECONDS, DELAY_SECONDS, BATCH_SIZE);
+    }
+
+    @PreDestroy
+    public void shutdownRepairMonitor() {
+        scheduler.shutdownNow();
     }
 
     private void repairCycle() {
