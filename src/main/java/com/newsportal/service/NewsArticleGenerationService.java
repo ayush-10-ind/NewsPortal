@@ -2,17 +2,18 @@ package com.newsportal.service;
 
 import com.newsportal.entity.News;
 import com.newsportal.repository.NewsRepository;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Service
 public class NewsArticleGenerationService {
 
     private static final Logger logger = LoggerFactory.getLogger(NewsArticleGenerationService.class);
-
     private static final String PLACEHOLDER = "Article content is being prepared.";
     private static final int MIN_SOURCE_LENGTH = 80;
     private static final int MIN_GENERATED_LENGTH = 500;
@@ -20,6 +21,7 @@ public class NewsArticleGenerationService {
 
     private final NewsRepository newsRepository;
     private final WebClientAPIService webClientService;
+    private final Set<Long> inFlight = ConcurrentHashMap.newKeySet();
 
     public NewsArticleGenerationService(NewsRepository newsRepository, WebClientAPIService webClientService) {
         this.newsRepository = newsRepository;
@@ -28,16 +30,18 @@ public class NewsArticleGenerationService {
 
     @Async("newsTaskExecutor")
     public void generateArticleAsync(Long newsId) {
+        if (newsId == null || !inFlight.add(newsId)) {
+            return;
+        }
+
         try {
             News news = newsRepository.findById(newsId).orElse(null);
-
             if (news == null) {
                 logger.warn("Ashna generation skipped: newsId={} not found", newsId);
                 return;
             }
 
             String sourceContent = clean(news.getContent());
-
             if (sourceContent == null || PLACEHOLDER.equalsIgnoreCase(sourceContent)) {
                 logger.warn("Ashna generation skipped: newsId={} has no usable source content", newsId);
                 return;
@@ -49,27 +53,29 @@ public class NewsArticleGenerationService {
                 return;
             }
 
-            logger.debug("Ashna background generation started: newsId={}", newsId);
+            logger.info("Ashna background generation started: newsId={}, sourceChars={}",
+                    newsId, sourceContent.length());
 
-            String prompt = buildPrompt(news, sourceContent);
-            String response = webClientService.askAshna(prompt);
+            String response = webClientService.askAshna(buildPrompt(news, sourceContent));
 
             if (!isValidGeneratedArticle(response)) {
-                logger.warn("Ashna returned unusable content: newsId={}", newsId);
+                logger.warn("Ashna returned unusable content: newsId={}, responseChars={}, paragraphBreaks={}",
+                        newsId,
+                        response == null ? 0 : response.trim().length(),
+                        response == null ? 0 : countParagraphBreaks(response.trim()));
                 return;
             }
 
             news.setContent(clean(response));
             newsRepository.saveAndFlush(news);
-            logger.info("Ashna background generation completed: newsId={}", newsId);
+            logger.info("Ashna background generation completed: newsId={}, generatedChars={}",
+                    newsId, response.trim().length());
 
         } catch (Exception e) {
-            logger.warn(
-                    "Ashna background generation failed: newsId={}, errorType={}, message={}",
-                    newsId,
-                    e.getClass().getSimpleName(),
-                    e.getMessage()
-            );
+            logger.warn("Ashna background generation failed: newsId={}, errorType={}, message={}",
+                    newsId, e.getClass().getSimpleName(), e.getMessage());
+        } finally {
+            inFlight.remove(newsId);
         }
     }
 
@@ -78,17 +84,14 @@ public class NewsArticleGenerationService {
                 .orElseThrow(() -> new RuntimeException("News article not found with id: " + id));
 
         String sourceContent = clean(news.getContent());
-
         if (sourceContent == null || PLACEHOLDER.equalsIgnoreCase(sourceContent)) {
             throw new RuntimeException("No usable source content is available for this article.");
         }
-
         if (sourceContent.length() < MIN_SOURCE_LENGTH) {
             throw new RuntimeException("Source content is too short to safely generate this article.");
         }
 
         String response = webClientService.askAshna(buildPrompt(news, sourceContent));
-
         if (!isValidGeneratedArticle(response)) {
             throw new RuntimeException("Ashna returned unusable article content.");
         }
@@ -96,29 +99,28 @@ public class NewsArticleGenerationService {
         String generated = clean(response);
         news.setContent(generated);
         newsRepository.saveAndFlush(news);
-
         return generated;
     }
 
     private String buildPrompt(News news, String sourceContent) {
         return """
-                You are a professional news editor for a modern online news portal.
+                You are a professional news editor for AgniPress.
 
-                Rewrite the information below into an original, factual and readable news article.
+                Turn the supplied source information into a polished original news article.
 
-                IMPORTANT RULES:
-                - Do not invent facts.
-                - Do not invent quotes.
-                - Do not add unsupported information.
-                - Do not copy the source word-for-word.
-                - Keep all facts consistent with the source.
-                - Use professional journalism.
-                - Use short readable paragraphs.
-                - Do not use Markdown.
+                FACTUAL INTEGRITY:
+                - Use only facts supported by the supplied information.
+                - Never invent names, quotes, dates, statistics, locations or events.
+                - Do not claim that you researched anything externally.
                 - Do not mention AI.
+                - Do not copy the source word-for-word.
+
+                ARTICLE FORMAT:
                 - Return ONLY the article text.
-                - Write approximately 5 to 7 substantial paragraphs.
-                - Do not turn a short source into a list of unsupported details.
+                - No Markdown.
+                - Write 5 to 7 clear, readable paragraphs.
+                - Develop the supplied facts into coherent journalistic prose without inventing new facts.
+                - If the source is brief, stay concise rather than fabricating details.
 
                 TITLE:
                 %s
@@ -132,42 +134,35 @@ public class NewsArticleGenerationService {
                 DATE:
                 %s
 
-                INFORMATION:
+                SOURCE INFORMATION:
                 %s
                 """.formatted(
                 news.getTitle(),
                 news.getAuthor() != null ? news.getAuthor() : "Unknown",
                 news.getSourceName() != null ? news.getSourceName() : "Unknown",
                 news.getPublishedDate() != null ? news.getPublishedDate().toString() : "Unknown",
-                sourceContent
-        );
+                sourceContent);
     }
 
     private boolean isValidGeneratedArticle(String response) {
         String generated = clean(response);
-
-        if (generated == null || generated.length() < MIN_GENERATED_LENGTH) {
-            return false;
-        }
-
-        return countParagraphBreaks(generated) >= MIN_PARAGRAPH_BREAKS;
+        return generated != null
+                && generated.length() >= MIN_GENERATED_LENGTH
+                && countParagraphBreaks(generated) >= MIN_PARAGRAPH_BREAKS;
     }
 
     private int countParagraphBreaks(String content) {
         int count = 0;
-
         for (int i = 0; i < content.length() - 1; i++) {
             if (content.charAt(i) == '\n' && content.charAt(i + 1) == '\n') {
                 count++;
             }
         }
-
         return count;
     }
 
     private String clean(String value) {
         if (value == null) return null;
-
         String cleaned = value.trim();
         return cleaned.isBlank() ? null : cleaned;
     }
