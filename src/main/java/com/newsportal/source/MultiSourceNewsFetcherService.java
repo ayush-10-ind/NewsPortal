@@ -1,95 +1,117 @@
 package com.newsportal.source;
 
+import com.newsportal.repository.NewsRepository;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 @Service
 public class MultiSourceNewsFetcherService {
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(MultiSourceNewsFetcherService.class);
+    private static final Logger logger = LoggerFactory.getLogger(MultiSourceNewsFetcherService.class);
+    private static final int MAX_NEW_ARTICLES_PER_SECTION = 12;
 
     private final NewsSourceRegistry sourceRegistry;
-
     private final RssNewsFetcherService rssNewsFetcherService;
+    private final NewsRepository newsRepository;
 
     public MultiSourceNewsFetcherService(
             NewsSourceRegistry sourceRegistry,
-            RssNewsFetcherService rssNewsFetcherService) {
-
+            RssNewsFetcherService rssNewsFetcherService,
+            NewsRepository newsRepository) {
         this.sourceRegistry = sourceRegistry;
         this.rssNewsFetcherService = rssNewsFetcherService;
+        this.newsRepository = newsRepository;
     }
 
-    // =====================================================
-    // FETCH RSS SOURCES FOR SECTION
-    // =====================================================
-
-    public List<RssNewsFetcherService.RssArticle>
-    fetchRssForSection(
-            NewsSection section) {
-
-        List<RssNewsFetcherService.RssArticle> results =
-                new ArrayList<>();
+    public List<RssNewsFetcherService.RssArticle> fetchRssForSection(NewsSection section) {
+        List<RssNewsFetcherService.RssArticle> results = new ArrayList<>();
 
         if (section == null) {
             logger.warn("RSS fetch skipped: section is null");
             return results;
         }
 
-        List<NewsSource> sources =
-                sourceRegistry.getUsableRssSources(section);
+        List<NewsSource> sources = sourceRegistry.getUsableRssSources(section);
 
-        logger.info(
-                "Fetching RSS sources: section={}, sources={}",
-                section.getDisplayName(),
-                sources.size()
-        );
+        logger.info("Fetching RSS sources: section={}, sources={}, maxNewArticles={}",
+                section.getDisplayName(), sources.size(), MAX_NEW_ARTICLES_PER_SECTION);
+
+        List<List<RssNewsFetcherService.RssArticle>> sourceResults = new ArrayList<>();
 
         for (NewsSource source : sources) {
-
             try {
-
                 List<RssNewsFetcherService.RssArticle> articles =
                         rssNewsFetcherService.fetchFeed(source);
-
-                if (articles != null && !articles.isEmpty()) {
-                    results.addAll(articles);
-                }
-
+                sourceResults.add(articles == null ? List.of() : articles);
             } catch (Exception e) {
-
-                logger.error(
-                        "RSS source failed: source={}, errorType={}, message={}",
+                sourceResults.add(List.of());
+                logger.error("RSS source failed: source={}, errorType={}, message={}",
                         source.getName(),
                         e.getClass().getSimpleName(),
-                        e.getMessage()
-                );
+                        e.getMessage());
             }
         }
 
-        logger.info(
-                "RSS sources fetched: section={}, articles={}",
-                section.getDisplayName(),
-                results.size()
-        );
+        /*
+         * Select up to 12 genuinely new articles for the section.
+         * Articles are taken round-robin across enabled sources so one feed
+         * cannot consume the entire section quota by itself.
+         * Existing URLs/titles are checked against MySQL before they are returned.
+         */
+        Set<String> seenSourceUrls = new HashSet<>();
+        Set<String> seenTitles = new HashSet<>();
+
+        int maxSourceLength = maxSourceLength(sourceResults);
+
+        for (int index = 0; index < maxSourceLength && results.size() < MAX_NEW_ARTICLES_PER_SECTION; index++) {
+            for (List<RssNewsFetcherService.RssArticle> articles : sourceResults) {
+                if (index >= articles.size() || results.size() >= MAX_NEW_ARTICLES_PER_SECTION) {
+                    continue;
+                }
+
+                RssNewsFetcherService.RssArticle article = articles.get(index);
+                if (article == null) continue;
+
+                String sourceUrl = clean(article.getUrl());
+                String title = clean(article.getTitle());
+                if (sourceUrl == null || title == null) continue;
+
+                String urlKey = sourceUrl.toLowerCase(Locale.ROOT);
+                String titleKey = title.toLowerCase(Locale.ROOT);
+
+                if (!seenSourceUrls.add(urlKey)) continue;
+                if (!seenTitles.add(titleKey)) continue;
+
+                if (newsRepository.findBySourceUrl(sourceUrl).isPresent()) {
+                    continue;
+                }
+
+                if (newsRepository.existsByTitleAndCategoryIgnoreCase(
+                        title,
+                        section.getDisplayName())) {
+                    continue;
+                }
+
+                results.add(article);
+            }
+        }
+
+        logger.info("RSS sources fetched: section={}, newCandidates={}, maxPerSection={}",
+                section.getDisplayName(), results.size(), MAX_NEW_ARTICLES_PER_SECTION);
 
         return results;
     }
 
-    // =====================================================
-    // FETCH ALL USABLE RSS SOURCES
-    // =====================================================
-
-    public List<RssNewsFetcherService.RssArticle>
-    fetchAllRssSources() {
-
-        List<RssNewsFetcherService.RssArticle> results =
-                new ArrayList<>();
+    public List<RssNewsFetcherService.RssArticle> fetchAllRssSources() {
+        List<RssNewsFetcherService.RssArticle> results = new ArrayList<>();
 
         for (NewsSection section : NewsSection.values()) {
             results.addAll(fetchRssForSection(section));
@@ -98,40 +120,20 @@ public class MultiSourceNewsFetcherService {
         return results;
     }
 
-    // =====================================================
-    // GET USABLE SOURCES
-    // =====================================================
-
-    public List<NewsSource> getUsableSources(
-            NewsSection section) {
-
+    public List<NewsSource> getUsableSources(NewsSection section) {
         return sourceRegistry.getUsableSources(section);
     }
 
-    // =====================================================
-    // GET RSS SOURCES
-    // =====================================================
-
-    public List<NewsSource> getUsableRssSources(
-            NewsSection section) {
-
+    public List<NewsSource> getUsableRssSources(NewsSection section) {
         return sourceRegistry.getUsableRssSources(section);
     }
 
-    // =====================================================
-    // SOURCE STATUS
-    // =====================================================
-
     public String getSourceStatus() {
-
         StringBuilder result = new StringBuilder();
-
         result.append("AGNIPRESS SOURCE STATUS\n");
 
         for (NewsSection section : NewsSection.values()) {
-
-            List<NewsSource> sources =
-                    sourceRegistry.getSources(section);
+            List<NewsSource> sources = sourceRegistry.getSources(section);
 
             result.append("\n")
                     .append(section.getDisplayName())
@@ -143,7 +145,6 @@ public class MultiSourceNewsFetcherService {
             }
 
             for (NewsSource source : sources) {
-
                 result.append("  - ")
                         .append(source.getName())
                         .append(" | ")
@@ -157,5 +158,19 @@ public class MultiSourceNewsFetcherService {
         }
 
         return result.toString();
+    }
+
+    private int maxSourceLength(List<List<RssNewsFetcherService.RssArticle>> sourceResults) {
+        int maximum = 0;
+        for (List<RssNewsFetcherService.RssArticle> articles : sourceResults) {
+            maximum = Math.max(maximum, articles.size());
+        }
+        return maximum;
+    }
+
+    private String clean(String value) {
+        if (value == null) return null;
+        String cleaned = value.trim();
+        return cleaned.isBlank() ? null : cleaned;
     }
 }
