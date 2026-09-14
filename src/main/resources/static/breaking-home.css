@@ -101,45 +101,64 @@
 }
 
 /* =========================================================
-   HIGH-CONTRAST TICKER OVERRIDES
-   Keeps the premium navy/red ticker readable when the signed-in
-   dark theme is active.
+   AUTHENTICATED STATE — KEEP THE TICKER IDENTICAL
+   TO THE LOGGED-OUT HOMEPAGE
    ========================================================= */
 
 html.agni-dark .breaking-ticker {
     background: #071a35 !important;
-    border-top-color: #173861 !important;
-    border-bottom-color: #173861 !important;
+    color: #ffffff !important;
+    border-top: 1px solid #071a35 !important;
+    border-bottom: 1px solid #071a35 !important;
+    opacity: 1 !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+}
+
+html.agni-dark .breaking-ticker *,
+html.agni-dark .breaking-ticker::before,
+html.agni-dark .breaking-ticker::after {
+    opacity: 1 !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
 }
 
 html.agni-dark .breaking-live {
     background: #d71920 !important;
-    border-right-color: rgba(255, 255, 255, .18) !important;
+    border-right: 1px solid rgba(255, 255, 255, .18) !important;
     color: #ffffff !important;
 }
 
 html.agni-dark .breaking-live .live-word,
 html.agni-dark .breaking-live .live-time {
     color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
 }
 
 html.agni-dark .breaking-title {
     color: #ffffff !important;
-    border-right-color: rgba(255, 255, 255, .18) !important;
+    border-right: 1px solid rgba(255, 255, 255, .18) !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
 }
 
 html.agni-dark .breaking-ticker .breaking-story,
 html.agni-dark .breaking-ticker .breaking-headline,
 html.agni-dark .breaking-ticker .breaking-arrow {
     color: #ffffff !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
 }
 
 html.agni-dark .breaking-ticker .breaking-category {
     color: #ff7b6b !important;
+    opacity: 1 !important;
 }
 
 html.agni-dark .breaking-ticker .breaking-divider {
-    color: rgba(255, 255, 255, .34) !important;
+    color: rgba(255, 255, 255, .55) !important;
+    opacity: 1 !important;
 }
 
 html.agni-dark .breaking-ticker .breaking-story:hover .breaking-headline {
