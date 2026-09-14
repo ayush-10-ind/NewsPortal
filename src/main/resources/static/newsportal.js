@@ -42,39 +42,93 @@ document.addEventListener("DOMContentLoaded", function () {
         document.head.appendChild(stylesheet);
     }
 
-    function applyUserAvatars() {
+    function applyAvatarStyle(avatar, identity, initials) {
         const palette = [
             "#0d9488",
             "#f4511e",
-            "#2563eb",
+            "#eab308",
+            "#16a34a",
             "#7c3aed",
-            "#d9465f",
-            "#15803d",
-            "#b45309"
+            "#db2777",
+            "#2563eb",
+            "#d97706",
+            "#0891b2"
         ];
 
-        document.querySelectorAll(".editorial-nav .user-initial").forEach(function (avatar) {
-            const identity = avatar.textContent.trim();
-            if (!identity) return;
+        let hash = 17;
+        const seed = (identity || "user").toLowerCase();
 
-            const firstLetter = identity.replace(/[^A-Za-z0-9]/g, "").charAt(0).toUpperCase();
-            avatar.textContent = firstLetter || "U";
+        for (let i = 0; i < seed.length; i++) {
+            hash = ((hash * 31) + seed.charCodeAt(i)) | 0;
+        }
 
-            let hash = 0;
-            for (let i = 0; i < identity.length; i++) {
-                hash = ((hash << 5) - hash) + identity.charCodeAt(i);
-                hash |= 0;
-            }
+        let colorIndex = Math.abs(hash) % palette.length;
 
-            const color = palette[Math.abs(hash) % palette.length];
+        // Avoid making every commonly-used account land on the same blue.
+        if (palette[colorIndex] === "#2563eb") {
+            colorIndex = (colorIndex + 2) % palette.length;
+        }
 
-            avatar.style.setProperty("background", color, "important");
-            avatar.style.setProperty("background-image", "none", "important");
-            avatar.style.setProperty("color", "#ffffff", "important");
-            avatar.style.setProperty("border", "1px solid rgba(255,255,255,.72)", "important");
-            avatar.style.setProperty("box-shadow", "0 1px 3px rgba(17,17,15,.16), inset 0 0 0 1px rgba(255,255,255,.16)", "important");
-            avatar.style.setProperty("font-weight", "800", "important");
-        });
+        avatar.textContent = initials || "U";
+        avatar.style.setProperty("background", palette[colorIndex], "important");
+        avatar.style.setProperty("background-image", "none", "important");
+        avatar.style.setProperty("color", "#ffffff", "important");
+        avatar.style.setProperty("border", "1px solid rgba(255,255,255,.72)", "important");
+        avatar.style.setProperty(
+            "box-shadow",
+            "0 1px 3px rgba(17,17,15,.16), inset 0 0 0 1px rgba(255,255,255,.16)",
+            "important"
+        );
+        avatar.style.setProperty("font-weight", "800", "important");
+    }
+
+    function initialsFromName(name) {
+        if (!name) return "U";
+
+        const words = name
+            .trim()
+            .split(/\s+/)
+            .filter(Boolean);
+
+        if (words.length >= 2) {
+            return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+        }
+
+        return words[0].charAt(0).toUpperCase() || "U";
+    }
+
+    async function applyUserAvatars() {
+        const avatars = document.querySelectorAll(".editorial-nav .user-initial");
+        if (!avatars.length) return;
+
+        try {
+            const response = await fetch("/api/user/me", {
+                method: "GET",
+                credentials: "same-origin",
+                headers: {
+                    "Accept": "application/json"
+                }
+            });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+            const displayName = (data.name || "").trim();
+            const email = (data.email || "").trim();
+            const identity = displayName || email || "User";
+            const initials = initialsFromName(displayName || email);
+
+            avatars.forEach(function (avatar) {
+                applyAvatarStyle(avatar, identity + "|" + email, initials);
+            });
+        } catch (error) {
+            // Keep the existing server-rendered fallback if the identity endpoint is unavailable.
+            avatars.forEach(function (avatar) {
+                const current = avatar.textContent.trim();
+                const initials = initialsFromName(current);
+                applyAvatarStyle(avatar, current || "User", initials);
+            });
+        }
     }
 
     loadHomepagePolish();
