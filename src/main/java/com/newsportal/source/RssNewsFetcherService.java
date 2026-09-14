@@ -33,6 +33,11 @@ public class RssNewsFetcherService {
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(8);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
 
+    // RSS feeds often expose dozens of historical entries. AgniPress only
+    // needs the newest entries on each scheduled import, so cap the parsed
+    // result to keep memory and downstream work bounded.
+    private static final int MAX_ARTICLES_PER_FEED = 12;
+
     private static final Pattern HTML_ENTITY_PATTERN =
             Pattern.compile("&(?:nbsp|amp|quot|apos|lt|gt|hellip|ndash|mdash|rsquo|lsquo|rdquo|ldquo|trade|copy|reg|bull|middot|laquo|raquo|#\\d+|#x[0-9a-fA-F]+);");
 
@@ -112,7 +117,7 @@ public class RssNewsFetcherService {
                 items = root.getElementsByTagNameNS("*", "entry");
             }
 
-            for (int i = 0; i < items.getLength(); i++) {
+            for (int i = 0; i < items.getLength() && articles.size() < MAX_ARTICLES_PER_FEED; i++) {
                 Node node = items.item(i);
                 if (!(node instanceof Element element)) continue;
 
