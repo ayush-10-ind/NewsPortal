@@ -7,6 +7,7 @@ import com.newsportal.source.WebArticleContentExtractorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -22,6 +23,7 @@ public class RssArticleRepairService {
     // Historical repair is a safety net only. New RSS articles use the normal
     // import -> Ashna pipeline, so this worker must not fetch every RSS feed.
     private static final int MAX_REPAIR_BATCH = 3;
+    private static final int REPAIR_CANDIDATE_SCAN = 25;
     private static final int MIN_USABLE_SOURCE_LENGTH = 80;
 
     private final NewsRepository newsRepository;
@@ -52,12 +54,17 @@ public class RssArticleRepairService {
     }
 
     public int repairArticles() {
-        List<News> allNews = newsRepository.findAll();
-        if (allNews == null || allNews.isEmpty()) return 0;
+        List<News> candidates = newsRepository.findRepairCandidates(
+                NewsSourceType.EXTERNAL_API,
+                PLACEHOLDER,
+                PageRequest.of(0, REPAIR_CANDIDATE_SCAN)
+        );
+
+        if (candidates == null || candidates.isEmpty()) return 0;
 
         int repaired = 0;
 
-        for (News news : allNews) {
+        for (News news : candidates) {
             if (repaired >= MAX_REPAIR_BATCH) break;
             if (!isRssArticle(news) || !needsGeneration(news)) continue;
 
