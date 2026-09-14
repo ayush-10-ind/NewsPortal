@@ -16,6 +16,7 @@ public class NewsArticleGenerationService {
     private static final Logger logger = LoggerFactory.getLogger(NewsArticleGenerationService.class);
     private static final String PLACEHOLDER = "Article content is being prepared.";
     private static final int MIN_SOURCE_LENGTH = 80;
+    private static final int MAX_SOURCE_LENGTH = 12000;
     private static final int MIN_GENERATED_LENGTH = 500;
     private static final int MIN_PARAGRAPH_BREAKS = 3;
 
@@ -67,7 +68,7 @@ public class NewsArticleGenerationService {
             }
 
             news.setContent(clean(response));
-            newsRepository.saveAndFlush(news);
+            newsRepository.save(news);
             logger.info("Ashna background generation completed: newsId={}, generatedChars={}",
                     newsId, response.trim().length());
 
@@ -98,11 +99,15 @@ public class NewsArticleGenerationService {
 
         String generated = clean(response);
         news.setContent(generated);
-        newsRepository.saveAndFlush(news);
+        newsRepository.save(news);
         return generated;
     }
 
     private String buildPrompt(News news, String sourceContent) {
+        String boundedSource = sourceContent.length() <= MAX_SOURCE_LENGTH
+                ? sourceContent
+                : sourceContent.substring(0, MAX_SOURCE_LENGTH);
+
         return """
                 You are a professional news editor for AgniPress.
 
@@ -141,7 +146,7 @@ public class NewsArticleGenerationService {
                 news.getAuthor() != null ? news.getAuthor() : "Unknown",
                 news.getSourceName() != null ? news.getSourceName() : "Unknown",
                 news.getPublishedDate() != null ? news.getPublishedDate().toString() : "Unknown",
-                sourceContent);
+                boundedSource);
     }
 
     private boolean isValidGeneratedArticle(String response) {
