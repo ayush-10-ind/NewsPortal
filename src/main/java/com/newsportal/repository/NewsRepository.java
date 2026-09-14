@@ -153,4 +153,17 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     List<News> findTop25ByImageUrlStartingWithAndSourceUrlIsNotNullOrderByPublishedDateDesc(
             String imagePrefix
     );
+
+    @Query("""
+        SELECT n
+        FROM News n
+        WHERE n.imageUrl LIKE CONCAT(:imagePrefix, '%')
+        AND n.sourceUrl IS NOT NULL
+        AND LOWER(n.sourceUrl) LIKE '%nasa.gov%'
+        ORDER BY n.publishedDate DESC
+    """)
+    List<News> findNasaFallbackImageCandidates(
+            @Param("imagePrefix") String imagePrefix,
+            Pageable pageable
+    );
 }
