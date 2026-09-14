@@ -84,6 +84,17 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             Pageable pageable
     );
 
+    List<News> findTop5ByOrderByViewCountDesc();
+
+    @Query("""
+        SELECT DISTINCT n.category
+        FROM News n
+        WHERE n.category IS NOT NULL
+        AND TRIM(n.category) <> ''
+        ORDER BY n.category
+    """)
+    List<String> findDistinctCategories();
+
     List<News> findTop3ByCategoryIgnoreCaseAndIdNotOrderByPublishedDateDesc(
             String category,
             Long id
