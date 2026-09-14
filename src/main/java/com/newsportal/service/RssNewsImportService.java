@@ -146,11 +146,19 @@ public class RssNewsImportService {
 
                 String category = sectionName;
                 String rssImageUrl = clean(article.getImageUrl());
-                String resolvedImage = articleImageService.resolveImage(
-                        rssImageUrl,
-                        sourceUrl,
-                        category
-                );
+
+                // RSS already supplied the image URL. Trust a valid absolute
+                // RSS image URL instead of making another HTTP request just to
+                // validate it. The image repair worker can recover bad/missing
+                // URLs later without slowing the import path.
+                String resolvedImage = rssImageUrl;
+                if (resolvedImage == null) {
+                    resolvedImage = articleImageService.resolveImage(
+                            null,
+                            sourceUrl,
+                            category
+                    );
+                }
 
                 if (resolvedImage == null || resolvedImage.isBlank()) {
                     resolvedImage = "/images/fallback?category=" + category;
@@ -169,23 +177,12 @@ public class RssNewsImportService {
                 news.setPublishedDate(convertPublishedDate(article.getPublishedDate()));
                 news.setViewCount(0L);
 
-                News savedNews = newsRepository.saveAndFlush(news);
-
-                Optional<News> persistedArticle = newsRepository.findBySourceUrl(sourceUrl);
-                if (persistedArticle.isEmpty()) {
-                    failedCount++;
-                    logger.error(
-                            "RSS article save verification failed. Database ID={}",
-                            savedNews.getId()
-                    );
-                    continue;
-                }
+                News savedNews = newsRepository.save(news);
 
                 importedCount++;
 
-                // RSS content is preferred. If it is incomplete, the publisher
-                // page is used as factual source material. Ashna writes the
-                // final article asynchronously after the source is persisted.
+                // Source content is persisted before Ashna is called. Generation
+                // is asynchronous so the RSS scheduler never waits for AI.
                 articleGenerationService.generateArticleAsync(savedNews.getId());
                 generationQueuedCount++;
 
