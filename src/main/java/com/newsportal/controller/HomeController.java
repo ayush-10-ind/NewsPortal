@@ -10,10 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Controller
 public class HomeController {
@@ -27,6 +24,8 @@ public class HomeController {
     @GetMapping("/")
     public String home(Model model) {
 
+        // Keep the homepage request small. Only fetch the records that the
+        // template actually needs instead of loading the complete news table.
         Page<News> latestPage = newsRepository.findAll(
                 PageRequest.of(
                         0,
@@ -36,43 +35,22 @@ public class HomeController {
         );
 
         List<News> latestNews = latestPage.getContent();
-
         model.addAttribute("latestNews", latestNews);
 
         News featuredNews = latestNews.stream()
-                .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
 
         model.addAttribute("featuredNews", featuredNews);
 
-        List<News> trendingNews = newsRepository.findAll()
-                .stream()
-                .filter(Objects::nonNull)
-                .sorted(
-                        Comparator.comparing(
-                                News::getViewCount,
-                                Comparator.nullsLast(
-                                        Comparator.reverseOrder()
-                                )
-                        )
-                )
-                .limit(5)
-                .collect(Collectors.toList());
-
+        // Trending news is now limited by the database query. This avoids
+        // loading every News entity and sorting the complete table in Java.
+        List<News> trendingNews = newsRepository.findTop5ByOrderByViewCountDesc();
         model.addAttribute("trendingNews", trendingNews);
 
-        List<String> categories = newsRepository.findAll()
-                .stream()
-                .filter(Objects::nonNull)
-                .map(News::getCategory)
-                .filter(Objects::nonNull)
-                .map(String::trim)
-                .filter(category -> !category.isEmpty())
-                .distinct()
-                .sorted()
-                .collect(Collectors.toList());
-
+        // Categories are returned directly from the database instead of
+        // loading every News entity just to extract a string field.
+        List<String> categories = newsRepository.findDistinctCategories();
         model.addAttribute("categories", categories);
 
         return "index";
