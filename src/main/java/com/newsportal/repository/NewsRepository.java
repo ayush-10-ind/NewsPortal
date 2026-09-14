@@ -138,6 +138,8 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             LocalDate cutoffDate
     );
 
+    long deleteByPublishedDateBefore(LocalDate cutoffDate);
+
     List<News> findTop5ByImageUrlStartingWithOrderByIdAsc(
             String imagePrefix
     );
