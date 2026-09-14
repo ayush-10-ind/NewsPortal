@@ -6,10 +6,13 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.util.Map;
 
 @Service
 public class WebClientAPIService {
+
+    private static final Duration ASHNA_TIMEOUT = Duration.ofSeconds(45);
 
     private final WebClient webClient;
 
@@ -74,6 +77,7 @@ public class WebClientAPIService {
                                     ))
                     )
                     .bodyToMono(JsonNode.class)
+                    .timeout(ASHNA_TIMEOUT)
                     .block();
 
             if (ashnaResponse == null) {
