@@ -1,6 +1,7 @@
 package com.newsportal.repository;
 
 import com.newsportal.entity.News;
+import com.newsportal.entity.NewsSourceType;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -94,6 +95,24 @@ public interface NewsRepository extends JpaRepository<News, Long> {
         ORDER BY n.category
     """)
     List<String> findDistinctCategories();
+
+    @Query("""
+        SELECT n
+        FROM News n
+        WHERE n.sourceType = :sourceType
+        AND n.sourceUrl IS NOT NULL
+        AND (
+            n.content IS NULL
+            OR n.content = :placeholder
+            OR LENGTH(n.content) < 1500
+        )
+        ORDER BY n.id ASC
+    """)
+    List<News> findRepairCandidates(
+            @Param("sourceType") NewsSourceType sourceType,
+            @Param("placeholder") String placeholder,
+            Pageable pageable
+    );
 
     List<News> findTop3ByCategoryIgnoreCaseAndIdNotOrderByPublishedDateDesc(
             String category,
