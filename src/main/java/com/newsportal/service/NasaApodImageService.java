@@ -36,32 +36,41 @@ public class NasaApodImageService {
     public NasaApodImageService(
             WebClient.Builder webClientBuilder,
             ObjectMapper objectMapper,
-            @Value("${nasa.api-key:DEMO_KEY}") String nasaApiKey) {
+            @Value("${nasa.api-key:}") String nasaApiKey) {
         this.webClient = webClientBuilder.build();
         this.objectMapper = objectMapper;
-        this.nasaApiKey = nasaApiKey;
+        this.nasaApiKey = nasaApiKey == null ? "" : nasaApiKey.trim();
     }
 
     /**
-     * Resolves images for NASA articles.
+     * Resolves images for NASA articles without requiring a NASA API key.
      *
-     * APOD articles use the structured NASA APOD API because the image is
-     * tied directly to the publication date. Other NASA articles use the
-     * publisher page's Open Graph/Twitter/JSON-LD image metadata.
+     * Priority:
+     * 1. Read the NASA publisher page metadata directly.
+     * 2. For APOD articles only, optionally use the APOD API when a real
+     *    NASA API key has been configured.
+     *
+     * This keeps NASA image resolution working for deployments that only have
+     * the application's normal news API key.
      */
     public String resolveImage(String sourceUrl, String title, LocalDate publishedDate) {
         if (!isNasaArticle(sourceUrl)) {
             return null;
         }
 
-        if (isApodArticle(title) && publishedDate != null) {
+        String pageImage = resolveNasaPageImage(sourceUrl, title);
+        if (isUsableUrl(pageImage)) {
+            return pageImage;
+        }
+
+        if (isApodArticle(title) && publishedDate != null && hasUsableApiKey()) {
             String apodImage = resolveApodImage(publishedDate, title);
             if (isUsableUrl(apodImage)) {
                 return apodImage;
             }
         }
 
-        return resolveNasaPageImage(sourceUrl, title);
+        return null;
     }
 
     private String resolveApodImage(LocalDate publishedDate, String title) {
@@ -93,12 +102,12 @@ public class NasaApodImageService {
             String resolved = isUsableUrl(hdUrl) ? hdUrl : standardUrl;
 
             if (isUsableUrl(resolved)) {
-                logger.info("NASA APOD image resolved: date={}, title={}", publishedDate, title);
+                logger.info("NASA APOD API image resolved: date={}, title={}", publishedDate, title);
                 return resolved;
             }
 
         } catch (Exception ex) {
-            logger.debug("NASA APOD image lookup failed: date={}, errorType={}, message={}",
+            logger.debug("NASA APOD API lookup failed: date={}, errorType={}, message={}",
                     publishedDate,
                     ex.getClass().getSimpleName(),
                     ex.getMessage());
@@ -132,7 +141,9 @@ public class NasaApodImageService {
                     "meta[property=og:image:url]",
                     "meta[property=og:image:secure_url]",
                     "meta[name=twitter:image]",
-                    "meta[name=twitter:image:src]"
+                    "meta[name=twitter:image:src]",
+                    "meta[name=image]",
+                    "meta[property=image]"
             };
 
             for (String selector : selectors) {
@@ -140,10 +151,11 @@ public class NasaApodImageService {
                 if (element == null) continue;
 
                 String content = element.attr("content").trim();
-                if (isUsableUrl(content)) {
-                    logger.info("NASA article image resolved from metadata: title={}, imageHost={}",
-                            title, hostOf(content));
-                    return content;
+                String normalized = normalizeUrl(content, sourceUrl);
+                if (isUsableUrl(normalized)) {
+                    logger.info("NASA article image resolved from page metadata: title={}, imageHost={}",
+                            title, hostOf(normalized));
+                    return normalized;
                 }
             }
 
@@ -152,6 +164,13 @@ public class NasaApodImageService {
                 logger.info("NASA article image resolved from JSON-LD: title={}, imageHost={}",
                         title, hostOf(jsonLdImage));
                 return jsonLdImage;
+            }
+
+            String contentImage = findArticleImage(document, sourceUrl);
+            if (isUsableUrl(contentImage)) {
+                logger.info("NASA article image resolved from article content: title={}, imageHost={}",
+                        title, hostOf(contentImage));
+                return contentImage;
             }
 
         } catch (Exception ex) {
@@ -207,7 +226,7 @@ public class NasaApodImageService {
         }
 
         if (node.isObject()) {
-            for (String fieldName : new String[]{"image", "thumbnailUrl", "contentUrl"}) {
+            for (String fieldName : new String[]{"image", "thumbnailUrl", "contentUrl", "thumbnail"}) {
                 JsonNode imageNode = node.get(fieldName);
                 String result = extractImageValue(imageNode, sourceUrl);
                 if (isUsableUrl(result)) {
@@ -257,6 +276,40 @@ public class NasaApodImageService {
         return null;
     }
 
+    private String findArticleImage(Document document, String sourceUrl) {
+        String[] selectors = {
+                "article img[src]",
+                "main img[src]",
+                "img[data-src]",
+                "img[data-lazy-src]",
+                "img[data-original]"
+        };
+
+        for (String selector : selectors) {
+            for (Element image : document.select(selector)) {
+                String[] attributes = {"src", "data-src", "data-lazy-src", "data-original"};
+                for (String attribute : attributes) {
+                    String value = image.attr(attribute);
+                    String normalized = normalizeUrl(value, sourceUrl);
+                    if (isUsableUrl(normalized) && !looksLikeNonArticleAsset(normalized)) {
+                        return normalized;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private boolean looksLikeNonArticleAsset(String value) {
+        String normalized = value.toLowerCase(Locale.ROOT);
+        return normalized.contains("logo")
+                || normalized.contains("icon")
+                || normalized.contains("avatar")
+                || normalized.contains("favicon")
+                || normalized.contains("sprite");
+    }
+
     private boolean isNasaArticle(String sourceUrl) {
         if (sourceUrl == null || sourceUrl.isBlank()) return false;
         String normalized = sourceUrl.toLowerCase(Locale.ROOT);
@@ -265,6 +318,12 @@ public class NasaApodImageService {
 
     private boolean isApodArticle(String title) {
         return title != null && title.trim().toLowerCase(Locale.ROOT).startsWith("apod:");
+    }
+
+    private boolean hasUsableApiKey() {
+        return nasaApiKey != null
+                && !nasaApiKey.isBlank()
+                && !"DEMO_KEY".equalsIgnoreCase(nasaApiKey.trim());
     }
 
     private boolean isUsableUrl(String value) {
