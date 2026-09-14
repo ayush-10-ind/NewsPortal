@@ -22,14 +22,13 @@ public class NewsImageRepairService {
     private static final Logger logger = LoggerFactory.getLogger(NewsImageRepairService.class);
     private static final String FALLBACK_PREFIX = "/images/fallback";
 
-    // Safety-net worker only. It repairs a small number of historical records
-    // and must not compete with normal RSS imports for network/CPU capacity.
     private static final int BATCH_SIZE = 5;
     private static final long INITIAL_DELAY_SECONDS = 300;
     private static final long DELAY_SECONDS = 1800;
 
     private final NewsRepository newsRepository;
     private final ArticleImageService articleImageService;
+    private final NasaApodImageService nasaApodImageService;
     private final TransactionTemplate transactionTemplate;
 
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(runnable -> {
@@ -40,9 +39,11 @@ public class NewsImageRepairService {
 
     public NewsImageRepairService(NewsRepository newsRepository,
                                   ArticleImageService articleImageService,
+                                  NasaApodImageService nasaApodImageService,
                                   TransactionTemplate transactionTemplate) {
         this.newsRepository = newsRepository;
         this.articleImageService = articleImageService;
+        this.nasaApodImageService = nasaApodImageService;
         this.transactionTemplate = transactionTemplate;
     }
 
@@ -78,13 +79,20 @@ public class NewsImageRepairService {
 
                     attempted++;
 
-                    // Do not fetch all RSS feeds just to recover one image. The
-                    // article page extractor already supports OG, Twitter,
-                    // JSON-LD and article image metadata.
                     String resolvedImage = articleImageService.resolveImage(
                             null,
                             sourceUrl,
                             news.getCategory());
+
+                    if (isFallbackImage(resolvedImage)) {
+                        String nasaImage = nasaApodImageService.resolveImage(
+                                sourceUrl,
+                                news.getTitle(),
+                                news.getPublishedDate());
+                        if (nasaImage != null && !nasaImage.isBlank()) {
+                            resolvedImage = nasaImage;
+                        }
+                    }
 
                     if (!isRealImage(resolvedImage)) continue;
 
@@ -98,8 +106,9 @@ public class NewsImageRepairService {
 
                     if (Boolean.TRUE.equals(saved)) {
                         repaired++;
-                        logger.info("Recovered news image: articleId={}, source=article-page",
-                                news.getId());
+                        logger.info("Recovered news image: articleId={}, source={}",
+                                news.getId(),
+                                isNasaImage(resolvedImage) ? "nasa-apod" : "article-page");
                     }
                 } catch (Exception ex) {
                     logger.debug("News image retry skipped: articleId={}, errorType={}, message={}",
@@ -128,5 +137,9 @@ public class NewsImageRepairService {
 
     private boolean isRealImage(String imageUrl) {
         return imageUrl != null && !imageUrl.isBlank() && !isFallbackImage(imageUrl);
+    }
+
+    private boolean isNasaImage(String imageUrl) {
+        return imageUrl != null && imageUrl.toLowerCase().contains("nasa.gov");
     }
 }
