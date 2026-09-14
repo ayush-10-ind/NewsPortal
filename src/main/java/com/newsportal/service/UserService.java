@@ -22,18 +22,12 @@ public class UserService {
     private final EmailVerificationTokenRepository tokenRepository;
     private final EmailService emailService;
 
-
-    // =====================================================
-    // CONSTRUCTOR
-    // =====================================================
-
     public UserService(
             UserRepository userRepository,
             RoleRepository roleRepository,
             PasswordEncoder passwordEncoder,
             EmailVerificationTokenRepository tokenRepository,
             EmailService emailService) {
-
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
@@ -41,147 +35,65 @@ public class UserService {
         this.emailService = emailService;
     }
 
+    public User registerUser(RegisterRequestDTO request) {
 
-    // =====================================================
-    // REGISTER / RESEND VERIFICATION
-    // =====================================================
+        String email = normalize(request.getEmail());
+        String username = normalize(request.getUsername());
+        String name = request.getName().trim();
 
-    @Transactional
-    public User registerUser(
-            RegisterRequestDTO request) {
-
-        String email =
-                request.getEmail()
-                        .trim()
-                        .toLowerCase();
-
-        String username =
-                request.getUsername()
-                        .trim()
-                        .toLowerCase();
-
-        // =================================================
-        // CHECK IF EMAIL ALREADY EXISTS
-        // =================================================
-
-        User existingUser =
-                userRepository
-                        .findByEmail(email)
-                        .orElse(null);
-
-        // =================================================
-        // EXISTING USER
-        // =================================================
+        User existingUser = userRepository.findByEmail(email).orElse(null);
 
         if (existingUser != null) {
 
-            if (existingUser.isEmailVerified()
-                    && existingUser.getPassword() != null
-                    && !existingUser.getPassword().isBlank()) {
-
+            // A verified account includes OAuth-only accounts, whose local
+            // password is intentionally null. Never reset such an account.
+            if (existingUser.isEmailVerified()) {
                 throw new RuntimeException(
-                        "An account with this email already exists. "
-                        + "Please sign in instead."
+                        "An account with this email already exists. Please sign in or use your social login."
                 );
             }
 
-            // -------------------------------------------------
-            // CHECK USERNAME
-            // -------------------------------------------------
-
-            if (!existingUser.getUsername()
-                    .equalsIgnoreCase(username)) {
-
-                if (userRepository.existsByUsername(username)) {
-
-                    throw new RuntimeException(
-                            "This username is already taken. "
-                            + "Please choose another."
-                    );
-                }
-
-                existingUser.setUsername(username);
+            if (!existingUser.getUsername().equalsIgnoreCase(username)
+                    && userRepository.existsByUsername(username)) {
+                throw new RuntimeException(
+                        "This username is already taken. Please choose another."
+                );
             }
 
-            // -------------------------------------------------
-            // UPDATE PENDING ACCOUNT
-            // -------------------------------------------------
-
-            existingUser.setName(
-                    request.getName().trim()
-            );
-
+            existingUser.setUsername(username);
+            existingUser.setName(name);
             existingUser.setPassword(null);
             existingUser.setEnabled(false);
             existingUser.setEmailVerified(false);
 
-            User savedUser =
-                    userRepository.save(existingUser);
-
-            // -------------------------------------------------
-            // REPLACE OLD TOKEN
-            // -------------------------------------------------
+            User savedUser = userRepository.save(existingUser);
 
             tokenRepository.deleteAllByUser(savedUser);
             tokenRepository.flush();
 
-            EmailVerificationToken newToken =
+            EmailVerificationToken token =
                     new EmailVerificationToken(savedUser);
 
-            tokenRepository.save(newToken);
-
-            // -------------------------------------------------
-            // SEND EMAIL
-            // -------------------------------------------------
-
-            try {
-
-                emailService.sendVerificationEmail(
-                        savedUser,
-                        newToken
-                );
-
-            } catch (Exception e) {
-
-                tokenRepository.delete(newToken);
-
-                throw new RuntimeException(
-                        "We could not send a verification email "
-                        + "to this address. Please check the "
-                        + "email address and try again."
-                );
-            }
+            tokenRepository.save(token);
+            sendVerificationEmailOrThrow(savedUser, token);
 
             return savedUser;
         }
 
-        // =====================================================
-        // NEW USER
-        // =====================================================
-
         if (userRepository.existsByUsername(username)) {
-
             throw new RuntimeException(
-                    "This username is already taken. "
-                    + "Please choose another."
+                    "This username is already taken. Please choose another."
             );
         }
 
-        Role userRole =
-                roleRepository
-                        .findByName("ROLE_USER")
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "ROLE_USER not found"
-                                )
-                        );
+        Role userRole = roleRepository
+                .findByName("ROLE_USER")
+                .orElseThrow(() ->
+                        new RuntimeException("ROLE_USER not found")
+                );
 
         User user = new User();
-
-        user.setName(
-                request.getName().trim()
-        );
-
+        user.setName(name);
         user.setUsername(username);
         user.setEmail(email);
         user.setPassword(null);
@@ -189,123 +101,103 @@ public class UserService {
         user.setEmailVerified(false);
         user.addRole(userRole);
 
-        User savedUser =
-                userRepository.save(user);
-
-        // =====================================================
-        // CREATE VERIFICATION TOKEN
-        // =====================================================
+        User savedUser = userRepository.save(user);
 
         EmailVerificationToken token =
                 new EmailVerificationToken(savedUser);
 
         tokenRepository.save(token);
 
-        // =====================================================
-        // SEND VERIFICATION EMAIL
-        // =====================================================
-
-        try {
-
-            emailService.sendVerificationEmail(
-                    savedUser,
-                    token
-            );
-
-        } catch (Exception e) {
-
-            tokenRepository.delete(token);
-            userRepository.delete(savedUser);
-
-            throw new RuntimeException(
-                    "We could not send a verification email "
-                    + "to this address. Please check the "
-                    + "email address and try again."
-            );
-        }
+        // Email delivery happens after the account/token persistence so a
+        // slow or failing mail provider cannot roll back the account.
+        sendVerificationEmailOrThrow(savedUser, token);
 
         return savedUser;
     }
 
+    private void sendVerificationEmailOrThrow(
+            User user,
+            EmailVerificationToken token) {
 
-    // =====================================================
-    // COMPLETE EMAIL VERIFICATION + PASSWORD CREATION
-    // =====================================================
+        try {
+            emailService.sendVerificationEmail(user, token);
+        } catch (Exception e) {
+            throw new RuntimeException(
+                    "Your account was created, but we could not send the verification email. "
+                    + "Please try the resend verification option.",
+                    e
+            );
+        }
+    }
+
+    public boolean resendVerificationEmail(String email) {
+
+        String normalizedEmail = normalize(email);
+
+        User user = userRepository
+                .findByEmail(normalizedEmail)
+                .orElse(null);
+
+        if (user == null
+                || user.isEmailVerified()
+                || (user.getPassword() != null && !user.getPassword().isBlank())) {
+            return false;
+        }
+
+        tokenRepository.deleteAllByUser(user);
+        tokenRepository.flush();
+
+        EmailVerificationToken token =
+                new EmailVerificationToken(user);
+
+        tokenRepository.save(token);
+        sendVerificationEmailOrThrow(user, token);
+
+        return true;
+    }
+
+    private String normalize(String value) {
+        return value == null
+                ? ""
+                : value.trim().toLowerCase();
+    }
 
     @Transactional
     public void completeEmailVerification(
             String token,
             SetPasswordRequestDTO request) {
 
-        // -------------------------------------------------
-        // FIND TOKEN INSIDE THE SAME TRANSACTION
-        // -------------------------------------------------
-
-        EmailVerificationToken verificationToken =
-                tokenRepository
-                        .findByToken(token)
-                        .orElse(null);
+        EmailVerificationToken verificationToken = tokenRepository
+                .findByToken(token)
+                .orElse(null);
 
         if (verificationToken == null) {
-
             throw new RuntimeException(
                     "This verification link is invalid or has already been used."
             );
         }
 
         if (verificationToken.isExpired()) {
-
             throw new RuntimeException(
-                    "This verification link has expired. Please register again."
+                    "This verification link has expired. Please request a new verification email."
             );
         }
-
-        // -------------------------------------------------
-        // PASSWORD MATCH
-        // -------------------------------------------------
 
         if (request.getPassword() == null
                 || request.getConfirmPassword() == null
-                || !request.getPassword()
-                        .equals(request.getConfirmPassword())) {
-
-            throw new RuntimeException(
-                    "Passwords do not match."
-            );
+                || !request.getPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Passwords do not match.");
         }
-
-        // -------------------------------------------------
-        // GET USER
-        // -------------------------------------------------
 
         User user = verificationToken.getUser();
 
-        // -------------------------------------------------
-        // SET PASSWORD
-        // -------------------------------------------------
-
-        user.setPassword(
-                passwordEncoder.encode(
-                        request.getPassword()
-                )
-        );
-
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmailVerified(true);
         user.setEnabled(true);
 
         userRepository.save(user);
-
-        // -------------------------------------------------
-        // DELETE TOKEN ATOMICALLY
-        // -------------------------------------------------
-
         tokenRepository.delete(verificationToken);
     }
-
-
-    // =====================================================
-    // LEGACY PASSWORD METHOD
-    // =====================================================
 
     @Transactional
     public void setPassword(
@@ -314,20 +206,11 @@ public class UserService {
 
         if (request.getPassword() == null
                 || request.getConfirmPassword() == null
-                || !request.getPassword()
-                        .equals(request.getConfirmPassword())) {
-
-            throw new RuntimeException(
-                    "Passwords do not match."
-            );
+                || !request.getPassword().equals(request.getConfirmPassword())) {
+            throw new RuntimeException("Passwords do not match.");
         }
 
-        user.setPassword(
-                passwordEncoder.encode(
-                        request.getPassword()
-                )
-        );
-
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setEmailVerified(true);
         user.setEnabled(true);
 

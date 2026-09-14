@@ -11,14 +11,23 @@ public class SecurityConfig {
     private final CustomAccessDeniedHandler accessDeniedHandler;
     private final CustomAuthenticationFailureHandler authenticationFailureHandler;
     private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomOidcUserService customOidcUserService;
+    private final CustomOAuth2AuthenticationSuccessHandler oauthSuccessHandler;
+    private final CustomOAuth2AuthenticationFailureHandler oauthFailureHandler;
 
     public SecurityConfig(
             CustomAccessDeniedHandler accessDeniedHandler,
             CustomAuthenticationFailureHandler authenticationFailureHandler,
-            CustomOAuth2UserService customOAuth2UserService) {
+            CustomOAuth2UserService customOAuth2UserService,
+            CustomOidcUserService customOidcUserService,
+            CustomOAuth2AuthenticationSuccessHandler oauthSuccessHandler,
+            CustomOAuth2AuthenticationFailureHandler oauthFailureHandler) {
         this.accessDeniedHandler = accessDeniedHandler;
         this.authenticationFailureHandler = authenticationFailureHandler;
         this.customOAuth2UserService = customOAuth2UserService;
+        this.customOidcUserService = customOidcUserService;
+        this.oauthSuccessHandler = oauthSuccessHandler;
+        this.oauthFailureHandler = oauthFailureHandler;
     }
 
     @Bean
@@ -32,6 +41,7 @@ public class SecurityConfig {
                     "/login",
                     "/register",
                     "/verify-email",
+                    "/resend-verification",
                     "/access-denied",
                     "/live-news",
                     "/api/live-channels",
@@ -80,9 +90,12 @@ public class SecurityConfig {
             )
             .oauth2Login(oauth -> oauth
                 .loginPage("/login")
-                .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
-                .defaultSuccessUrl("/", true)
-                .failureUrl("/login?oauth2Error=true")
+                .userInfoEndpoint(userInfo -> userInfo
+                    .userService(customOAuth2UserService)
+                    .oidcUserService(customOidcUserService)
+                )
+                .successHandler(oauthSuccessHandler)
+                .failureHandler(oauthFailureHandler)
             )
             .logout(logout -> logout
                 .logoutSuccessUrl("/")

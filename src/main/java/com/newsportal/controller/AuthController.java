@@ -12,6 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 public class AuthController {
@@ -22,92 +23,69 @@ public class AuthController {
         this.userService = userService;
     }
 
-    // =====================================================
-    // LOGIN
-    // =====================================================
-
     @GetMapping("/login")
     public String login() {
         return "login";
     }
 
-    // =====================================================
-    // REGISTER PAGE
-    // =====================================================
-
     @GetMapping("/register")
     public String registerPage(Model model) {
-
-        model.addAttribute(
-                "registerRequest",
-                new RegisterRequestDTO()
-        );
-
-        // Keep one canonical registration template.
+        model.addAttribute("registerRequest", new RegisterRequestDTO());
         return "register";
     }
-
-    // =====================================================
-    // REGISTER
-    // =====================================================
 
     @PostMapping("/register")
     public String register(
             @Valid
             @ModelAttribute("registerRequest")
             RegisterRequestDTO request,
-
             BindingResult bindingResult,
-
             Model model) {
-
-        // =================================================
-        // FORM VALIDATION
-        // =================================================
 
         if (bindingResult.hasErrors()) {
             return "register";
         }
 
-        // =================================================
-        // REGISTER USER
-        // =================================================
-
         try {
-
             userService.registerUser(request);
 
-            /*
-             * IMPORTANT:
-             *
-             * registerUser() only returns successfully
-             * when the verification email was accepted
-             * by the mail server.
-             *
-             * Do NOT send the user directly to login.
-             */
-
-            model.addAttribute(
-                    "email",
-                    request.getEmail()
-            );
-
+            model.addAttribute("email", request.getEmail());
             return "verification-sent";
 
         } catch (RuntimeException e) {
-
-            model.addAttribute(
-                    "error",
-                    e.getMessage()
-            );
-
+            model.addAttribute("error", e.getMessage());
             return "register";
         }
     }
 
     // =====================================================
-    // ACCESS DENIED
+    // RESEND VERIFICATION
     // =====================================================
+
+    @PostMapping("/resend-verification")
+    public String resendVerification(
+            @RequestParam("email") String email,
+            Model model) {
+
+        try {
+            boolean sent = userService.resendVerificationEmail(email);
+
+            model.addAttribute("email", email.trim());
+            model.addAttribute(
+                    "resendMessage",
+                    sent
+                            ? "A new verification link has been sent."
+                            : "If this email belongs to a pending AgniPress account, a new verification link will be sent."
+            );
+
+            return "verification-sent";
+
+        } catch (RuntimeException e) {
+            model.addAttribute("email", email.trim());
+            model.addAttribute("error", e.getMessage());
+            return "verification-sent";
+        }
+    }
 
     @GetMapping("/access-denied")
     public String accessDenied() {

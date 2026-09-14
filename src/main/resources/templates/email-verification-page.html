@@ -23,12 +23,10 @@
             </h1>
 
             <p>
-                Your email address has been verified.
-                Now create a secure password for your account.
+                Verify your email and create a secure password for your AgniPress account.
             </p>
 
             <div class="auth-intro-line"></div>
-
             <span class="auth-edition">AGNIPRESS / SECURITY</span>
         </section>
 
@@ -42,16 +40,11 @@
                 Verification successful.
             </div>
 
-            <!-- AGNIPRESS EMAIL VERIFICATION PAGE V3 -->
-            <!-- The password form is rendered whenever the controller supplies
-                 setPasswordRequest. It remains independent of the token value. -->
             <div th:if="${setPasswordRequest != null and success == null}">
 
                 <div class="auth-form-header">
                     <span class="auth-form-kicker">WELCOME</span>
-
                     <h2>Create your password</h2>
-
                     <p>
                         Hello
                         <strong th:text="${userName}">Member</strong>.
@@ -68,7 +61,6 @@
 
                     <div class="auth-field">
                         <label for="password">PASSWORD</label>
-
                         <input id="password"
                                type="password"
                                th:field="*{password}"
@@ -76,16 +68,13 @@
                                autocomplete="new-password"
                                minlength="8"
                                required>
-
                         <div th:if="${#fields.hasErrors('password')}"
                              class="auth-error"
-                             th:errors="*{password}">
-                        </div>
+                             th:errors="*{password}"></div>
                     </div>
 
                     <div class="auth-field">
                         <label for="confirmPassword">CONFIRM PASSWORD</label>
-
                         <input id="confirmPassword"
                                type="password"
                                th:field="*{confirmPassword}"
@@ -93,11 +82,9 @@
                                autocomplete="new-password"
                                minlength="8"
                                required>
-
                         <div th:if="${#fields.hasErrors('confirmPassword')}"
                              class="auth-error"
-                             th:errors="*{confirmPassword}">
-                        </div>
+                             th:errors="*{confirmPassword}"></div>
                     </div>
 
                     <button type="submit" class="auth-submit">
@@ -107,8 +94,42 @@
                 </form>
             </div>
 
+            <div th:if="${error != null and email != null and success == null}"
+                 class="auth-form"
+                 style="margin-top:24px;">
+
+                <div class="auth-form-header">
+                    <span class="auth-form-kicker">NEED A NEW LINK?</span>
+                    <h2>Resend verification</h2>
+                    <p>
+                        Request a fresh verification link. Your previous link will no longer be valid.
+                    </p>
+                </div>
+
+                <form th:action="@{/resend-verification}" method="post" class="auth-form">
+                    <div class="auth-field">
+                        <label for="resend-email">EMAIL ADDRESS</label>
+                        <input id="resend-email"
+                               name="email"
+                               type="email"
+                               th:value="${email}"
+                               autocomplete="email"
+                               required>
+                    </div>
+
+                    <button type="submit" class="auth-submit">
+                        SEND NEW VERIFICATION LINK
+                        <span>→</span>
+                    </button>
+                </form>
+            </div>
+
             <div th:if="${success}" class="auth-footer">
                 <a href="/login">SIGN IN TO AGNIPRESS</a>
+            </div>
+
+            <div th:if="${error != null and email == null}" class="auth-footer">
+                <a href="/register">START REGISTRATION AGAIN</a>
             </div>
 
         </section>
@@ -119,10 +140,7 @@
     <div class="editorial-container footer-grid">
         <div>
             <div class="footer-brand">AGNIPRESS</div>
-            <p>
-                Independent reporting and stories
-                shaping the day ahead.
-            </p>
+            <p>Independent reporting and stories shaping the day ahead.</p>
         </div>
 
         <div class="footer-links">

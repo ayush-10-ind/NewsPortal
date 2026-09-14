@@ -35,7 +35,9 @@ public class EmailService {
     @Value("${mailjet.from-email:}")
     private String fromEmail;
 
-    @Value("${APP_BASE_URL:http://localhost:8082}")
+    // Railway should set APP_BASE_URL to the public AgniPress URL.
+    // Local development falls back to the application's default port.
+    @Value("${APP_BASE_URL:http://localhost:8080}")
     private String baseUrl;
 
     public EmailService(WebClient.Builder webClientBuilder) {
@@ -49,12 +51,9 @@ public class EmailService {
         validateConfiguration();
 
         String verificationUrl =
-                baseUrl
+                normalizeBaseUrl()
                         + "/verify-email?token="
                         + token.getToken();
-
-        String subject =
-                "Verify your AgniPress account";
 
         String html = """
                 <!DOCTYPE html>
@@ -63,111 +62,44 @@ public class EmailService {
                     <meta charset="UTF-8">
                     <title>Verify your AgniPress account</title>
                 </head>
-                <body style="
-                    margin:0;
-                    padding:0;
-                    background:#f5f2eb;
-                    font-family:Arial,Helvetica,sans-serif;
-                    color:#111111;
-                ">
-                    <div style="
-                        max-width:600px;
-                        margin:40px auto;
-                        background:#ffffff;
-                        border:1px solid #ddd8cf;
-                    ">
-                        <div style="
-                            padding:28px 32px;
-                            border-bottom:1px solid #ddd8cf;
-                        ">
-                            <div style="
-                                font-size:28px;
-                                font-weight:700;
-                                letter-spacing:-1px;
-                            ">
+                <body style="margin:0;padding:0;background:#f5f2eb;font-family:Arial,Helvetica,sans-serif;color:#111111;">
+                    <div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #ddd8cf;">
+                        <div style="padding:28px 32px;border-bottom:1px solid #ddd8cf;">
+                            <div style="font-size:28px;font-weight:700;letter-spacing:-1px;">
                                 Agni<span style="font-weight:400;">Press</span>
                             </div>
-                            <div style="
-                                margin-top:6px;
-                                font-size:11px;
-                                letter-spacing:2px;
-                                color:#b83220;
-                            ">
+                            <div style="margin-top:6px;font-size:11px;letter-spacing:2px;color:#b83220;">
                                 INDIA. IN THE MOMENT.
                             </div>
                         </div>
                         <div style="padding:40px 32px;">
-                            <div style="
-                                font-size:11px;
-                                font-weight:bold;
-                                letter-spacing:2px;
-                                color:#b83220;
-                                margin-bottom:15px;
-                            ">
+                            <div style="font-size:11px;font-weight:bold;letter-spacing:2px;color:#b83220;margin-bottom:15px;">
                                 WELCOME TO AGNIPRESS
                             </div>
-                            <h1 style="
-                                margin:0 0 18px 0;
-                                font-family:Georgia,serif;
-                                font-size:38px;
-                                font-weight:400;
-                                line-height:1.15;
-                            ">
+                            <h1 style="margin:0 0 18px 0;font-family:Georgia,serif;font-size:38px;font-weight:400;line-height:1.15;">
                                 Verify your email.
                             </h1>
-                            <p style="
-                                font-size:16px;
-                                line-height:1.7;
-                                color:#555555;
-                            ">
+                            <p style="font-size:16px;line-height:1.7;color:#555555;">
                                 Hello %s,
                             </p>
-                            <p style="
-                                font-size:16px;
-                                line-height:1.7;
-                                color:#555555;
-                            ">
+                            <p style="font-size:16px;line-height:1.7;color:#555555;">
                                 Thanks for creating your AgniPress account.
                                 Please verify your email address to continue
                                 and create your password.
                             </p>
                             <div style="margin:32px 0;">
-                                <a href="%s" style="
-                                   display:inline-block;
-                                   background:#111111;
-                                   color:#ffffff;
-                                   text-decoration:none;
-                                   padding:16px 28px;
-                                   font-size:12px;
-                                   font-weight:bold;
-                                   letter-spacing:1.5px;
-                                   ">
+                                <a href="%s" style="display:inline-block;background:#111111;color:#ffffff;text-decoration:none;padding:16px 28px;font-size:12px;font-weight:bold;letter-spacing:1.5px;">
                                     VERIFY EMAIL
                                 </a>
                             </div>
-                            <p style="
-                                font-size:13px;
-                                line-height:1.6;
-                                color:#777777;
-                            ">
-                                This verification link will expire after
-                                24 hours.
+                            <p style="font-size:13px;line-height:1.6;color:#777777;">
+                                This verification link will expire after 24 hours.
                             </p>
-                            <p style="
-                                font-size:13px;
-                                line-height:1.6;
-                                color:#777777;
-                            ">
-                                If you did not create an AgniPress account,
-                                you can safely ignore this email.
+                            <p style="font-size:13px;line-height:1.6;color:#777777;">
+                                If you did not create an AgniPress account, you can safely ignore this email.
                             </p>
                         </div>
-                        <div style="
-                            padding:20px 32px;
-                            border-top:1px solid #ddd8cf;
-                            font-size:11px;
-                            color:#888888;
-                        ">
+                        <div style="padding:20px 32px;border-top:1px solid #ddd8cf;font-size:11px;color:#888888;">
                             AgniPress &nbsp;·&nbsp; Independent News
                         </div>
                     </div>
@@ -188,7 +120,7 @@ public class EmailService {
                         "Email", user.getEmail(),
                         "Name", user.getName()
                 )),
-                "Subject", subject,
+                "Subject", "Verify your AgniPress account",
                 "HTMLPart", html
         );
 
@@ -197,7 +129,6 @@ public class EmailService {
         );
 
         try {
-
             webClient
                     .post()
                     .uri(MAILJET_API_URL)
@@ -206,7 +137,7 @@ public class EmailService {
                     .bodyValue(payload)
                     .retrieve()
                     .toBodilessEntity()
-                    .block(Duration.ofSeconds(15));
+                    .block(Duration.ofSeconds(10));
 
             logger.info(
                     "Verification email sent successfully via Mailjet: recipient={}",
@@ -214,13 +145,11 @@ public class EmailService {
             );
 
         } catch (WebClientResponseException e) {
-
             logger.error(
-                    "Mailjet email delivery failed: recipient={}, status={}, errorType={}, message={}",
+                    "Mailjet delivery failed: recipient={}, status={}, errorType={}",
                     user.getEmail(),
                     e.getStatusCode().value(),
-                    e.getClass().getSimpleName(),
-                    e.getMessage()
+                    e.getClass().getSimpleName()
             );
 
             throw new RuntimeException(
@@ -229,7 +158,6 @@ public class EmailService {
             );
 
         } catch (Exception e) {
-
             logger.error(
                     "Mailjet email error: recipient={}, errorType={}, message={}",
                     user.getEmail(),
@@ -244,26 +172,34 @@ public class EmailService {
         }
     }
 
-    private void validateConfiguration() {
+    private String normalizeBaseUrl() {
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IllegalStateException(
+                    "APP_BASE_URL is not configured."
+            );
+        }
 
+        return baseUrl.trim().replaceAll("/+$", "");
+    }
+
+    private void validateConfiguration() {
         if (apiKey == null || apiKey.isBlank()) {
-            logger.error("Mailjet email configuration is missing: MAILJET_API_KEY is not configured");
+            logger.error("Mailjet configuration missing: MAILJET_API_KEY");
             throw new IllegalStateException("Email provider is not configured.");
         }
 
         if (secretKey == null || secretKey.isBlank()) {
-            logger.error("Mailjet email configuration is missing: MAILJET_SECRET_KEY is not configured");
+            logger.error("Mailjet configuration missing: MAILJET_SECRET_KEY");
             throw new IllegalStateException("Email provider secret is not configured.");
         }
 
         if (fromEmail == null || fromEmail.isBlank()) {
-            logger.error("Mailjet email configuration is missing: MAILJET_FROM_EMAIL is not configured");
+            logger.error("Mailjet configuration missing: MAILJET_FROM_EMAIL");
             throw new IllegalStateException("Email sender is not configured.");
         }
     }
 
     private String escapeHtml(String value) {
-
         if (value == null) {
             return "";
         }

@@ -14,212 +14,147 @@ import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
-public class CustomOAuth2UserService
-        extends DefaultOAuth2UserService {
+public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final RestClient restClient;
+    private final WebClient webClient;
 
     public CustomOAuth2UserService(
             UserRepository userRepository,
-            RoleRepository roleRepository) {
-
+            RoleRepository roleRepository,
+            WebClient.Builder webClientBuilder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
-        this.restClient = RestClient.builder().build();
+        this.webClient = webClientBuilder.build();
     }
 
-    // =====================================================
-    // LOAD OAUTH USER
-    // =====================================================
-
     @Override
-    public OAuth2User loadUser(
-            OAuth2UserRequest userRequest)
+    public OAuth2User loadUser(OAuth2UserRequest userRequest)
             throws OAuth2AuthenticationException {
 
-        OAuth2User oauthUser =
-                super.loadUser(userRequest);
+        OAuth2User oauthUser = super.loadUser(userRequest);
 
-        String registrationId =
-                userRequest
-                        .getClientRegistration()
-                        .getRegistrationId();
+        String registrationId = userRequest
+                .getClientRegistration()
+                .getRegistrationId();
 
-        String email =
-                extractEmail(
-                        oauthUser,
-                        userRequest,
-                        registrationId
-                );
+        String email = extractEmail(
+                oauthUser,
+                userRequest,
+                registrationId
+        );
 
         if (email == null || email.isBlank()) {
-
             throw oauthException(
                     "email_not_found",
-                    "Unable to retrieve a verified email from "
-                            + registrationId
+                    "Unable to retrieve a verified email from " + registrationId
             );
         }
 
         email = email.trim().toLowerCase();
 
-        // =================================================
-        // FIND EXISTING USER BY EMAIL
-        // =================================================
+        User user = userRepository.findByEmail(email).orElse(null);
 
-        User user =
-                userRepository
-                        .findByEmail(email)
-                        .orElse(null);
+        if (user == null) {
+            user = createNewOAuthUser(oauthUser, email, registrationId);
+        } else {
+            updateExistingOAuthUser(user, oauthUser, registrationId);
+        }
 
-        // =================================================
-        // EXISTING USER
-        // =================================================
+        return buildOAuthUser(oauthUser, user);
+    }
 
-        if (user != null) {
+    private void updateExistingOAuthUser(
+            User user,
+            OAuth2User oauthUser,
+            String registrationId) {
 
-            if (!user.isEnabled()) {
+        if (!user.isEnabled() && !user.isEmailVerified()) {
+            user.setEmailVerified(true);
+            user.setEnabled(true);
+        } else if (!user.isEnabled()) {
+            throw oauthException(
+                    "account_disabled",
+                    "Your AgniPress account has been disabled."
+            );
+        } else if (!user.isEmailVerified()) {
+            user.setEmailVerified(true);
+        }
 
-                throw oauthException(
-                        "account_disabled",
-                        "Your News Portal account has been disabled."
-                );
-            }
+        String name = extractName(oauthUser);
+        if (name != null && !name.isBlank()) {
+            user.setName(name);
+        }
 
-            // OAuth authentication proves ownership
-            // of the verified provider email.
-            if (!user.isEmailVerified()) {
+        Object avatar = oauthUser.getAttributes().get("avatar_url");
+        if (avatar != null && !avatar.toString().isBlank()) {
+            user.setProfileImage(avatar.toString());
+        }
 
-                user.setEmailVerified(true);
-                userRepository.save(user);
-            }
-
-            return buildOAuthUser(
-                    oauthUser,
-                    user
+        if (user.getUsername() == null || user.getUsername().isBlank()) {
+            user.setUsername(
+                    generateUniqueUsername(
+                            oauthUser,
+                            user.getEmail(),
+                            registrationId
+                    )
             );
         }
 
-        // =================================================
-        // NEW OAUTH USER
-        // =================================================
+        if (user.getRoles() == null || user.getRoles().isEmpty()) {
+            user.addRole(getUserRole());
+        }
 
-        user =
-                createNewOAuthUser(
-                        oauthUser,
-                        email,
-                        registrationId
-                );
-
-        return buildOAuthUser(
-                oauthUser,
-                user
-        );
+        userRepository.save(user);
     }
-
-    // =====================================================
-    // CREATE NEW OAUTH USER
-    // =====================================================
 
     private User createNewOAuthUser(
             OAuth2User oauthUser,
             String email,
             String registrationId) {
 
-        Role userRole =
-                roleRepository
-                        .findByName("ROLE_USER")
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "ROLE_USER not found"
-                                )
-                        );
-
         User user = new User();
 
-        // =================================================
-        // DISPLAY NAME
-        // =================================================
-
-        String name =
-                extractName(oauthUser);
-
+        String name = extractName(oauthUser);
         if (name == null || name.isBlank()) {
-
             int atIndex = email.indexOf("@");
-
-            if (atIndex > 0) {
-
-                name =
-                        email.substring(
-                                0,
-                                atIndex
-                        );
-
-            } else {
-
-                name = "News Portal User";
-            }
+            name = atIndex > 0 ? email.substring(0, atIndex) : "News Portal User";
         }
 
         user.setName(name);
-
-        // =================================================
-        // UNIQUE NEWS PORTAL USERNAME
-        // =================================================
-
-        String username =
-                generateUniqueUsername(
-                        oauthUser,
-                        email,
-                        registrationId
-                );
-
-        user.setUsername(username);
-
-        // =================================================
-        // EMAIL
-        // =================================================
-
+        user.setUsername(generateUniqueUsername(oauthUser, email, registrationId));
         user.setEmail(email);
-
-        // =================================================
-        // PASSWORD
-        // =================================================
-
         user.setPassword(null);
-
-        // =================================================
-        // STATUS
-        // =================================================
-
         user.setEnabled(true);
-
-        // OAuth provider has authenticated the email.
         user.setEmailVerified(true);
 
-        // =================================================
-        // ROLE
-        // =================================================
+        Object avatar = oauthUser.getAttributes().get("avatar_url");
+        if (avatar != null && !avatar.toString().isBlank()) {
+            user.setProfileImage(avatar.toString());
+        }
 
-        user.addRole(userRole);
+        user.addRole(getUserRole());
 
         return userRepository.save(user);
     }
 
-    // =====================================================
-    // GENERATE UNIQUE USERNAME
-    // =====================================================
+    private Role getUserRole() {
+        return roleRepository
+                .findByName("ROLE_USER")
+                .orElseThrow(() ->
+                        new RuntimeException("ROLE_USER not found")
+                );
+    }
 
     private String generateUniqueUsername(
             OAuth2User oauthUser,
@@ -228,200 +163,71 @@ public class CustomOAuth2UserService
 
         String baseUsername = null;
 
-        // -------------------------------------------------
-        // GITHUB LOGIN
-        // -------------------------------------------------
-
         if ("github".equalsIgnoreCase(registrationId)) {
-
-            Object login =
-                    oauthUser
-                            .getAttributes()
-                            .get("login");
-
-            if (login != null
-                    && !login.toString().isBlank()) {
-
-                baseUsername =
-                        login.toString();
+            Object login = oauthUser.getAttributes().get("login");
+            if (login != null && !login.toString().isBlank()) {
+                baseUsername = login.toString();
             }
         }
 
-        // -------------------------------------------------
-        // PROVIDER NAME
-        // -------------------------------------------------
-
-        if (baseUsername == null
-                || baseUsername.isBlank()) {
-
-            Object name =
-                    oauthUser
-                            .getAttributes()
-                            .get("name");
-
-            if (name != null
-                    && !name.toString().isBlank()) {
-
-                baseUsername =
-                        name.toString();
-            }
+        if (baseUsername == null || baseUsername.isBlank()) {
+            baseUsername = extractName(oauthUser);
         }
 
-        // -------------------------------------------------
-        // EMAIL FALLBACK
-        // -------------------------------------------------
-
-        if (baseUsername == null
-                || baseUsername.isBlank()) {
-
-            int atIndex =
-                    email.indexOf("@");
-
-            if (atIndex > 0) {
-
-                baseUsername =
-                        email.substring(
-                                0,
-                                atIndex
-                        );
-
-            } else {
-
-                baseUsername =
-                        "user";
-            }
+        if (baseUsername == null || baseUsername.isBlank()) {
+            int atIndex = email.indexOf("@");
+            baseUsername = atIndex > 0 ? email.substring(0, atIndex) : "user";
         }
 
-        // -------------------------------------------------
-        // CLEAN USERNAME
-        // -------------------------------------------------
-
-        baseUsername =
-                baseUsername
-                        .toLowerCase()
-                        .replaceAll(
-                                "[^a-z0-9_]",
-                                "_"
-                        )
-                        .replaceAll(
-                                "_+",
-                                "_"
-                        )
-                        .replaceAll(
-                                "^_+|_+$",
-                                ""
-                        );
+        baseUsername = baseUsername
+                .toLowerCase()
+                .replaceAll("[^a-z0-9_]", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("^_+|_+$", "");
 
         if (baseUsername.isBlank()) {
             baseUsername = "user";
         }
 
         if (baseUsername.length() > 40) {
-
-            baseUsername =
-                    baseUsername.substring(
-                            0,
-                            40
-                    );
+            baseUsername = baseUsername.substring(0, 40);
         }
 
-        // -------------------------------------------------
-        // UNIQUE CHECK
-        // -------------------------------------------------
-
-        String username =
-                baseUsername;
-
+        String username = baseUsername;
         int counter = 1;
 
         while (userRepository.existsByUsername(username)) {
-
-            String suffix =
-                    "_" + counter;
-
-            int maxBaseLength =
-                    50 - suffix.length();
-
-            String shortenedBase =
-                    baseUsername.length() > maxBaseLength
-                            ? baseUsername.substring(
-                                    0,
-                                    maxBaseLength
-                            )
-                            : baseUsername;
-
-            username =
-                    shortenedBase + suffix;
-
+            String suffix = "_" + counter;
+            int maxBaseLength = 50 - suffix.length();
+            String shortenedBase = baseUsername.length() > maxBaseLength
+                    ? baseUsername.substring(0, maxBaseLength)
+                    : baseUsername;
+            username = shortenedBase + suffix;
             counter++;
         }
 
         return username;
     }
 
-    // =====================================================
-    // BUILD OAUTH USER
-    // =====================================================
-
     private OAuth2User buildOAuthUser(
             OAuth2User oauthUser,
             User user) {
 
-        List<SimpleGrantedAuthority> authorities =
-                new ArrayList<>();
-
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
         for (Role role : user.getRoles()) {
-
-            authorities.add(
-                    new SimpleGrantedAuthority(
-                            role.getName()
-                    )
-            );
+            authorities.add(new SimpleGrantedAuthority(role.getName()));
         }
 
         Map<String, Object> attributes =
-                new HashMap<>(
-                        oauthUser.getAttributes()
-                );
+                new HashMap<>(oauthUser.getAttributes());
 
-        // -------------------------------------------------
-        // APPLICATION EMAIL
-        // -------------------------------------------------
-
-        attributes.put(
-                "email",
-                user.getEmail()
-        );
-
-        // -------------------------------------------------
-        // APPLICATION USERNAME
-        // -------------------------------------------------
-
-        attributes.put(
-                "username",
-                user.getUsername()
-        );
-
-        // -------------------------------------------------
-        // APPLICATION DISPLAY NAME
-        // -------------------------------------------------
-
-        attributes.put(
-                "displayName",
-                user.getName()
-        );
-
-        // -------------------------------------------------
-        // PROFILE IMAGE
-        // -------------------------------------------------
+        attributes.put("email", user.getEmail());
+        attributes.put("username", user.getUsername());
+        attributes.put("displayName", user.getName());
 
         if (user.getProfileImage() != null
                 && !user.getProfileImage().isBlank()) {
-
-            attributes.put(
-                    "profileImage",
-                    user.getProfileImage()
-            );
+            attributes.put("profileImage", user.getProfileImage());
         }
 
         return new DefaultOAuth2User(
@@ -431,228 +237,99 @@ public class CustomOAuth2UserService
         );
     }
 
-    // =====================================================
-    // EXTRACT EMAIL
-    // =====================================================
-
     private String extractEmail(
             OAuth2User oauthUser,
             OAuth2UserRequest userRequest,
             String registrationId) {
 
-        // =================================================
-        // GOOGLE
-        // =================================================
-
-        if ("google".equalsIgnoreCase(
-                registrationId)) {
-
-            Object email =
-                    oauthUser
-                            .getAttributes()
-                            .get("email");
-
-            Object verified =
-                    oauthUser
-                            .getAttributes()
-                            .get("email_verified");
-
-            if (email != null) {
-
-                if (Boolean.TRUE.equals(verified)
-                        || "true".equalsIgnoreCase(
-                                String.valueOf(verified)
-                        )) {
-
-                    return email.toString();
-                }
-            }
-
-            return null;
+        if ("github".equalsIgnoreCase(registrationId)) {
+            // The GitHub profile's email field is not enough to prove
+            // verification, so always use the email endpoint for GitHub.
+            return extractGitHubEmail(userRequest);
         }
 
-        // =================================================
-        // GITHUB
-        // =================================================
-
-        if ("github".equalsIgnoreCase(
-                registrationId)) {
-
-            Object email =
-                    oauthUser
-                            .getAttributes()
-                            .get("email");
-
-            if (email != null
-                    && !email.toString().isBlank()) {
-
-                return email.toString();
-            }
-
-            return extractGitHubEmail(
-                    userRequest
-            );
-        }
-
-        // =================================================
-        // GENERIC
-        // =================================================
-
-        Object email =
-                oauthUser
-                        .getAttributes()
-                        .get("email");
-
-        if (email != null
-                && !email.toString().isBlank()) {
-
+        Object email = oauthUser.getAttributes().get("email");
+        if (email != null && !email.toString().isBlank()) {
             return email.toString();
         }
 
         return null;
     }
 
-    // =====================================================
-    // GITHUB EMAIL
-    // =====================================================
-
+    @SuppressWarnings("unchecked")
     private String extractGitHubEmail(
             OAuth2UserRequest userRequest) {
 
         try {
+            String accessToken = userRequest
+                    .getAccessToken()
+                    .getTokenValue();
 
-            String accessToken =
-                    userRequest
-                            .getAccessToken()
-                            .getTokenValue();
+            List<Map<String, Object>> emails = webClient
+                    .get()
+                    .uri("https://api.github.com/user/emails")
+                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                    .header(HttpHeaders.ACCEPT, "application/vnd.github+json")
+                    .header("X-GitHub-Api-Version", "2022-11-28")
+                    .retrieve()
+                    .bodyToMono(List.class)
+                    .block(Duration.ofSeconds(5));
 
-            List<Map<String, Object>> emails =
-                    restClient
-                            .get()
-                            .uri(
-                                    "https://api.github.com/user/emails"
-                            )
-                            .header(
-                                    HttpHeaders.AUTHORIZATION,
-                                    "Bearer " + accessToken
-                            )
-                            .header(
-                                    HttpHeaders.ACCEPT,
-                                    "application/vnd.github+json"
-                            )
-                            .header(
-                                    "X-GitHub-Api-Version",
-                                    "2026-03-10"
-                            )
-                            .retrieve()
-                            .body(List.class);
-
-            if (emails == null
-                    || emails.isEmpty()) {
-
+            if (emails == null || emails.isEmpty()) {
                 return null;
             }
 
-            // =================================================
-            // PRIMARY + VERIFIED
-            // =================================================
-
-            for (Map<String, Object> emailData :
-                    emails) {
-
-                Object email =
-                        emailData.get("email");
-
-                Object primary =
-                        emailData.get("primary");
-
-                Object verified =
-                        emailData.get("verified");
+            for (Map<String, Object> emailData : emails) {
+                Object email = emailData.get("email");
+                Object primary = emailData.get("primary");
+                Object verified = emailData.get("verified");
 
                 if (email != null
                         && Boolean.TRUE.equals(primary)
                         && Boolean.TRUE.equals(verified)) {
-
                     return email.toString();
                 }
             }
 
-            // =================================================
-            // ANY VERIFIED EMAIL
-            // =================================================
+            for (Map<String, Object> emailData : emails) {
+                Object email = emailData.get("email");
+                Object verified = emailData.get("verified");
 
-            for (Map<String, Object> emailData :
-                    emails) {
-
-                Object email =
-                        emailData.get("email");
-
-                Object verified =
-                        emailData.get("verified");
-
-                if (email != null
-                        && Boolean.TRUE.equals(verified)) {
-
+                if (email != null && Boolean.TRUE.equals(verified)) {
                     return email.toString();
                 }
             }
+
+            return null;
 
         } catch (Exception e) {
-
             throw oauthException(
                     "github_email_error",
-                    "Could not retrieve email from GitHub."
+                    "Could not retrieve a verified email from GitHub."
             );
         }
-
-        return null;
     }
 
-    // =====================================================
-    // EXTRACT NAME
-    // =====================================================
+    private String extractName(OAuth2User oauthUser) {
+        Map<String, Object> attributes = oauthUser.getAttributes();
 
-    private String extractName(
-            OAuth2User oauthUser) {
-
-        Map<String, Object> attributes =
-                oauthUser.getAttributes();
-
-        Object name =
-                attributes.get("name");
-
-        if (name != null
-                && !name.toString().isBlank()) {
-
+        Object name = attributes.get("name");
+        if (name != null && !name.toString().isBlank()) {
             return name.toString();
         }
 
-        Object login =
-                attributes.get("login");
-
-        if (login != null
-                && !login.toString().isBlank()) {
-
+        Object login = attributes.get("login");
+        if (login != null && !login.toString().isBlank()) {
             return login.toString();
         }
 
-        Object username =
-                attributes.get(
-                        "preferred_username"
-                );
-
-        if (username != null
-                && !username.toString().isBlank()) {
-
+        Object username = attributes.get("preferred_username");
+        if (username != null && !username.toString().isBlank()) {
             return username.toString();
         }
 
         return null;
     }
-
-    // =====================================================
-    // OAUTH EXCEPTION
-    // =====================================================
 
     private OAuth2AuthenticationException oauthException(
             String errorCode,

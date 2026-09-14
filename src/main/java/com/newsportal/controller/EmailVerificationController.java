@@ -12,8 +12,6 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 
-import org.springframework.transaction.annotation.Transactional;
-
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,194 +26,90 @@ public class EmailVerificationController {
     public EmailVerificationController(
             EmailVerificationTokenRepository tokenRepository,
             UserService userService) {
-
         this.tokenRepository = tokenRepository;
         this.userService = userService;
     }
 
-    // =====================================================
-    // OPEN VERIFICATION LINK
-    // =====================================================
-
-    @Transactional
     @GetMapping("/verify-email")
     public String verifyEmail(
             @RequestParam("token") String token,
             Model model) {
 
-        EmailVerificationToken verificationToken =
-                tokenRepository
-                        .findByToken(token)
-                        .orElse(null);
-
-        // =================================================
-        // INVALID TOKEN
-        // =================================================
+        EmailVerificationToken verificationToken = tokenRepository
+                .findByToken(token)
+                .orElse(null);
 
         if (verificationToken == null) {
-
             model.addAttribute(
                     "error",
                     "This verification link is invalid or has already been used."
             );
-
             return "email-verification-page";
         }
-
-        // =================================================
-        // EXPIRED TOKEN
-        // =================================================
-
-        if (verificationToken.isExpired()) {
-
-            model.addAttribute(
-                    "error",
-                    "This verification link has expired. Please register again."
-            );
-
-            return "email-verification-page";
-        }
-
-        // =================================================
-        // GET USER WHILE DATABASE SESSION IS ACTIVE
-        // =================================================
 
         User user = verificationToken.getUser();
+        model.addAttribute("email", user.getEmail());
 
-        String userName = user.getName();
+        if (verificationToken.isExpired()) {
+            model.addAttribute(
+                    "error",
+                    "This verification link has expired. Request a new verification email below."
+            );
+            return "email-verification-page";
+        }
 
-        // =================================================
-        // SHOW PASSWORD PAGE
-        // =================================================
+        model.addAttribute("token", token);
+        model.addAttribute("setPasswordRequest", new SetPasswordRequestDTO());
+        model.addAttribute("userName", user.getName());
+
+        return "email-verification-page";
+    }
+
+    @PostMapping("/verify-email")
+    public String completeVerification(
+            @RequestParam("token") String token,
+            @Valid
+            @ModelAttribute("setPasswordRequest")
+            SetPasswordRequestDTO request,
+            BindingResult bindingResult,
+            Model model) {
+
+        if (bindingResult.hasErrors()) {
+            restoreVerificationContext(token, model);
+            return "email-verification-page";
+        }
+
+        try {
+            userService.completeEmailVerification(token, request);
+
+        } catch (RuntimeException e) {
+            model.addAttribute("error", e.getMessage());
+            restoreVerificationContext(token, model);
+            return "email-verification-page";
+        }
 
         model.addAttribute(
-                "token",
-                token
-        );
-
-        model.addAttribute(
-                "setPasswordRequest",
-                new SetPasswordRequestDTO()
-        );
-
-        model.addAttribute(
-                "userName",
-                userName
+                "success",
+                "Your email has been verified and your account is ready. You can now sign in."
         );
 
         return "email-verification-page";
     }
 
-    // =====================================================
-    // CREATE PASSWORD
-    // =====================================================
-
-    @PostMapping("/verify-email")
-    public String completeVerification(
-            @RequestParam("token") String token,
-
-            @Valid
-            @ModelAttribute("setPasswordRequest")
-            SetPasswordRequestDTO request,
-
-            BindingResult bindingResult,
+    private void restoreVerificationContext(
+            String token,
             Model model) {
 
-        // =================================================
-        // FORM VALIDATION
-        // =================================================
+        model.addAttribute("token", token);
 
-        if (bindingResult.hasErrors()) {
+        EmailVerificationToken verificationToken = tokenRepository
+                .findByToken(token)
+                .orElse(null);
 
-            EmailVerificationToken verificationToken =
-                    tokenRepository
-                            .findByToken(token)
-                            .orElse(null);
-
-            model.addAttribute(
-                    "token",
-                    token
-            );
-
-            if (verificationToken != null) {
-
-                User user = verificationToken.getUser();
-
-                model.addAttribute(
-                        "userName",
-                        user.getName()
-                );
-            }
-
-            return "email-verification-page";
+        if (verificationToken != null) {
+            User user = verificationToken.getUser();
+            model.addAttribute("userName", user.getName());
+            model.addAttribute("email", user.getEmail());
         }
-
-        // =================================================
-        // COMPLETE VERIFICATION
-        // =================================================
-
-        /*
-         * IMPORTANT:
-         *
-         * The database transaction now lives entirely inside
-         * UserService. The controller deliberately does NOT
-         * start an outer transaction and then catch exceptions
-         * from the service transaction.
-         *
-         * This prevents Spring from attempting to commit a
-         * transaction that has already been marked rollback-only,
-         * which caused the HTTP 500:
-         *
-         * "Transaction silently rolled back because it has been
-         * marked as rollback-only."
-         */
-        try {
-
-            userService.completeEmailVerification(
-                    token,
-                    request
-            );
-
-        } catch (RuntimeException e) {
-
-            model.addAttribute(
-                    "error",
-                    e.getMessage()
-            );
-
-            model.addAttribute(
-                    "token",
-                    token
-            );
-
-            EmailVerificationToken verificationToken =
-                    tokenRepository
-                            .findByToken(token)
-                            .orElse(null);
-
-            if (verificationToken != null) {
-
-                User user = verificationToken.getUser();
-
-                model.addAttribute(
-                        "userName",
-                        user.getName()
-                );
-            }
-
-            return "email-verification-page";
-        }
-
-        // =================================================
-        // SUCCESS
-        // =================================================
-
-        model.addAttribute(
-                "success",
-                "Your email has been verified and your account is ready. "
-                + "You can now sign in."
-        );
-
-        return "email-verification-page";
     }
 }
