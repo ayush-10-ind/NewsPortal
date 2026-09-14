@@ -101,8 +101,7 @@
 }
 
 /* =========================================================
-   AUTHENTICATED STATE — KEEP THE TICKER IDENTICAL
-   TO THE LOGGED-OUT HOMEPAGE
+   AUTHENTICATED STATE
    ========================================================= */
 
 html.agni-dark .breaking-ticker {
@@ -163,6 +162,70 @@ html.agni-dark .breaking-ticker .breaking-divider {
 
 html.agni-dark .breaking-ticker .breaking-story:hover .breaking-headline {
     color: #ffb0a4 !important;
+}
+
+/* =========================================================
+   FINAL HOMEPAGE-IDENTICAL CONTRAST
+   Apply the same ticker palette to EVERY auth state.
+   This intentionally does not depend on a theme class.
+   ========================================================= */
+
+.breaking-ticker,
+.breaking-ticker * {
+    opacity: 1 !important;
+    filter: none !important;
+    mix-blend-mode: normal !important;
+}
+
+.breaking-ticker {
+    background: #071a35 !important;
+    border-top-color: #071a35 !important;
+    border-bottom-color: #071a35 !important;
+}
+
+.breaking-ticker .breaking-live {
+    background: #d71920 !important;
+    border-right-color: rgba(255, 255, 255, .18) !important;
+}
+
+.breaking-ticker .live-word,
+.breaking-ticker .live-time {
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+.breaking-ticker .breaking-title,
+.breaking-ticker .breaking-story,
+.breaking-ticker .breaking-headline,
+.breaking-ticker .breaking-arrow {
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+.breaking-ticker .breaking-title {
+    border-right-color: rgba(255, 255, 255, .18) !important;
+}
+
+.breaking-ticker .breaking-category {
+    display: inline-flex !important;
+    align-items: center !important;
+    min-height: 28px !important;
+    padding: 0 11px !important;
+    border-radius: 3px !important;
+    background: #d71920 !important;
+    color: #ffffff !important;
+    font-size: 8px !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
+    text-transform: uppercase !important;
+}
+
+.breaking-ticker .breaking-divider {
+    color: rgba(255, 255, 255, .48) !important;
+}
+
+.breaking-ticker .breaking-story:hover .breaking-headline {
+    color: #ffffff !important;
 }
 
 @media (max-width: 700px) {
