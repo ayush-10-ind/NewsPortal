@@ -32,6 +32,7 @@ public class RssNewsImportService {
     private final MultiSourceNewsFetcherService multiSourceNewsFetcherService;
     private final NewsRepository newsRepository;
     private final ArticleImageService articleImageService;
+    private final NasaApodImageService nasaApodImageService;
     private final NewsArticleGenerationService articleGenerationService;
     private final WebArticleContentExtractorService webArticleContentExtractorService;
 
@@ -39,11 +40,13 @@ public class RssNewsImportService {
             MultiSourceNewsFetcherService multiSourceNewsFetcherService,
             NewsRepository newsRepository,
             ArticleImageService articleImageService,
+            NasaApodImageService nasaApodImageService,
             NewsArticleGenerationService articleGenerationService,
             WebArticleContentExtractorService webArticleContentExtractorService) {
         this.multiSourceNewsFetcherService = multiSourceNewsFetcherService;
         this.newsRepository = newsRepository;
         this.articleImageService = articleImageService;
+        this.nasaApodImageService = nasaApodImageService;
         this.articleGenerationService = articleGenerationService;
         this.webArticleContentExtractorService = webArticleContentExtractorService;
     }
@@ -71,6 +74,7 @@ public class RssNewsImportService {
         int failedCount = 0;
         int fallbackImageCount = 0;
         int webFallbackCount = 0;
+        int nasaImageCount = 0;
         int generationQueuedCount = 0;
 
         for (RssNewsFetcherService.RssArticle article : articles) {
@@ -146,11 +150,8 @@ public class RssNewsImportService {
 
                 String category = sectionName;
                 String rssImageUrl = clean(article.getImageUrl());
+                LocalDate publishedDate = convertPublishedDate(article.getPublishedDate());
 
-                // RSS already supplied the image URL. Trust a valid absolute
-                // RSS image URL instead of making another HTTP request just to
-                // validate it. The image repair worker can recover bad/missing
-                // URLs later without slowing the import path.
                 String resolvedImage = rssImageUrl;
                 if (resolvedImage == null) {
                     resolvedImage = articleImageService.resolveImage(
@@ -160,8 +161,25 @@ public class RssNewsImportService {
                     );
                 }
 
+                if (isFallbackImage(resolvedImage)) {
+                    String nasaImage = nasaApodImageService.resolveImage(
+                            sourceUrl,
+                            title,
+                            publishedDate
+                    );
+
+                    if (nasaImage != null && !nasaImage.isBlank()) {
+                        resolvedImage = nasaImage;
+                        nasaImageCount++;
+                        logger.info("NASA APOD image fallback succeeded: title={}, date={}",
+                                title, publishedDate);
+                    }
+                }
+
                 if (resolvedImage == null || resolvedImage.isBlank()) {
                     resolvedImage = "/images/fallback?category=" + category;
+                    fallbackImageCount++;
+                } else if (isFallbackImage(resolvedImage)) {
                     fallbackImageCount++;
                 }
 
@@ -174,24 +192,23 @@ public class RssNewsImportService {
                 news.setSourceUrl(sourceUrl);
                 news.setSourceName(sourceName);
                 news.setSourceType(NewsSourceType.EXTERNAL_API);
-                news.setPublishedDate(convertPublishedDate(article.getPublishedDate()));
+                news.setPublishedDate(publishedDate);
                 news.setViewCount(0L);
 
                 News savedNews = newsRepository.save(news);
 
                 importedCount++;
 
-                // Source content is persisted before Ashna is called. Generation
-                // is asynchronous so the RSS scheduler never waits for AI.
                 articleGenerationService.generateArticleAsync(savedNews.getId());
                 generationQueuedCount++;
 
                 logger.info(
-                        "RSS article persisted and Ashna generation queued: id={}, title={}, source={}, webFallback={}",
+                        "RSS article persisted and Ashna generation queued: id={}, title={}, source={}, webFallback={}, nasaImage={}",
                         savedNews.getId(),
                         savedNews.getTitle(),
                         sourceName,
-                        usedWebFallback
+                        usedWebFallback,
+                        !isFallbackImage(resolvedImage)
                 );
 
             } catch (Exception e) {
@@ -208,7 +225,7 @@ public class RssNewsImportService {
         }
 
         logger.info(
-                "RSS import completed: section={}, received={}, imported={}, duplicates={}, rejected={}, failed={}, fallbackImages={}, webFallbacks={}, generationQueued={}",
+                "RSS import completed: section={}, received={}, imported={}, duplicates={}, rejected={}, failed={}, fallbackImages={}, webFallbacks={}, nasaImages={}, generationQueued={}",
                 sectionName,
                 articles.size(),
                 importedCount,
@@ -217,6 +234,7 @@ public class RssNewsImportService {
                 failedCount,
                 fallbackImageCount,
                 webFallbackCount,
+                nasaImageCount,
                 generationQueuedCount
         );
 
@@ -238,8 +256,7 @@ public class RssNewsImportService {
                         "RSS section failed: section={}, errorType={}, error={}",
                         section.getDisplayName(),
                         e.getClass().getSimpleName(),
-                        e.getMessage(),
-                        e
+                        e.getMessage()
                 );
             }
         }
@@ -259,6 +276,10 @@ public class RssNewsImportService {
                 && !PLACEHOLDER.equalsIgnoreCase(content);
     }
 
+    private boolean isFallbackImage(String imageUrl) {
+        return imageUrl != null && imageUrl.startsWith("/images/fallback");
+    }
+
     private String resolveSourceName(String sourceUrl) {
         try {
             URI uri = URI.create(sourceUrl);
@@ -267,7 +288,6 @@ public class RssNewsImportService {
                 return host.replaceFirst("^www\\.", "");
             }
         } catch (Exception ignored) {
-            // Fall through to the stable RSS label.
         }
         return "RSS Source";
     }
