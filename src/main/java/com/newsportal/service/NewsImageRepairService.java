@@ -26,7 +26,9 @@ public class NewsImageRepairService {
     private static final String FALLBACK_PREFIX = "/images/fallback";
 
     private static final int BATCH_SIZE = 5;
+    private static final int INITIAL_NASA_BATCH_SIZE = 10;
     private static final int MAX_MANUAL_BATCH_SIZE = 10;
+    private static final long INITIAL_NASA_REPAIR_DELAY_SECONDS = 20;
     private static final long INITIAL_DELAY_SECONDS = 300;
     private static final long DELAY_SECONDS = 1800;
     private static final long NASA_FULL_REPAIR_DELAY_SECONDS = 2;
@@ -56,15 +58,39 @@ public class NewsImageRepairService {
 
     @PostConstruct
     public void initializeRepairMonitor() {
+        scheduler.schedule(this::runInitialNasaRepair,
+                INITIAL_NASA_REPAIR_DELAY_SECONDS,
+                TimeUnit.SECONDS);
+
         scheduler.scheduleWithFixedDelay(this::repairCycle,
                 INITIAL_DELAY_SECONDS, DELAY_SECONDS, TimeUnit.SECONDS);
-        logger.info("News image repair monitor initialized: firstRun={}s, interval={}s, batch={}",
-                INITIAL_DELAY_SECONDS, DELAY_SECONDS, BATCH_SIZE);
+
+        logger.info("News image repair monitor initialized: nasaFirstRun={}s, generalFirstRun={}s, interval={}s, batch={}",
+                INITIAL_NASA_REPAIR_DELAY_SECONDS,
+                INITIAL_DELAY_SECONDS,
+                DELAY_SECONDS,
+                BATCH_SIZE);
     }
 
     @PreDestroy
     public void shutdownRepairMonitor() {
         scheduler.shutdownNow();
+    }
+
+    private void runInitialNasaRepair() {
+        if (!nasaRepairRunning.compareAndSet(false, true)) {
+            return;
+        }
+
+        try {
+            repairNasaBatch(INITIAL_NASA_BATCH_SIZE);
+        } catch (Exception ex) {
+            logger.warn("Initial NASA image repair failed: errorType={}, message={}",
+                    ex.getClass().getSimpleName(),
+                    ex.getMessage());
+        } finally {
+            nasaRepairRunning.set(false);
+        }
     }
 
     private void repairCycle() {
