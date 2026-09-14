@@ -42,8 +42,44 @@ document.addEventListener("DOMContentLoaded", function () {
         document.head.appendChild(stylesheet);
     }
 
+    function applyUserAvatars() {
+        const palette = [
+            "#0d9488",
+            "#f4511e",
+            "#2563eb",
+            "#7c3aed",
+            "#d9465f",
+            "#15803d",
+            "#b45309"
+        ];
+
+        document.querySelectorAll(".editorial-nav .user-initial").forEach(function (avatar) {
+            const identity = avatar.textContent.trim();
+            if (!identity) return;
+
+            const firstLetter = identity.replace(/[^A-Za-z0-9]/g, "").charAt(0).toUpperCase();
+            avatar.textContent = firstLetter || "U";
+
+            let hash = 0;
+            for (let i = 0; i < identity.length; i++) {
+                hash = ((hash << 5) - hash) + identity.charCodeAt(i);
+                hash |= 0;
+            }
+
+            const color = palette[Math.abs(hash) % palette.length];
+
+            avatar.style.setProperty("background", color, "important");
+            avatar.style.setProperty("background-image", "none", "important");
+            avatar.style.setProperty("color", "#ffffff", "important");
+            avatar.style.setProperty("border", "1px solid rgba(255,255,255,.72)", "important");
+            avatar.style.setProperty("box-shadow", "0 1px 3px rgba(17,17,15,.16), inset 0 0 0 1px rgba(255,255,255,.16)", "important");
+            avatar.style.setProperty("font-weight", "800", "important");
+        });
+    }
+
     loadHomepagePolish();
     loadBreakingTickerStyles();
+    applyUserAvatars();
 
     function addWeatherNavigation() {
         const desktopNavigation = document.querySelector(".desktop-navigation");
