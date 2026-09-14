@@ -152,28 +152,34 @@ public class RssNewsImportService {
                 String rssImageUrl = clean(article.getImageUrl());
                 LocalDate publishedDate = convertPublishedDate(article.getPublishedDate());
 
-                String resolvedImage = rssImageUrl;
+                String resolvedImage = null;
+
+                // NASA is treated as an authoritative image provider. This avoids
+                // falling through the generic scraper first and gives APOD and
+                // regular NASA Science articles their own resolution path.
+                String nasaImage = nasaApodImageService.resolveImage(
+                        sourceUrl,
+                        title,
+                        publishedDate
+                );
+
+                if (nasaImage != null && !nasaImage.isBlank()) {
+                    resolvedImage = nasaImage;
+                    nasaImageCount++;
+                    logger.info("NASA image resolution succeeded: title={}, date={}",
+                            title, publishedDate);
+                }
+
+                if (resolvedImage == null && rssImageUrl != null) {
+                    resolvedImage = rssImageUrl;
+                }
+
                 if (resolvedImage == null) {
                     resolvedImage = articleImageService.resolveImage(
                             null,
                             sourceUrl,
                             category
                     );
-                }
-
-                if (isFallbackImage(resolvedImage)) {
-                    String nasaImage = nasaApodImageService.resolveImage(
-                            sourceUrl,
-                            title,
-                            publishedDate
-                    );
-
-                    if (nasaImage != null && !nasaImage.isBlank()) {
-                        resolvedImage = nasaImage;
-                        nasaImageCount++;
-                        logger.info("NASA APOD image fallback succeeded: title={}, date={}",
-                                title, publishedDate);
-                    }
                 }
 
                 if (resolvedImage == null || resolvedImage.isBlank()) {
@@ -208,7 +214,7 @@ public class RssNewsImportService {
                         savedNews.getTitle(),
                         sourceName,
                         usedWebFallback,
-                        !isFallbackImage(resolvedImage)
+                        nasaImage != null && !nasaImage.isBlank()
                 );
 
             } catch (Exception e) {
@@ -262,7 +268,7 @@ public class RssNewsImportService {
         }
 
         logger.info(
-                "AgniPress RSS import all completed: imported={}, sectionFailures={}",
+                "RSS import all completed: imported={}, sectionFailures={}",
                 totalImported,
                 totalFailed
         );
