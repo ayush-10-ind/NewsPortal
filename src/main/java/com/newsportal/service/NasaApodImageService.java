@@ -8,7 +8,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import reactor.core.publisher.Mono;
 
-import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.regex.Matcher;
@@ -39,10 +38,6 @@ public class NasaApodImageService {
         this.webClient = webClientBuilder.build();
     }
 
-    /**
-     * Resolves an image for NASA Astronomy Picture of the Day articles.
-     * Returns null for non-APOD articles so normal image resolution remains unchanged.
-     */
     public String resolveImage(String sourceUrl, String title, LocalDate publishedDate) {
         if (!isApodArticle(sourceUrl, title) || publishedDate == null) {
             return null;
@@ -50,11 +45,7 @@ public class NasaApodImageService {
 
         try {
             String response = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .path(URI.create(APOD_API).getPath())
-                            .queryParam("api_key", DEMO_KEY)
-                            .queryParam("date", publishedDate)
-                            .build())
+                    .uri(APOD_API + "?api_key=" + DEMO_KEY + "&date=" + publishedDate)
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .bodyToMono(String.class)
@@ -72,24 +63,26 @@ public class NasaApodImageService {
             }
 
             Matcher urlMatcher = URL_PATTERN.matcher(response);
-            String bestUrl = null;
+            String firstUrl = null;
+            String secondUrl = null;
+            int matchIndex = 0;
+
             while (urlMatcher.find()) {
                 String candidate = urlMatcher.group(1);
-                if (candidate != null && !candidate.isBlank()) {
-                    if (candidate.contains("hdurl")) {
-                        bestUrl = candidate;
-                    } else if (bestUrl == null) {
-                        bestUrl = candidate;
-                    }
-                }
+                if (candidate == null || candidate.isBlank()) continue;
+
+                if (matchIndex == 0) firstUrl = candidate;
+                if (matchIndex == 1) secondUrl = candidate;
+                matchIndex++;
             }
 
-            if (bestUrl == null) {
+            String resolved = secondUrl != null ? secondUrl : firstUrl;
+            if (resolved == null || resolved.isBlank()) {
                 return null;
             }
 
             logger.info("NASA APOD image resolved: date={}, title={}", publishedDate, title);
-            return bestUrl;
+            return resolved;
 
         } catch (Exception ex) {
             logger.debug("NASA APOD image lookup failed: date={}, errorType={}, message={}",
