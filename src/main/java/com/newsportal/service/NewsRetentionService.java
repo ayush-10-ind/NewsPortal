@@ -24,7 +24,7 @@ public class NewsRetentionService {
     @Transactional
     public long deleteExpiredNews() {
         LocalDate cutoffDate = LocalDate.now().minusDays(RETENTION_DAYS);
-        long deleted = newsRepository.deleteByPublishedDateBefore(cutoffDate);
+        int deleted = newsRepository.deleteExpiredNews(cutoffDate);
 
         logger.info(
                 "AgniPress seven-day news retention completed: cutoffDate={}, deleted={}",
