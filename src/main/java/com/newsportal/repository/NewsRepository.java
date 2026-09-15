@@ -6,6 +6,7 @@ import com.newsportal.entity.NewsSourceType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -138,7 +139,11 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             LocalDate cutoffDate
     );
 
-    long deleteByPublishedDateBefore(LocalDate cutoffDate);
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("DELETE FROM News n WHERE n.publishedDate < :cutoffDate")
+    int deleteExpiredNews(
+            @Param("cutoffDate") LocalDate cutoffDate
+    );
 
     List<News> findTop5ByImageUrlStartingWithOrderByIdAsc(
             String imagePrefix
