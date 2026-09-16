@@ -32,20 +32,14 @@ public class RssNewsFetcherService {
 
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(8);
-
-    // Read a wider window so editorial-noise filtering can still leave up to
-    // 12 useful articles available to the per-section quota.
     private static final int MAX_ARTICLES_PER_FEED = 20;
 
     private static final Pattern HTML_ENTITY_PATTERN =
             Pattern.compile("&(?:nbsp|amp|quot|apos|lt|gt|hellip|ndash|mdash|rsquo|lsquo|rdquo|ldquo|trade|copy|reg|bull|middot|laquo|raquo|#\\d+|#x[0-9a-fA-F]+);");
-
     private static final Pattern BARE_AMPERSAND_PATTERN =
             Pattern.compile("&(?!#\\d+;|#x[0-9a-fA-F]+;|[A-Za-z][A-Za-z0-9]{1,31};)");
-
     private static final Pattern RAW_HTML_LINK_TAG_PATTERN =
             Pattern.compile("<\\s*link\\b(?=[^>]*\\bcrossorigin\\b)[^>]*>", Pattern.CASE_INSENSITIVE);
-
     private static final Pattern EMBEDDED_HTML_FIELD_PATTERN = Pattern.compile(
             "(<(?:description|summary|content)(?:\\s[^>]*)?>)(.*?)(</(?:description|summary|content)\\s*>)",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL
@@ -94,24 +88,17 @@ public class RssNewsFetcherService {
     }
 
     private List<RssArticle> parseFeed(String sourceName, String xml) {
-        List<RssArticle> articles = new ArrayList<>();
-
         try {
             return parseFeedDocument(sourceName, xml);
         } catch (Exception firstFailure) {
             logger.warn("RSS XML parse failed; retrying with embedded-HTML protection: source={}, errorType={}, message={}",
-                    sourceName,
-                    firstFailure.getClass().getSimpleName(),
-                    firstFailure.getMessage());
-
+                    sourceName, firstFailure.getClass().getSimpleName(), firstFailure.getMessage());
             try {
-                return parseFeedDocument(sourceName, protectEmbeddedHtml(sanitizeXml(xml)));
+                return parseFeedDocument(sourceName, protectEmbeddedHtml(xml));
             } catch (Exception secondFailure) {
                 logger.error("RSS XML parse failed after safe retry: source={}, errorType={}, message={}",
-                        sourceName,
-                        secondFailure.getClass().getSimpleName(),
-                        secondFailure.getMessage());
-                return articles;
+                        sourceName, secondFailure.getClass().getSimpleName(), secondFailure.getMessage());
+                return List.of();
             }
         }
     }
@@ -201,8 +188,21 @@ public class RssNewsFetcherService {
     }
 
     private String extractImage(Element item, String description) {
-        String[] imageTags = {"media:content", "media:thumbnail", "enclosure", "image"};
-        for (String tag : imageTags) {
+        // Media RSS is namespaced, so query local names instead of relying only
+        // on the literal prefix. WIRED commonly publishes images this way.
+        for (String localName : new String[]{"content", "thumbnail"}) {
+            NodeList nodes = item.getElementsByTagNameNS("*", localName);
+            for (int i = 0; i < nodes.getLength(); i++) {
+                Node node = nodes.item(i);
+                if (node instanceof Element element) {
+                    String url = element.getAttribute("url");
+                    if (url == null || url.isBlank()) url = element.getAttribute("href");
+                    if (looksLikeImage(url)) return url;
+                }
+            }
+        }
+
+        for (String tag : new String[]{"enclosure", "image"}) {
             NodeList nodes = item.getElementsByTagName(tag);
             for (int i = 0; i < nodes.getLength(); i++) {
                 Node node = nodes.item(i);
@@ -227,42 +227,41 @@ public class RssNewsFetcherService {
     private boolean looksLikeImage(String value) {
         if (value == null || value.isBlank()) return false;
         String lower = value.toLowerCase(Locale.ROOT);
-        return lower.matches(".*\\\\.(jpg|jpeg|png|webp|gif|avif)(?:[?#].*)?$") || lower.contains("image");
+        return lower.matches(".*\\.(jpg|jpeg|png|webp|gif|avif)(?:[?#].*)?$")
+                || lower.contains("/image/")
+                || lower.contains("/images/")
+                || lower.contains("media.wired.com");
     }
 
     private String sanitizeXml(String xml) {
         if (xml == null) return "";
 
         String result = RAW_HTML_LINK_TAG_PATTERN.matcher(xml).replaceAll("");
-
-        result = HTML_ENTITY_PATTERN.matcher(result).replaceAll(match -> {
-            return switch (match.group().toLowerCase(Locale.ROOT)) {
-                case "&nbsp;" -> "&#160;";
-                case "&amp;" -> "&#38;";
-                case "&quot;" -> "&#34;";
-                case "&apos;" -> "&#39;";
-                case "&lt;" -> "&#60;";
-                case "&gt;" -> "&#62;";
-                case "&hellip;" -> "&#8230;";
-                case "&ndash;" -> "&#8211;";
-                case "&mdash;" -> "&#8212;";
-                case "&rsquo;" -> "&#8217;";
-                case "&lsquo;" -> "&#8216;";
-                case "&rdquo;" -> "&#8221;";
-                case "&ldquo;" -> "&#8220;";
-                case "&trade;" -> "&#8482;";
-                case "&copy;" -> "&#169;";
-                case "&reg;" -> "&#174;";
-                case "&bull;" -> "&#8226;";
-                case "&middot;" -> "&#183;";
-                case "&laquo;" -> "&#171;";
-                case "&raquo;" -> "&#187;";
-                default -> match.group();
-            };
+        result = HTML_ENTITY_PATTERN.matcher(result).replaceAll(match -> switch (match.group().toLowerCase(Locale.ROOT)) {
+            case "&nbsp;" -> "&#160;";
+            case "&amp;" -> "&#38;";
+            case "&quot;" -> "&#34;";
+            case "&apos;" -> "&#39;";
+            case "&lt;" -> "&#60;";
+            case "&gt;" -> "&#62;";
+            case "&hellip;" -> "&#8230;";
+            case "&ndash;" -> "&#8211;";
+            case "&mdash;" -> "&#8212;";
+            case "&rsquo;" -> "&#8217;";
+            case "&lsquo;" -> "&#8216;";
+            case "&rdquo;" -> "&#8221;";
+            case "&ldquo;" -> "&#8220;";
+            case "&trade;" -> "&#8482;";
+            case "&copy;" -> "&#169;";
+            case "&reg;" -> "&#174;";
+            case "&bull;" -> "&#8226;";
+            case "&middot;" -> "&#183;";
+            case "&laquo;" -> "&#171;";
+            case "&raquo;" -> "&#187;";
+            default -> match.group();
         });
 
-        result = BARE_AMPERSAND_PATTERN.matcher(result).replaceAll("&amp;");
-        return result;
+        return BARE_AMPERSAND_PATTERN.matcher(result).replaceAll("&amp;");
     }
 
     private String protectEmbeddedHtml(String xml) {
@@ -273,14 +272,14 @@ public class RssNewsFetcherService {
 
         while (matcher.find()) {
             String body = matcher.group(2);
-            String replacementBody = body;
+            String protectedBody = body;
 
             if (body != null && !body.trim().startsWith("<![CDATA[") && !body.trim().endsWith("]]>") ) {
-                replacementBody = "<![CDATA[" + body.replace("]]>", "]]]]><![CDATA[>") + "]] >".replace(" ", "");
+                protectedBody = "<![CDATA[" + body.replace("]]>", "]]]]><![CDATA[>") + "]]>";
             }
 
             matcher.appendReplacement(result, Matcher.quoteReplacement(
-                    matcher.group(1) + replacementBody + matcher.group(3)
+                    matcher.group(1) + protectedBody + matcher.group(3)
             ));
         }
 
