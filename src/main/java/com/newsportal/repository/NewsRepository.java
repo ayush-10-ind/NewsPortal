@@ -78,9 +78,22 @@ public interface NewsRepository extends JpaRepository<News, Long> {
             Pageable pageable
     );
 
-    Page<News> findAllByOrderByPublishedDateDesc(
-            Pageable pageable
-    );
+    @Query("""
+        SELECT n
+        FROM News n
+        WHERE NOT (
+            LOWER(COALESCE(n.title, '')) LIKE '%coupon%'
+            OR LOWER(COALESCE(n.title, '')) LIKE '%promo code%'
+            OR LOWER(COALESCE(n.title, '')) LIKE '%promo codes%'
+            OR LOWER(COALESCE(n.title, '')) LIKE '%discount code%'
+            OR LOWER(COALESCE(n.title, '')) LIKE '%discount codes%'
+            OR LOWER(COALESCE(n.title, '')) LIKE '%discount deal%'
+            OR LOWER(COALESCE(n.title, '')) LIKE '%discount deals%'
+            OR LOWER(COALESCE(n.title, '')) LIKE '%shop now%'
+        )
+        ORDER BY n.publishedDate DESC
+    """)
+    Page<News> findAllByOrderByPublishedDateDesc(Pageable pageable);
 
     Page<News> findAllByOrderByViewCountDesc(
             Pageable pageable
