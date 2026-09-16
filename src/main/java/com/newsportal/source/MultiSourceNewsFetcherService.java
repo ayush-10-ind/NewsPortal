@@ -61,10 +61,9 @@ public class MultiSourceNewsFetcherService {
         }
 
         /*
-         * Select up to 12 genuinely new articles for the section.
-         * Articles are taken round-robin across enabled sources so one feed
-         * cannot consume the entire section quota by itself.
-         * Existing URLs/titles are checked against MySQL before they are returned.
+         * Select up to 12 genuinely new editorial articles for the section.
+         * The wider per-feed window allows promotional/coupon noise to be
+         * filtered without unnecessarily reducing the useful section quota.
          */
         Set<String> seenSourceUrls = new HashSet<>();
         Set<String> seenTitles = new HashSet<>();
@@ -83,6 +82,12 @@ public class MultiSourceNewsFetcherService {
                 String sourceUrl = clean(article.getUrl());
                 String title = clean(article.getTitle());
                 if (sourceUrl == null || title == null) continue;
+
+                if (isPromotionalNoise(title)) {
+                    logger.debug("RSS article skipped as promotional noise: section={}, title={}",
+                            section.getDisplayName(), title);
+                    continue;
+                }
 
                 String urlKey = sourceUrl.toLowerCase(Locale.ROOT);
                 String titleKey = title.toLowerCase(Locale.ROOT);
@@ -166,6 +171,46 @@ public class MultiSourceNewsFetcherService {
             maximum = Math.max(maximum, articles.size());
         }
         return maximum;
+    }
+
+    private boolean isPromotionalNoise(String title) {
+        String normalized = title
+                .toLowerCase(Locale.ROOT)
+                .replaceAll("[^a-z0-9]+", " ")
+                .trim();
+
+        if (normalized.isBlank()) return false;
+
+        String[] phrases = {
+                "coupon",
+                "coupon codes",
+                "promo code",
+                "promo codes",
+                "promotion code",
+                "discount code",
+                "discount codes",
+                "discount deal",
+                "discount deals",
+                "shop now",
+                "save 20",
+                "save 30",
+                "save 40",
+                "save 50",
+                "save 60",
+                "save 70",
+                "get percent off"
+        };
+
+        for (String phrase : phrases) {
+            if (normalized.contains(phrase)) {
+                return true;
+            }
+        }
+
+        return normalized.startsWith("promo ")
+                || normalized.startsWith("discount ")
+                || normalized.endsWith(" promo code")
+                || normalized.endsWith(" coupon code");
     }
 
     private String clean(String value) {
