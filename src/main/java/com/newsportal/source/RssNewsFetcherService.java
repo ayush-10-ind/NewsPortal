@@ -30,8 +30,8 @@ public class RssNewsFetcherService {
 
     private static final Logger logger = LoggerFactory.getLogger(RssNewsFetcherService.class);
 
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(8);
-    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
+    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(8);
 
     // Read a wider window so editorial-noise filtering can still leave up to
     // 12 useful articles available to the per-section quota.
@@ -45,6 +45,11 @@ public class RssNewsFetcherService {
 
     private static final Pattern RAW_HTML_LINK_TAG_PATTERN =
             Pattern.compile("<\\s*link\\b(?=[^>]*\\bcrossorigin\\b)[^>]*>", Pattern.CASE_INSENSITIVE);
+
+    private static final Pattern EMBEDDED_HTML_FIELD_PATTERN = Pattern.compile(
+            "(<(?:description|summary|content)(?:\\s[^>]*)?>)(.*?)(</(?:description|summary|content)\\s*>)",
+            Pattern.CASE_INSENSITIVE | Pattern.DOTALL
+    );
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(CONNECT_TIMEOUT)
@@ -92,75 +97,92 @@ public class RssNewsFetcherService {
         List<RssArticle> articles = new ArrayList<>();
 
         try {
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            factory.setNamespaceAware(true);
-            factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
-            factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
-            factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-            factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
-            factory.setXIncludeAware(false);
-            factory.setExpandEntityReferences(false);
+            return parseFeedDocument(sourceName, xml);
+        } catch (Exception firstFailure) {
+            logger.warn("RSS XML parse failed; retrying with embedded-HTML protection: source={}, errorType={}, message={}",
+                    sourceName,
+                    firstFailure.getClass().getSimpleName(),
+                    firstFailure.getMessage());
 
-            DocumentBuilder builder = factory.newDocumentBuilder();
-            Document document = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
-            Element root = document.getDocumentElement();
-
-            NodeList items = root.getElementsByTagName("item");
-            if (items.getLength() == 0) {
-                items = root.getElementsByTagNameNS("*", "entry");
+            try {
+                return parseFeedDocument(sourceName, protectEmbeddedHtml(sanitizeXml(xml)));
+            } catch (Exception secondFailure) {
+                logger.error("RSS XML parse failed after safe retry: source={}, errorType={}, message={}",
+                        sourceName,
+                        secondFailure.getClass().getSimpleName(),
+                        secondFailure.getMessage());
+                return articles;
             }
+        }
+    }
 
-            for (int i = 0; i < items.getLength() && articles.size() < MAX_ARTICLES_PER_FEED; i++) {
-                Node node = items.item(i);
-                if (!(node instanceof Element element)) continue;
+    private List<RssArticle> parseFeedDocument(String sourceName, String xml) throws Exception {
+        List<RssArticle> articles = new ArrayList<>();
 
-                String title = firstText(element, "title");
-                String description = firstText(element, "description");
-                if (description == null) description = firstText(element, "summary");
-                if (description == null) description = firstText(element, "content");
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        factory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        factory.setXIncludeAware(false);
+        factory.setExpandEntityReferences(false);
 
-                String url = firstText(element, "link");
-                if (url == null) {
-                    NodeList links = element.getElementsByTagNameNS("*", "link");
-                    for (int j = 0; j < links.getLength(); j++) {
-                        Node link = links.item(j);
-                        if (link instanceof Element linkElement) {
-                            String href = linkElement.getAttribute("href");
-                            if (href != null && !href.isBlank()) {
-                                url = href;
-                                break;
-                            }
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8)));
+        Element root = document.getDocumentElement();
+
+        NodeList items = root.getElementsByTagName("item");
+        if (items.getLength() == 0) {
+            items = root.getElementsByTagNameNS("*", "entry");
+        }
+
+        for (int i = 0; i < items.getLength() && articles.size() < MAX_ARTICLES_PER_FEED; i++) {
+            Node node = items.item(i);
+            if (!(node instanceof Element element)) continue;
+
+            String title = firstText(element, "title");
+            String description = firstText(element, "description");
+            if (description == null) description = firstText(element, "summary");
+            if (description == null) description = firstText(element, "content");
+
+            String url = firstText(element, "link");
+            if (url == null) {
+                NodeList links = element.getElementsByTagNameNS("*", "link");
+                for (int j = 0; j < links.getLength(); j++) {
+                    Node link = links.item(j);
+                    if (link instanceof Element linkElement) {
+                        String href = linkElement.getAttribute("href");
+                        if (href != null && !href.isBlank()) {
+                            url = href;
+                            break;
                         }
                     }
                 }
-
-                String author = firstText(element, "author");
-                if (author == null) author = firstText(element, "creator");
-                if (author == null) author = firstText(element, "name");
-
-                String published = firstText(element, "pubDate");
-                if (published == null) published = firstText(element, "published");
-                if (published == null) published = firstText(element, "updated");
-
-                String imageUrl = extractImage(element, description);
-
-                if (title == null || title.isBlank() || url == null || url.isBlank()) {
-                    continue;
-                }
-
-                articles.add(new RssArticle(
-                        cleanText(title),
-                        cleanText(description),
-                        cleanUrl(url),
-                        cleanText(author),
-                        cleanText(published),
-                        cleanUrl(imageUrl)
-                ));
             }
 
-        } catch (Exception e) {
-            logger.error("RSS XML parse failed: source={}, errorType={}, message={}",
-                    sourceName, e.getClass().getSimpleName(), e.getMessage());
+            String author = firstText(element, "author");
+            if (author == null) author = firstText(element, "creator");
+            if (author == null) author = firstText(element, "name");
+
+            String published = firstText(element, "pubDate");
+            if (published == null) published = firstText(element, "published");
+            if (published == null) published = firstText(element, "updated");
+
+            String imageUrl = extractImage(element, description);
+
+            if (title == null || title.isBlank() || url == null || url.isBlank()) {
+                continue;
+            }
+
+            articles.add(new RssArticle(
+                    cleanText(title),
+                    cleanText(description),
+                    cleanUrl(url),
+                    cleanText(author),
+                    cleanText(published),
+                    cleanUrl(imageUrl)
+            ));
         }
 
         return articles;
@@ -241,6 +263,29 @@ public class RssNewsFetcherService {
 
         result = BARE_AMPERSAND_PATTERN.matcher(result).replaceAll("&amp;");
         return result;
+    }
+
+    private String protectEmbeddedHtml(String xml) {
+        if (xml == null || xml.isBlank()) return "";
+
+        Matcher matcher = EMBEDDED_HTML_FIELD_PATTERN.matcher(xml);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String body = matcher.group(2);
+            String replacementBody = body;
+
+            if (body != null && !body.trim().startsWith("<![CDATA[") && !body.trim().endsWith("]]>") ) {
+                replacementBody = "<![CDATA[" + body.replace("]]>", "]]]]><![CDATA[>") + "]] >".replace(" ", "");
+            }
+
+            matcher.appendReplacement(result, Matcher.quoteReplacement(
+                    matcher.group(1) + replacementBody + matcher.group(3)
+            ));
+        }
+
+        matcher.appendTail(result);
+        return result.toString();
     }
 
     private String cleanText(String value) {
