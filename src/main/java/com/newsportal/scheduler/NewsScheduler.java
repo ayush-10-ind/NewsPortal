@@ -55,10 +55,12 @@ public class NewsScheduler {
         }
     }
 
-    // Runs one minute after startup and then every seven days.
+    // Run five minutes after startup and then every seven days.
+    // The first cleanup is delayed so the application can finish startup and
+    // become healthy before any retention work touches the database.
     // Deletes articles whose published date is more than seven days old.
     @Scheduled(
-            initialDelay = 60000,
+            initialDelay = 300000,
             fixedDelay = 604800000
     )
     public void deleteExpiredNews() {
