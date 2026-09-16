@@ -28,6 +28,7 @@ public class RssNewsImportService {
     private static final Logger logger = LoggerFactory.getLogger(RssNewsImportService.class);
     private static final String PLACEHOLDER = "Article content is being prepared.";
     private static final int MIN_SOURCE_CONTENT_LENGTH = 80;
+    private static final int MAX_WEB_FALLBACKS_PER_SECTION = 2;
 
     private final MultiSourceNewsFetcherService multiSourceNewsFetcherService;
     private final NewsRepository newsRepository;
@@ -110,20 +111,20 @@ public class RssNewsImportService {
                 String sourceContent = rawContent;
                 boolean usedWebFallback = false;
 
-                if (!isUsableSourceContent(sourceContent)) {
+                if (!isUsableSourceContent(sourceContent) && webFallbackCount < MAX_WEB_FALLBACKS_PER_SECTION) {
                     logger.info(
-                            "RSS description unusable. Trying publisher page fallback: title={}, url={}",
+                            "RSS description unusable. Trying limited publisher page fallback: title={}, url={}",
                             title,
                             sourceUrl
                     );
 
+                    webFallbackCount++;
                     sourceContent = clean(
                             webArticleContentExtractorService.fetchArticleText(sourceUrl)
                     );
                     usedWebFallback = isUsableSourceContent(sourceContent);
 
                     if (usedWebFallback) {
-                        webFallbackCount++;
                         logger.info(
                                 "Publisher page fallback succeeded: title={}, extractedChars={}",
                                 title,
@@ -135,7 +136,7 @@ public class RssNewsImportService {
                 if (!isUsableSourceContent(sourceContent)) {
                     rejectedCount++;
                     logger.warn(
-                            "RSS article rejected: no usable source content after RSS + web fallback. Title={}, contentLength={}",
+                            "RSS article rejected: no usable source content after bounded RSS + web fallback. Title={}, contentLength={}",
                             title,
                             sourceContent == null ? 0 : sourceContent.length()
                     );
@@ -154,9 +155,6 @@ public class RssNewsImportService {
 
                 String resolvedImage = null;
 
-                // NASA is treated as an authoritative image provider. This avoids
-                // falling through the generic scraper first and gives APOD and
-                // regular NASA Science articles their own resolution path.
                 String nasaImage = nasaApodImageService.resolveImage(
                         sourceUrl,
                         title,
@@ -335,11 +333,13 @@ public class RssNewsImportService {
 
         for (DateTimeFormatter formatter : formatters) {
             try {
-                if ("yyyy-MM-dd".equals(formatter.toString())) {
-                    return LocalDate.parse(value, formatter);
-                }
                 return ZonedDateTime.parse(value, formatter).toLocalDate();
             } catch (Exception ignored) {
+                try {
+                    return LocalDate.parse(value, formatter);
+                } catch (Exception ignoredAgain) {
+                    // try next formatter
+                }
             }
         }
 
