@@ -25,16 +25,17 @@ public class NewsImageRepairService {
     private static final Logger logger = LoggerFactory.getLogger(NewsImageRepairService.class);
     private static final String FALLBACK_PREFIX = "/images/fallback";
 
-    private static final int BATCH_SIZE = 5;
+    private static final int BATCH_SIZE = 10;
     private static final int INITIAL_NASA_BATCH_SIZE = 10;
     private static final int MAX_MANUAL_BATCH_SIZE = 10;
     private static final long INITIAL_NASA_REPAIR_DELAY_SECONDS = 20;
-    private static final long INITIAL_DELAY_SECONDS = 300;
+    private static final long INITIAL_DELAY_SECONDS = 45;
     private static final long DELAY_SECONDS = 1800;
     private static final long NASA_FULL_REPAIR_DELAY_SECONDS = 2;
 
     private final NewsRepository newsRepository;
     private final ArticleImageService articleImageService;
+    private final WiredImageResolverService wiredImageResolverService;
     private final NasaApodImageService nasaApodImageService;
     private final TransactionTemplate transactionTemplate;
 
@@ -48,10 +49,12 @@ public class NewsImageRepairService {
 
     public NewsImageRepairService(NewsRepository newsRepository,
                                   ArticleImageService articleImageService,
+                                  WiredImageResolverService wiredImageResolverService,
                                   NasaApodImageService nasaApodImageService,
                                   TransactionTemplate transactionTemplate) {
         this.newsRepository = newsRepository;
         this.articleImageService = articleImageService;
+        this.wiredImageResolverService = wiredImageResolverService;
         this.nasaApodImageService = nasaApodImageService;
         this.transactionTemplate = transactionTemplate;
     }
@@ -78,16 +81,13 @@ public class NewsImageRepairService {
     }
 
     private void runInitialNasaRepair() {
-        if (!nasaRepairRunning.compareAndSet(false, true)) {
-            return;
-        }
+        if (!nasaRepairRunning.compareAndSet(false, true)) return;
 
         try {
             repairNasaBatch(INITIAL_NASA_BATCH_SIZE);
         } catch (Exception ex) {
             logger.warn("Initial NASA image repair failed: errorType={}, message={}",
-                    ex.getClass().getSimpleName(),
-                    ex.getMessage());
+                    ex.getClass().getSimpleName(), ex.getMessage());
         } finally {
             nasaRepairRunning.set(false);
         }
@@ -109,7 +109,6 @@ public class NewsImageRepairService {
                 try {
                     String sourceUrl = clean(news.getSourceUrl());
                     if (sourceUrl == null) continue;
-
                     attempted++;
 
                     String resolvedImage = null;
@@ -119,6 +118,12 @@ public class NewsImageRepairService {
                                 sourceUrl,
                                 news.getTitle(),
                                 news.getPublishedDate());
+                    }
+
+                    if (!isRealImage(resolvedImage) && isWiredSource(sourceUrl)) {
+                        resolvedImage = wiredImageResolverService.resolveImage(
+                                sourceUrl,
+                                news.getTitle());
                     }
 
                     if (!isRealImage(resolvedImage)) {
@@ -138,7 +143,6 @@ public class NewsImageRepairService {
                     if (!isRealImage(resolvedImage)) continue;
 
                     final String finalResolvedImage = resolvedImage;
-
                     Boolean saved = transactionTemplate.execute(status -> {
                         News current = newsRepository.findById(news.getId()).orElse(null);
                         if (current == null || !isFallbackImage(current.getImageUrl())) return false;
@@ -151,7 +155,7 @@ public class NewsImageRepairService {
                         repaired++;
                         logger.info("Recovered news image: articleId={}, source={}",
                                 news.getId(),
-                                isNasaSource(sourceUrl) ? "nasa" : "article-page");
+                                isNasaSource(sourceUrl) ? "nasa" : (isWiredSource(sourceUrl) ? "wired" : "article-page"));
                     }
                 } catch (Exception ex) {
                     logger.debug("News image retry skipped: articleId={}, errorType={}, message={}",
@@ -168,17 +172,11 @@ public class NewsImageRepairService {
         }
     }
 
-    /**
-     * Starts one targeted NASA repair batch asynchronously so the HTTP request
-     * does not wait on external NASA/publisher requests.
-     */
     public String startNasaRepair(int requestedBatchSize) {
         int batchSize = Math.max(1, Math.min(requestedBatchSize, MAX_MANUAL_BATCH_SIZE));
-
         if (!nasaRepairRunning.compareAndSet(false, true)) {
             return "NASA image repair is already running.";
         }
-
         scheduler.execute(() -> {
             try {
                 repairNasaBatch(batchSize);
@@ -186,18 +184,13 @@ public class NewsImageRepairService {
                 nasaRepairRunning.set(false);
             }
         });
-
         return "NASA image repair started. Batch size=" + batchSize + ".";
     }
 
-    /**
-     * Repairs all existing NASA fallback records in small asynchronous batches.
-     */
     public String startFullNasaRepair() {
         if (!nasaRepairRunning.compareAndSet(false, true)) {
             return "NASA image repair is already running.";
         }
-
         scheduler.execute(this::repairNasaFullCycle);
         return "Full NASA image repair started. Existing NASA fallback records will be processed in small batches.";
     }
@@ -232,8 +225,7 @@ public class NewsImageRepairService {
 
         } catch (Exception ex) {
             logger.warn("NASA full image repair cycle failed: errorType={}, message={}",
-                    ex.getClass().getSimpleName(),
-                    ex.getMessage());
+                    ex.getClass().getSimpleName(), ex.getMessage());
             nasaRepairRunning.set(false);
         }
     }
@@ -242,12 +234,10 @@ public class NewsImageRepairService {
         List<News> candidates = newsRepository.findNasaFallbackImageCandidates(
                 FALLBACK_PREFIX,
                 PageRequest.of(0, batchSize));
-
         if (candidates == null || candidates.isEmpty()) {
             logger.info("NASA image repair batch found no fallback candidates.");
             return;
         }
-
         repairNasaCandidates(candidates);
     }
 
@@ -259,7 +249,6 @@ public class NewsImageRepairService {
             try {
                 String sourceUrl = clean(news.getSourceUrl());
                 if (sourceUrl == null) continue;
-
                 attempted++;
 
                 String resolvedImage = nasaApodImageService.resolveImage(
@@ -270,7 +259,6 @@ public class NewsImageRepairService {
                 if (!isRealImage(resolvedImage)) continue;
 
                 final String finalResolvedImage = resolvedImage;
-
                 Boolean saved = transactionTemplate.execute(status -> {
                     News current = newsRepository.findById(news.getId()).orElse(null);
                     if (current == null || !isFallbackImage(current.getImageUrl())) return false;
@@ -309,7 +297,12 @@ public class NewsImageRepairService {
     }
 
     private boolean isNasaSource(String sourceUrl) {
-        return sourceUrl != null
-                && sourceUrl.toLowerCase(Locale.ROOT).contains("nasa.gov");
+        return sourceUrl != null && sourceUrl.toLowerCase(Locale.ROOT).contains("nasa.gov");
+    }
+
+    private boolean isWiredSource(String sourceUrl) {
+        if (sourceUrl == null || sourceUrl.isBlank()) return false;
+        String normalized = sourceUrl.toLowerCase(Locale.ROOT);
+        return normalized.contains("wired.com/") || normalized.contains("www.wired.com/");
     }
 }
