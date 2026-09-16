@@ -33,6 +33,7 @@ public class RssNewsImportService {
     private final MultiSourceNewsFetcherService multiSourceNewsFetcherService;
     private final NewsRepository newsRepository;
     private final ArticleImageService articleImageService;
+    private final WiredImageResolverService wiredImageResolverService;
     private final NasaApodImageService nasaApodImageService;
     private final NewsArticleGenerationService articleGenerationService;
     private final WebArticleContentExtractorService webArticleContentExtractorService;
@@ -41,12 +42,14 @@ public class RssNewsImportService {
             MultiSourceNewsFetcherService multiSourceNewsFetcherService,
             NewsRepository newsRepository,
             ArticleImageService articleImageService,
+            WiredImageResolverService wiredImageResolverService,
             NasaApodImageService nasaApodImageService,
             NewsArticleGenerationService articleGenerationService,
             WebArticleContentExtractorService webArticleContentExtractorService) {
         this.multiSourceNewsFetcherService = multiSourceNewsFetcherService;
         this.newsRepository = newsRepository;
         this.articleImageService = articleImageService;
+        this.wiredImageResolverService = wiredImageResolverService;
         this.nasaApodImageService = nasaApodImageService;
         this.articleGenerationService = articleGenerationService;
         this.webArticleContentExtractorService = webArticleContentExtractorService;
@@ -168,8 +171,18 @@ public class RssNewsImportService {
                             title, publishedDate);
                 }
 
+                // WIRED's RSS exposes useful Media RSS images. Prefer the RSS
+                // image, then use the dedicated page resolver before generic scraping.
                 if (resolvedImage == null && rssImageUrl != null) {
                     resolvedImage = rssImageUrl;
+                }
+
+                if (resolvedImage == null) {
+                    String wiredImage = wiredImageResolverService.resolveImage(sourceUrl, title);
+                    if (wiredImage != null && !wiredImage.isBlank()) {
+                        resolvedImage = wiredImage;
+                        logger.info("WIRED image resolution succeeded: title={}", title);
+                    }
                 }
 
                 if (resolvedImage == null) {
@@ -313,12 +326,10 @@ public class RssNewsImportService {
             return OffsetDateTime.parse(value).toLocalDate();
         } catch (Exception ignored) {
         }
-
         try {
             return ZonedDateTime.parse(value).toLocalDate();
         } catch (Exception ignored) {
         }
-
         try {
             return ZonedDateTime.parse(value, DateTimeFormatter.RFC_1123_DATE_TIME).toLocalDate();
         } catch (Exception ignored) {
