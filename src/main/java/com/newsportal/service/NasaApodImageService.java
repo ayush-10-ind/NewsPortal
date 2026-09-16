@@ -11,30 +11,22 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 @Service
 public class NasaApodImageService {
 
     private static final Logger logger = LoggerFactory.getLogger(NasaApodImageService.class);
-
-    private static final Duration API_TIMEOUT = Duration.ofSeconds(5);
-    private static final Duration PAGE_TIMEOUT = Duration.ofSeconds(8);
+    private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(8);
     private static final String APOD_API = "https://api.nasa.gov/planetary/apod";
-    private static final String NASA_IMAGE_SEARCH_API = "https://images-api.nasa.gov/search";
-    private static final String NASA_ASSET_API = "https://images-api.nasa.gov/asset";
 
     private final WebClient webClient;
     private final ObjectMapper objectMapper;
@@ -49,14 +41,6 @@ public class NasaApodImageService {
         this.nasaApiKey = nasaApiKey == null ? "" : nasaApiKey.trim();
     }
 
-    /**
-     * Resolves images for NASA articles without requiring a NASA API key.
-     *
-     * Priority:
-     * 1. NASA publisher page metadata/content.
-     * 2. NASA's public Images API and asset endpoint (no API key required).
-     * 3. APOD API, only when a real NASA API key is configured.
-     */
     public String resolveImage(String sourceUrl, String title, LocalDate publishedDate) {
         if (!isNasaArticle(sourceUrl)) {
             return null;
@@ -67,16 +51,13 @@ public class NasaApodImageService {
             return pageImage;
         }
 
-        String publicImageApiImage = resolveFromNasaImagesApi(title);
-        if (isUsableUrl(publicImageApiImage)) {
-            return publicImageApiImage;
+        String libraryImage = resolveFromNasaImagesApi(title);
+        if (isUsableUrl(libraryImage)) {
+            return libraryImage;
         }
 
         if (isApodArticle(title) && publishedDate != null && hasUsableApiKey()) {
-            String apodImage = resolveApodImage(publishedDate, title);
-            if (isUsableUrl(apodImage)) {
-                return apodImage;
-            }
+            return resolveApodImage(publishedDate, title);
         }
 
         return null;
@@ -89,7 +70,7 @@ public class NasaApodImageService {
         }
 
         try {
-            JsonNode root = webClient.get()
+            String response = webClient.get()
                     .uri(uriBuilder -> uriBuilder
                             .scheme("https")
                             .host("images-api.nasa.gov")
@@ -101,86 +82,7 @@ public class NasaApodImageService {
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .bodyToMono(String.class)
-                    .timeout(API_TIMEOUT)
-                    .onErrorResume(error -> Mono.empty())
-                    .block();
-
-            if (root == null || root.isBlank()) {
-                return null;
-            }
-
-            JsonNode items = objectMapper.readTree(root)
-                    .path("collection")
-                    .path("items");
-
-            if (!items.isArray() || items.isEmpty()) {
-                return null;
-            }
-
-            String bestNasaId = null;
-            String bestDirectImage = null;
-            int bestScore = Integer.MIN_VALUE;
-
-            for (JsonNode item : items) {
-                JsonNode data = item.path("data").isArray() && item.path("data").size() > 0
-                        ? item.path("data").get(0)
-                        : null;
-
-                if (data == null || data.isMissingNode()) {
-                    continue;
-                }
-
-                String resultTitle = data.path("title").asText("");
-                String nasaId = data.path("nasa_id").asText("");
-                int score = scoreSearchResult(query, resultTitle);
-
-                String directImage = extractPreviewImage(item);
-                if (isUsableUrl(directImage)) {
-                    score += 5;
-                }
-
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestNasaId = nasaId.isBlank() ? null : nasaId;
-                    bestDirectImage = directImage;
-                }
-            }
-
-            if (bestNasaId != null) {
-                String assetImage = resolveNasaAsset(bestNasaId);
-                if (isUsableUrl(assetImage)) {
-                    logger.info("NASA Images API asset resolved: title={}, nasaId={}", title, bestNasaId);
-                    return assetImage;
-                }
-            }
-
-            if (isUsableUrl(bestDirectImage)) {
-                logger.info("NASA Images API preview resolved: title={}", title);
-                return bestDirectImage;
-            }
-
-        } catch (Exception ex) {
-            logger.debug("NASA Images API lookup failed: title={}, errorType={}, message={}",
-                    title,
-                    ex.getClass().getSimpleName(),
-                    ex.getMessage());
-        }
-
-        return null;
-    }
-
-    private String resolveNasaAsset(String nasaId) {
-        try {
-            String response = webClient.get()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host("images-api.nasa.gov")
-                            .path("/asset/{nasaId}")
-                            .build(nasaId))
-                    .accept(MediaType.APPLICATION_JSON)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .timeout(API_TIMEOUT)
+                    .timeout(REQUEST_TIMEOUT)
                     .onErrorResume(error -> Mono.empty())
                     .block();
 
@@ -188,45 +90,48 @@ public class NasaApodImageService {
                 return null;
             }
 
-            JsonNode collection = objectMapper.readTree(response).path("collection").path("items");
-            if (!collection.isArray()) {
+            JsonNode items = objectMapper.readTree(response)
+                    .path("collection")
+                    .path("items");
+
+            if (!items.isArray() || items.isEmpty()) {
                 return null;
             }
 
-            String best = null;
+            String bestImage = null;
             int bestScore = Integer.MIN_VALUE;
 
-            for (JsonNode item : collection) {
-                String href = item.path("href").asText("");
-                if (!isUsableUrl(href) || !looksLikeImageAsset(href)) {
+            for (JsonNode item : items) {
+                JsonNode data = item.path("data");
+                if (!data.isArray() || data.isEmpty()) {
                     continue;
                 }
 
-                int score = 0;
-                String lower = href.toLowerCase(Locale.ROOT);
-                if (lower.endsWith(".jpg") || lower.endsWith(".jpeg") || lower.endsWith(".png")) {
-                    score += 20;
+                String resultTitle = data.get(0).path("title").asText("");
+                String preview = extractPreviewImage(item);
+                if (!isUsableUrl(preview)) {
+                    continue;
                 }
-                if (!lower.contains("thumbnail") && !lower.contains("thumb") && !lower.contains("small")) {
-                    score += 20;
-                }
-                score += Math.min(href.length(), 200) / 20;
+
+                int score = scoreSearchResult(query, resultTitle);
+                score += 5;
 
                 if (score > bestScore) {
                     bestScore = score;
-                    best = href;
+                    bestImage = preview;
                 }
             }
 
-            return best;
-
+            if (isUsableUrl(bestImage)) {
+                logger.info("NASA Images API preview resolved: title={}", title);
+                return bestImage;
+            }
         } catch (Exception ex) {
-            logger.debug("NASA asset lookup failed: nasaId={}, errorType={}, message={}",
-                    nasaId,
-                    ex.getClass().getSimpleName(),
-                    ex.getMessage());
-            return null;
+            logger.debug("NASA Images API lookup failed: title={}, errorType={}, message={}",
+                    title, ex.getClass().getSimpleName(), ex.getMessage());
         }
+
+        return null;
     }
 
     private String extractPreviewImage(JsonNode item) {
@@ -256,9 +161,6 @@ public class NasaApodImageService {
     private int scoreSearchResult(String query, String resultTitle) {
         Set<String> queryTokens = tokenize(query);
         Set<String> resultTokens = tokenize(resultTitle);
-        if (queryTokens.isEmpty() || resultTokens.isEmpty()) {
-            return 0;
-        }
 
         int score = 0;
         for (String token : queryTokens) {
@@ -268,7 +170,7 @@ public class NasaApodImageService {
         }
 
         if (!resultTitle.isBlank() && query.equalsIgnoreCase(resultTitle.trim())) {
-            score += 50;
+            score += 100;
         }
 
         return score;
@@ -324,7 +226,7 @@ public class NasaApodImageService {
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .bodyToMono(String.class)
-                    .timeout(API_TIMEOUT)
+                    .timeout(REQUEST_TIMEOUT)
                     .onErrorResume(error -> Mono.empty())
                     .block();
 
@@ -333,11 +235,7 @@ public class NasaApodImageService {
             }
 
             JsonNode root = objectMapper.readTree(response);
-            String mediaType = root.path("media_type").asText("");
-
-            if (!"image".equalsIgnoreCase(mediaType)) {
-                logger.debug("NASA APOD is not an image: date={}, title={}, mediaType={}",
-                        publishedDate, title, mediaType);
+            if (!"image".equalsIgnoreCase(root.path("media_type").asText(""))) {
                 return null;
             }
 
@@ -349,12 +247,9 @@ public class NasaApodImageService {
                 logger.info("NASA APOD API image resolved: date={}, title={}", publishedDate, title);
                 return resolved;
             }
-
         } catch (Exception ex) {
             logger.debug("NASA APOD API lookup failed: date={}, errorType={}, message={}",
-                    publishedDate,
-                    ex.getClass().getSimpleName(),
-                    ex.getMessage());
+                    publishedDate, ex.getClass().getSimpleName(), ex.getMessage());
         }
 
         return null;
@@ -370,7 +265,7 @@ public class NasaApodImageService {
                     })
                     .retrieve()
                     .bodyToMono(String.class)
-                    .timeout(PAGE_TIMEOUT)
+                    .timeout(REQUEST_TIMEOUT)
                     .onErrorResume(error -> Mono.empty())
                     .block();
 
@@ -385,43 +280,38 @@ public class NasaApodImageService {
                     "meta[property=og:image:url]",
                     "meta[property=og:image:secure_url]",
                     "meta[name=twitter:image]",
-                    "meta[name=twitter:image:src]",
-                    "meta[name=image]",
-                    "meta[property=image]"
+                    "meta[name=twitter:image:src]"
             };
 
             for (String selector : selectors) {
                 Element element = document.selectFirst(selector);
-                if (element == null) continue;
+                if (element == null) {
+                    continue;
+                }
 
-                String content = element.attr("content").trim();
-                String normalized = normalizeUrl(content, sourceUrl);
-                if (isUsableUrl(normalized)) {
-                    logger.info("NASA article image resolved from page metadata: title={}, imageHost={}",
-                            title, hostOf(normalized));
-                    return normalized;
+                String imageUrl = normalizeUrl(element.attr("content"), sourceUrl);
+                if (isUsableUrl(imageUrl)) {
+                    logger.info("NASA page image resolved: title={}, host={}", title, hostOf(imageUrl));
+                    return imageUrl;
                 }
             }
 
             String jsonLdImage = findJsonLdImage(document, sourceUrl);
             if (isUsableUrl(jsonLdImage)) {
-                logger.info("NASA article image resolved from JSON-LD: title={}, imageHost={}",
-                        title, hostOf(jsonLdImage));
                 return jsonLdImage;
             }
 
-            String contentImage = findArticleImage(document, sourceUrl);
-            if (isUsableUrl(contentImage)) {
-                logger.info("NASA article image resolved from article content: title={}, imageHost={}",
-                        title, hostOf(contentImage));
-                return contentImage;
+            for (Element image : document.select("article img[src], main img[src], img[data-src], img[data-lazy-src], img[data-original]")) {
+                for (String attribute : new String[]{"src", "data-src", "data-lazy-src", "data-original"}) {
+                    String imageUrl = normalizeUrl(image.attr(attribute), sourceUrl);
+                    if (isUsableUrl(imageUrl) && !looksLikeNonArticleAsset(imageUrl)) {
+                        return imageUrl;
+                    }
+                }
             }
-
         } catch (Exception ex) {
-            logger.debug("NASA article image lookup failed: url={}, errorType={}, message={}",
-                    sourceUrl,
-                    ex.getClass().getSimpleName(),
-                    ex.getMessage());
+            logger.debug("NASA page lookup failed: url={}, errorType={}, message={}",
+                    sourceUrl, ex.getClass().getSimpleName(), ex.getMessage());
         }
 
         return null;
@@ -433,8 +323,9 @@ public class NasaApodImageService {
             if (json == null || json.isBlank()) {
                 json = script.html();
             }
-
-            if (json == null || json.isBlank()) continue;
+            if (json == null || json.isBlank()) {
+                continue;
+            }
 
             try {
                 JsonNode root = objectMapper.readTree(json);
@@ -443,7 +334,7 @@ public class NasaApodImageService {
                     return result;
                 }
             } catch (Exception ignored) {
-                // A page may contain multiple JSON-LD blocks and some can be malformed.
+                // Try other JSON-LD blocks.
             }
         }
 
@@ -451,11 +342,7 @@ public class NasaApodImageService {
     }
 
     private String findImageNode(JsonNode node, String sourceUrl) {
-        if (node == null || node.isMissingNode() || node.isNull()) {
-            return null;
-        }
-
-        if (node.isTextual()) {
+        if (node == null || node.isNull() || node.isMissingNode()) {
             return null;
         }
 
@@ -470,9 +357,8 @@ public class NasaApodImageService {
         }
 
         if (node.isObject()) {
-            for (String fieldName : new String[]{"image", "thumbnailUrl", "contentUrl", "thumbnail"}) {
-                JsonNode imageNode = node.get(fieldName);
-                String result = extractImageValue(imageNode, sourceUrl);
+            for (String key : new String[]{"image", "thumbnailUrl", "contentUrl", "thumbnail"}) {
+                String result = extractImageValue(node.get(key), sourceUrl);
                 if (isUsableUrl(result)) {
                     return result;
                 }
@@ -491,7 +377,7 @@ public class NasaApodImageService {
     }
 
     private String extractImageValue(JsonNode node, String sourceUrl) {
-        if (node == null || node.isMissingNode() || node.isNull()) {
+        if (node == null || node.isNull() || node.isMissingNode()) {
             return null;
         }
 
@@ -502,7 +388,9 @@ public class NasaApodImageService {
         if (node.isArray()) {
             for (JsonNode child : node) {
                 String result = extractImageValue(child, sourceUrl);
-                if (isUsableUrl(result)) return result;
+                if (isUsableUrl(result)) {
+                    return result;
+                }
             }
             return null;
         }
@@ -512,7 +400,9 @@ public class NasaApodImageService {
                 JsonNode value = node.get(key);
                 if (value != null && value.isTextual()) {
                     String result = normalizeUrl(value.asText(), sourceUrl);
-                    if (isUsableUrl(result)) return result;
+                    if (isUsableUrl(result)) {
+                        return result;
+                    }
                 }
             }
         }
@@ -520,29 +410,15 @@ public class NasaApodImageService {
         return null;
     }
 
-    private String findArticleImage(Document document, String sourceUrl) {
-        String[] selectors = {
-                "article img[src]",
-                "main img[src]",
-                "img[data-src]",
-                "img[data-lazy-src]",
-                "img[data-original]"
-        };
-
-        for (String selector : selectors) {
-            for (Element image : document.select(selector)) {
-                String[] attributes = {"src", "data-src", "data-lazy-src", "data-original"};
-                for (String attribute : attributes) {
-                    String value = image.attr(attribute);
-                    String normalized = normalizeUrl(value, sourceUrl);
-                    if (isUsableUrl(normalized) && !looksLikeNonArticleAsset(normalized)) {
-                        return normalized;
-                    }
-                }
-            }
+    private boolean looksLikeImageAsset(String value) {
+        if (!isUsableUrl(value)) {
+            return false;
         }
 
-        return null;
+        String normalized = value.toLowerCase(Locale.ROOT);
+        return normalized.matches(".*\\.(jpg|jpeg|png|webp|gif|avif)(?:[?#].*)?$")
+                || normalized.contains("/image/")
+                || normalized.contains("/images/");
     }
 
     private boolean looksLikeNonArticleAsset(String value) {
@@ -554,18 +430,8 @@ public class NasaApodImageService {
                 || normalized.contains("sprite");
     }
 
-    private boolean looksLikeImageAsset(String value) {
-        if (!isUsableUrl(value)) return false;
-        String normalized = value.toLowerCase(Locale.ROOT);
-        return normalized.matches(".*\\.(jpg|jpeg|png|webp|gif|avif)(?:[?#].*)?$")
-                || normalized.contains("/image/")
-                || normalized.contains("/images/");
-    }
-
     private boolean isNasaArticle(String sourceUrl) {
-        if (sourceUrl == null || sourceUrl.isBlank()) return false;
-        String normalized = sourceUrl.toLowerCase(Locale.ROOT);
-        return normalized.contains("nasa.gov");
+        return sourceUrl != null && sourceUrl.toLowerCase(Locale.ROOT).contains("nasa.gov");
     }
 
     private boolean isApodArticle(String title) {
@@ -575,27 +441,30 @@ public class NasaApodImageService {
     private boolean hasUsableApiKey() {
         return nasaApiKey != null
                 && !nasaApiKey.isBlank()
-                && !"DEMO_KEY".equalsIgnoreCase(nasaApiKey.trim());
+                && !"DEMO_KEY".equalsIgnoreCase(nasaApiKey);
     }
 
     private boolean isUsableUrl(String value) {
-        if (value == null || value.isBlank()) return false;
-        String normalized = value.trim();
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
         return normalized.startsWith("https://") || normalized.startsWith("http://");
     }
 
     private String normalizeUrl(String value, String sourceUrl) {
-        if (value == null || value.isBlank()) return null;
-        String trimmed = value.trim();
+        if (value == null || value.isBlank()) {
+            return null;
+        }
 
         try {
-            URI candidate = URI.create(trimmed);
+            URI candidate = URI.create(value.trim());
             if (candidate.isAbsolute()) {
-                return trimmed;
+                return candidate.toString();
             }
 
-            URI base = URI.create(sourceUrl);
-            return base.resolve(trimmed).toString();
+            return URI.create(sourceUrl).resolve(candidate).toString();
         } catch (Exception ex) {
             return null;
         }
@@ -603,8 +472,8 @@ public class NasaApodImageService {
 
     private String hostOf(String value) {
         try {
-            URI uri = URI.create(value);
-            return uri.getHost() == null ? "unknown" : uri.getHost();
+            String host = URI.create(value).getHost();
+            return host == null ? "unknown" : host;
         } catch (Exception ex) {
             return "unknown";
         }
