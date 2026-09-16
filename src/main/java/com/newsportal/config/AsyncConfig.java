@@ -15,15 +15,12 @@ public class AsyncConfig {
         ThreadPoolTaskExecutor executor =
                 new ThreadPoolTaskExecutor();
 
+        // Keep external Ashna calls bounded so an RSS cycle cannot create a
+        // large burst of concurrent network requests and memory pressure.
         executor.setCorePoolSize(3);
-
         executor.setMaxPoolSize(3);
-
-        executor.setQueueCapacity(50);
-
-        executor.setThreadNamePrefix(
-                "news-ashna-"
-        );
+        executor.setQueueCapacity(120);
+        executor.setThreadNamePrefix("news-ashna-");
 
         executor.initialize();
 
