@@ -33,10 +33,9 @@ public class RssNewsFetcherService {
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(8);
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
 
-    // RSS feeds often expose dozens of historical entries. AgniPress only
-    // needs the newest entries on each scheduled import, so cap the parsed
-    // result to keep memory and downstream work bounded.
-    private static final int MAX_ARTICLES_PER_FEED = 12;
+    // Read a wider window so editorial-noise filtering can still leave up to
+    // 12 useful articles available to the per-section quota.
+    private static final int MAX_ARTICLES_PER_FEED = 20;
 
     private static final Pattern HTML_ENTITY_PATTERN =
             Pattern.compile("&(?:nbsp|amp|quot|apos|lt|gt|hellip|ndash|mdash|rsquo|lsquo|rdquo|ldquo|trade|copy|reg|bull|middot|laquo|raquo|#\\d+|#x[0-9a-fA-F]+);");
@@ -44,12 +43,6 @@ public class RssNewsFetcherService {
     private static final Pattern BARE_AMPERSAND_PATTERN =
             Pattern.compile("&(?!#\\d+;|#x[0-9a-fA-F]+;|[A-Za-z][A-Za-z0-9]{1,31};)");
 
-    /*
-     * Some publisher feeds place raw HTML inside description/summary fields
-     * without wrapping it in CDATA. A raw <link crossorigin ...> tag is not
-     * valid RSS XML and can abort the entire feed. Only remove link tags that
-     * clearly belong to embedded HTML; never remove normal RSS <link> elements.
-     */
     private static final Pattern RAW_HTML_LINK_TAG_PATTERN =
             Pattern.compile("<\\s*link\\b(?=[^>]*\\bcrossorigin\\b)[^>]*>", Pattern.CASE_INSENSITIVE);
 
@@ -201,7 +194,7 @@ public class RssNewsFetcherService {
 
         if (description != null) {
             Matcher matcher = Pattern.compile(
-                    "<img[^>]+(?:src|data-src|data-lazy-src|data-original)\\s*=\\s*[\"']([^\"']+)[\"']",
+                    "<img[^>]+(?:src|data-src|data-lazy-src|data-original)\\s*=\\s*[\\\"']([^\\\"']+)[\\\"']",
                     Pattern.CASE_INSENSITIVE).matcher(description);
             if (matcher.find()) return matcher.group(1);
         }
@@ -212,7 +205,7 @@ public class RssNewsFetcherService {
     private boolean looksLikeImage(String value) {
         if (value == null || value.isBlank()) return false;
         String lower = value.toLowerCase(Locale.ROOT);
-        return lower.matches(".*\\.(jpg|jpeg|png|webp|gif|avif)(?:[?#].*)?$") || lower.contains("image");
+        return lower.matches(".*\\\\.(jpg|jpeg|png|webp|gif|avif)(?:[?#].*)?$") || lower.contains("image");
     }
 
     private String sanitizeXml(String xml) {
