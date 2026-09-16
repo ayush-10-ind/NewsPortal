@@ -5,7 +5,6 @@ import com.newsportal.repository.NewsRepository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,14 +23,10 @@ public class HomeController {
     @GetMapping("/")
     public String home(Model model) {
 
-        // Keep the homepage request small. Only fetch the records that the
-        // template actually needs instead of loading the complete news table.
-        Page<News> latestPage = newsRepository.findAll(
-                PageRequest.of(
-                        0,
-                        8,
-                        Sort.by("publishedDate").descending()
-                )
+        // Use the same editorially filtered latest-news query as the news list.
+        // This hides already-stored coupon/promotional records from the homepage.
+        Page<News> latestPage = newsRepository.findAllByOrderByPublishedDateDesc(
+                PageRequest.of(0, 8)
         );
 
         List<News> latestNews = latestPage.getContent();
@@ -43,13 +38,11 @@ public class HomeController {
 
         model.addAttribute("featuredNews", featuredNews);
 
-        // Trending news is now limited by the database query. This avoids
-        // loading every News entity and sorting the complete table in Java.
+        // Trending news is limited by the database query.
         List<News> trendingNews = newsRepository.findTop5ByOrderByViewCountDesc();
         model.addAttribute("trendingNews", trendingNews);
 
-        // Categories are returned directly from the database instead of
-        // loading every News entity just to extract a string field.
+        // Categories are returned directly from the database.
         List<String> categories = newsRepository.findDistinctCategories();
         model.addAttribute("categories", categories);
 
