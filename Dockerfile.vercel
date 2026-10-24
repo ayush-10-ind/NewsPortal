@@ -20,4 +20,7 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 80
 
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-80} -jar app.jar"]
+# Bind explicitly to all container interfaces and honor Vercel's runtime PORT.
+# Lazy bean initialization reduces the amount of work required before the HTTP
+# listener can start; beans are created when first needed.
+ENTRYPOINT ["sh", "-c", "exec java -Dserver.address=0.0.0.0 -Dserver.port=${PORT:-80} -Dspring.main.lazy-initialization=true -jar app.jar"]
